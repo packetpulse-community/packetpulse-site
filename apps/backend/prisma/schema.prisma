@@ -65,6 +65,7 @@ model User {
   quizzesCreated       Quiz[]
   quizAttempts         QuizAttempt[]
   certificates         Certificate[]
+  notifications        Notification[]
 
   @@map("users")
 }
@@ -615,4 +616,32 @@ model Certificate {
 
   @@index([userId])
   @@map("certificates")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications (Phase 5) — real-time + email fan-out support. `payload` is JSONB
+// because its shape varies per notification_type and is read/written as a whole,
+// never queried by internal fields (plan §2 JSONB-vs-relational criteria).
+// ---------------------------------------------------------------------------
+
+enum NotificationType {
+  forum_reply
+  blog_comment
+  approval
+  role_change
+  certificate_issued
+  security_alert
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  payload   Json
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
 }

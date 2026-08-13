@@ -4,7 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { UserRepository } from "../../domain/repositories/user.repository";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { TokenService } from "./token.service";
-import { MailerService } from "../../infrastructure/email/mailer.service";
+import { EmailQueueService } from "../../../notifications";
 import { toPublicUser, PublicUser } from "../../domain/entities/user.entity";
 import { RegisterDto, RegisterAdminDto, LoginDto } from "../dto/auth.dto";
 
@@ -17,7 +17,7 @@ export class AuthService {
     private readonly users: UserRepository,
     private readonly prisma: PrismaService,
     private readonly tokens: TokenService,
-    private readonly mailer: MailerService,
+    private readonly emailQueue: EmailQueueService,
     private readonly config: ConfigService,
   ) {}
 
@@ -119,7 +119,7 @@ export class AuthService {
     await this.prisma.passwordReset.create({
       data: { userId: user.id, otpHash: hash, expiresAt: new Date(Date.now() + OTP_EXPIRY_MS) },
     });
-    await this.mailer.send(user.email, "Your PacketPulse password reset code", `Your OTP is ${plain}. It expires in 10 minutes.`);
+    await this.emailQueue.sendPasswordResetOtp(user.email, plain);
   }
 
   async verifyOtp(email: string, otp: string): Promise<{ tempToken: string }> {
@@ -157,6 +157,9 @@ export class AuthService {
       where: { userId: record.userId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+
+    const user = await this.users.findById(record.userId);
+    if (user) await this.emailQueue.sendPasswordChangedNotice(user.email);
   }
 
   async sendVerificationEmail(userId: string, email: string) {
@@ -164,11 +167,7 @@ export class AuthService {
     await this.prisma.emailVerification.create({
       data: { userId, tokenHash: hash, expiresAt: new Date(Date.now() + VERIFICATION_EXPIRY_MS) },
     });
-    await this.mailer.send(
-      email,
-      "Verify your PacketPulse email",
-      `Verify your email using this token: ${plain} (expires in 24h).`,
-    );
+    await this.emailQueue.sendVerificationEmail(email, plain);
   }
 
   async verifyEmail(token: string) {
@@ -180,5 +179,8 @@ export class AuthService {
 
     await this.prisma.emailVerification.update({ where: { id: record.id }, data: { consumedAt: new Date() } });
     await this.users.markEmailVerified(record.userId);
+
+    const user = await this.users.findById(record.userId);
+    if (user) await this.emailQueue.sendWelcomeEmail(user.email, user.firstName);
   }
 }

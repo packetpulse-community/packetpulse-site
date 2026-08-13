@@ -2,10 +2,14 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { randomBytes } from "node:crypto";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { SubmitQuizAttemptDto } from "../dto/quizzes.dto";
+import { NotificationsService } from "../../../notifications";
 
 @Injectable()
 export class QuizAttemptsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async start(quizId: string, userId: string) {
     const quiz = await this.prisma.quiz.findUnique({ where: { id: quizId } });
@@ -76,6 +80,12 @@ export class QuizAttemptsService {
           quizAttemptId: attemptId,
           certificateNumber: this.generateCertificateNumber(),
         },
+      });
+      await this.notifications.notify(userId, "certificate_issued", {
+        quizId,
+        quizTitle: quiz.title,
+        certificateId: certificate.id,
+        certificateNumber: certificate.certificateNumber,
       });
     }
 

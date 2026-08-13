@@ -2,19 +2,34 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { CreateCommentDto } from "../dto/blogs.dto";
 import { SUPER_ADMIN_ROLE } from "../../../identity";
+import { NotificationsService } from "../../../notifications";
 
 @Injectable()
 export class BlogCommentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async add(blogPostId: string, userId: string, dto: CreateCommentDto) {
-    const post = await this.prisma.blogPost.findUnique({ where: { id: blogPostId }, select: { id: true } });
+    const post = await this.prisma.blogPost.findUnique({ where: { id: blogPostId }, select: { id: true, authorId: true, title: true } });
     if (!post) throw new NotFoundException("Blog post not found");
 
-    return this.prisma.blogComment.create({
+    const comment = await this.prisma.blogComment.create({
       data: { blogPostId, userId, content: dto.content },
       include: { user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
     });
+
+    if (post.authorId !== userId) {
+      await this.notifications.notify(post.authorId, "blog_comment", {
+        blogPostId,
+        blogPostTitle: post.title,
+        commentId: comment.id,
+        fromUserId: userId,
+      });
+    }
+
+    return comment;
   }
 
   async remove(blogPostId: string, commentId: string, userId: string, roles: string[]) {

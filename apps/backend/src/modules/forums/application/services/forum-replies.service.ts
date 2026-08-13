@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { CreateForumReplyDto } from "../dto/forums.dto";
 import { ForumThreadsService } from "./forum-threads.service";
+import { NotificationsService } from "../../../notifications";
 
 @Injectable()
 export class ForumRepliesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly threads: ForumThreadsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async add(threadId: string, authorId: string, dto: CreateForumReplyDto) {
@@ -25,6 +27,16 @@ export class ForumRepliesService {
         data: { replyCount: { increment: 1 }, lastReplyAt: new Date() },
       }),
     ]);
+
+    if (thread.authorId !== authorId) {
+      await this.notifications.notify(thread.authorId, "forum_reply", {
+        threadId,
+        threadTitle: thread.title,
+        replyId: reply.id,
+        fromUserId: authorId,
+      });
+    }
+
     return reply;
   }
 

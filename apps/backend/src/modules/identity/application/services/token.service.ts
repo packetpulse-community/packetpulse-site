@@ -4,6 +4,7 @@ import { JwtService } from "@nestjs/jwt";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { PublicUser } from "../../domain/entities/user.entity";
+import { EmailQueueService } from "../../../notifications";
 
 export interface AccessTokenPayload {
   sub: string;
@@ -20,6 +21,7 @@ export class TokenService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly emailQueue: EmailQueueService,
   ) {}
 
   signAccessToken(user: PublicUser): string {
@@ -78,13 +80,21 @@ export class TokenService {
       throw new UnauthorizedException("Invalid refresh token");
     }
 
-    if (existing.revokedAt || existing.expiresAt < new Date()) {
-      // Reuse of a revoked/expired token — treat as compromise and kill the family.
+    if (existing.revokedAt) {
+      // Reuse of an already-rotated-away token — this is the actual compromise
+      // signal (a merely expired-but-never-rotated token, handled below, is normal
+      // inactivity, not an attack — alerting on that would be a false positive).
       await this.prisma.refreshToken.updateMany({
         where: { familyId: existing.familyId, revokedAt: null },
         data: { revokedAt: new Date() },
       });
+      const user = await this.prisma.user.findUnique({ where: { id: existing.userId } });
+      if (user) await this.emailQueue.sendSuspiciousRefreshReuseAlert(user.email);
       throw new UnauthorizedException("Refresh token reuse detected — session revoked");
+    }
+
+    if (existing.expiresAt < new Date()) {
+      throw new UnauthorizedException("Refresh token expired");
     }
 
     const next = await this.createRefreshToken(existing.userId, existing.familyId, meta);

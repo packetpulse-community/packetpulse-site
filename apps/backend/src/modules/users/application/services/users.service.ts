@@ -2,11 +2,15 @@ import { BadRequestException, Injectable, NotFoundException, UnauthorizedExcepti
 import * as bcrypt from "bcrypt";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { toPublicUser, userWithRolesInclude } from "../../../identity";
+import { EmailQueueService } from "../../../notifications";
 import { UpdateProfileDto, ChangePasswordDto } from "../dto/users.dto";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailQueue: EmailQueueService,
+  ) {}
 
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId }, include: userWithRolesInclude });
@@ -41,6 +45,8 @@ export class UsersService {
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+
+    await this.emailQueue.sendPasswordChangedNotice(user.email);
   }
 
   async deleteAccount(userId: string, password: string) {

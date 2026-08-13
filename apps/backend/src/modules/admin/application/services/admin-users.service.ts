@@ -4,10 +4,15 @@ import { PrismaService } from "../../../../prisma/prisma.service";
 import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { AdminUserListQueryDto, AssignRolesDto } from "../dto/admin.dto";
 import { userWithRolesInclude, toPublicUser } from "../../../identity";
+import { EmailQueueService, NotificationsService } from "../../../notifications";
 
 @Injectable()
 export class AdminUsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailQueue: EmailQueueService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async list(query: AdminUserListQueryDto) {
     const skip = prismaSkip(query.page, query.limit);
@@ -66,6 +71,12 @@ export class AdminUsersService {
         approvedAt: approved ? new Date() : null,
       },
     });
+
+    await Promise.all([
+      this.emailQueue.sendApprovalNotice(user.email, approved),
+      this.notifications.notify(id, "approval", { approved }),
+    ]);
+
     return this.getById(id);
   }
 
@@ -80,6 +91,9 @@ export class AdminUsersService {
       this.prisma.userRole.deleteMany({ where: { userId: id } }),
       this.prisma.userRole.createMany({ data: roles.map((role) => ({ userId: id, roleId: role.id })) }),
     ]);
+
+    await this.emailQueue.sendRoleChangeNotice(user.email, dto.roleNames);
+
     return this.getById(id);
   }
 

@@ -18,6 +18,11 @@ import { RecordingsModule } from "./modules/recordings";
 import { ForumsModule } from "./modules/forums";
 import { QuizzesModule } from "./modules/quizzes";
 import { AdminModule } from "./modules/admin";
+import { RedisModule } from "./common/redis/redis.module";
+import { NotificationsModule } from "./modules/notifications";
+import { RealtimeModule } from "./modules/realtime";
+import { NetworkToolsModule } from "./modules/network-tools";
+import { DashboardModule } from "./modules/dashboard";
 
 // Feature modules land here as they're built (migration plan phases). Global guard
 // chain — JwtAuthGuard → RolesGuard → ApprovedGuard, with @Public() opting a route
@@ -28,8 +33,11 @@ import { AdminModule } from "./modules/admin";
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]), // global read-standard default
     PrismaModule,
+    RedisModule,
     ObservabilityLoggerModule,
     HealthModule,
+    NotificationsModule,
+    RealtimeModule,
     IdentityModule,
     UsersModule,
     BlogsModule,
@@ -38,6 +46,8 @@ import { AdminModule } from "./modules/admin";
     ForumsModule,
     QuizzesModule,
     AdminModule,
+    NetworkToolsModule,
+    DashboardModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

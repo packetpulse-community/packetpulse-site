@@ -6,7 +6,7 @@ import { AuthController } from "./presentation/controllers/auth.controller";
 import { AuthService } from "./application/services/auth.service";
 import { AuthCookieService } from "./application/services/auth-cookie.service";
 import { TokenService } from "./application/services/token.service";
-import { MailerService } from "./infrastructure/email/mailer.service";
+import { NotificationsModule } from "../notifications";
 import { UserRepository } from "./domain/repositories/user.repository";
 import { UserPrismaRepository } from "./infrastructure/prisma/user.prisma-repository";
 import { JwtStrategy } from "./presentation/strategies/jwt.strategy";
@@ -18,6 +18,7 @@ import { EmailVerifiedGuard } from "./presentation/guards/email-verified.guard";
 @Module({
   imports: [
     PassportModule,
+    NotificationsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -32,7 +33,6 @@ import { EmailVerifiedGuard } from "./presentation/guards/email-verified.guard";
     AuthService,
     AuthCookieService,
     TokenService,
-    MailerService,
     { provide: UserRepository, useClass: UserPrismaRepository },
     JwtStrategy,
     // Exported so app.module can wire these as the global APP_GUARD chain —
