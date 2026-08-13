@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 // Color token system ported as-is from the old packetpulse-community frontend
 // (packetpulse-community/tailwind.config.js) — visual identity carries over, not redesigned.
@@ -48,6 +49,11 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        brand: {
+          DEFAULT: "hsl(var(--brand))",
+          foreground: "hsl(var(--brand-foreground))",
+          muted: "hsl(var(--brand-muted))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -70,7 +76,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 };
 
 export default config;

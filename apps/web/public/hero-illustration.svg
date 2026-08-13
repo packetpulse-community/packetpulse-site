@@ -1,0 +1,38 @@
+<svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Network graph illustration">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="edge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.3" />
+    </linearGradient>
+  </defs>
+
+  <circle cx="240" cy="240" r="220" fill="url(#glow)" />
+
+  <g stroke="url(#edge)" stroke-width="1.5" fill="none">
+    <line x1="240" y1="240" x2="120" y2="140" />
+    <line x1="240" y1="240" x2="360" y2="120" />
+    <line x1="240" y1="240" x2="90" y2="300" />
+    <line x1="240" y1="240" x2="380" y2="300" />
+    <line x1="240" y1="240" x2="240" y2="380" />
+    <line x1="240" y1="240" x2="180" y2="90" />
+    <line x1="120" y1="140" x2="180" y2="90" />
+    <line x1="360" y1="120" x2="380" y2="300" />
+    <line x1="90" y1="300" x2="240" y2="380" />
+  </g>
+
+  <g fill="#4f46e5" stroke="#a5b4fc" stroke-width="1.5">
+    <circle cx="240" cy="240" r="14" />
+  </g>
+  <g fill="#312e81" stroke="#818cf8" stroke-width="1.5">
+    <circle cx="120" cy="140" r="8" />
+    <circle cx="360" cy="120" r="8" />
+    <circle cx="90" cy="300" r="8" />
+    <circle cx="380" cy="300" r="8" />
+    <circle cx="240" cy="380" r="8" />
+    <circle cx="180" cy="90" r="6" />
+  </g>
+</svg>
