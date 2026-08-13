@@ -1,5 +1,5 @@
-// Placeholder schema for Phase 0 bootstrap — real domain models land in Phase 1
-// (users/roles/permissions/tokens) and subsequent phases (see migration plan §2).
+// Identity domain (Phase 1) — users, multi-role RBAC, and token/verification tables.
+// Content domains (blogs/resources/recordings/forums/quizzes/...) land in later phases (plan §2).
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,7 +9,170 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model HealthCheck {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+enum ProfessionalExperience {
+  student
+  junior
+  mid
+  senior
+  lead
+}
+
+model User {
+  id                     String    @id @default(uuid())
+  firstName              String    @map("first_name")
+  lastName               String    @map("last_name")
+  email                  String    @unique
+  passwordHash           String    @map("password_hash")
+  whatsappNumber         String?   @map("whatsapp_number")
+  professionalExperience ProfessionalExperience? @map("professional_experience")
+  avatarUrl              String?   @map("avatar_url")
+  bio                    String?
+
+  // Approval is orthogonal to role — an unapproved user has no access regardless
+  // of role (plan §4). Requires emailVerified before an admin can approve (plan §4).
+  isApproved  Boolean   @default(false) @map("is_approved")
+  approvedById String?  @map("approved_by_id")
+  approvedBy   User?    @relation("UserApprovals", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedUsers User[]  @relation("UserApprovals")
+  approvedAt   DateTime? @map("approved_at")
+
+  emailVerified Boolean  @default(false) @map("email_verified")
+  lastLoginAt   DateTime? @map("last_login_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  certifications      UserCertification[]
+  socialLinks         UserSocialLinks?
+  refreshTokens        RefreshToken[]
+  passwordResets        PasswordReset[]
+  emailVerifications     EmailVerification[]
+  roles                 UserRole[]
+
+  @@map("users")
+}
+
+model UserCertification {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  issueDate        DateTime? @map("issue_date")
+  expiryDate       DateTime? @map("expiry_date")
+  verificationUrl  String?   @map("verification_url")
+
+  @@index([userId])
+  @@map("user_certifications")
+}
+
+// Fixed known columns, not a free-form JSON blob — replaces the old Mongoose
+// socialLinks{} ad hoc object (plan §2 JSONB-vs-relational criteria).
+model UserSocialLinks {
+  id        String @id @default(uuid())
+  userId    String @unique @map("user_id")
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedin  String?
+  github    String?
+  twitter   String?
+  website   String?
+
+  @@map("user_social_links")
+}
+
+// Refresh tokens are stored server-side as a hash (not a bare re-signed JWT like the
+// old app) so they can be genuinely revoked, and rotated with reuse detection: presenting
+// an already-rotated token revokes the whole family (replayAttack defense, plan §4).
+model RefreshToken {
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash     String    @map("token_hash")
+  familyId      String    @map("family_id") // shared across a rotation chain — revoking one revokes the family
+  expiresAt     DateTime  @map("expires_at")
+  revokedAt     DateTime? @map("revoked_at")
+  replacedById  String?   @unique @map("replaced_by_id")
+  replacedBy    RefreshToken? @relation("TokenRotation", fields: [replacedById], references: [id], onDelete: SetNull)
+  previousToken RefreshToken? @relation("TokenRotation")
+  userAgent     String?   @map("user_agent")
+  ipAddress     String?   @map("ip_address")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}
+
+// OTP-based reset (6-digit, hashed, 10-minute expiry) — kept from the old app's UX,
+// reimplemented against its own table instead of overloading columns on User (plan §4).
+model PasswordReset {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otpHash    String    @map("otp_hash")
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([userId, expiresAt])
+  @@map("password_resets")
+}
+
+// New — the old app never verified email despite having an unused emailVerified field.
+// Single-use, 24h-expiry, hashed token (plan §4).
+model EmailVerification {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @map("token_hash")
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([userId, expiresAt])
+  @@map("email_verifications")
+}
+
+// Multi-role RBAC — replaces the old flat member/admin enum. RolesGuard checks
+// permissions, not raw role names, so adding a role later never touches guard logic,
+// only role_permissions seed data (plan §4).
+model Role {
+  id          String    @id @default(uuid())
+  name        String    @unique // member | moderator | instructor | admin | super_admin
+  description String?
+
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id   String @id @default(uuid())
+  key  String @unique // e.g. "blogs:publish", "forums:moderate", "users:approve"
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String     @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// A user can hold multiple roles at once (e.g. instructor + moderator), not just one (plan §4).
+model UserRole {
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId String @map("role_id")
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
 }

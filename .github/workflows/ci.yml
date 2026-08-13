@@ -8,6 +8,43 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # Real Postgres/Redis so the identity module's e2e regression tests (plan Phase 1
+    # step 4 — the old app's password-rehash and refresh-token-reuse bugs, among
+    # others) run against the genuine database, not mocks.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: packetpulse
+          POSTGRES_PASSWORD: packetpulse
+          POSTGRES_DB: packetpulse
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U packetpulse"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://packetpulse:packetpulse@localhost:5432/packetpulse
+      REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: ci-test-access-secret-not-for-production-use-only
+      JWT_REFRESH_SECRET: ci-test-refresh-secret-not-for-production-use-only
+      ADMIN_SECURE_CODE: ci-test-admin-secure-code
+      CORS_ORIGINS: http://localhost:3000
+      NODE_ENV: test
+
     steps:
       - uses: actions/checkout@v4
 
@@ -32,5 +69,14 @@ jobs:
       - name: Build
         run: pnpm turbo run build
 
+      - name: Run database migrations
+        run: pnpm --filter @packetpulse/backend exec prisma migrate deploy
+
+      - name: Seed roles and permissions
+        run: pnpm --filter @packetpulse/backend run prisma:seed
+
       - name: Test
         run: pnpm turbo run test
+
+      - name: E2E test (identity module regressions)
+        run: pnpm --filter @packetpulse/backend run test:e2e
