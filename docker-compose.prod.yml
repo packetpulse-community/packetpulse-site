@@ -1,0 +1,87 @@
+# Production Docker Compose for the VPS (plan §8).
+#
+# What this does NOT do (needs to happen once, manually, on the actual VPS):
+#   - provisioning the VPS itself
+#   - pointing DNS at it
+#   - creating apps/backend/.env.prod and Caddyfile's $API_DOMAIN with real values
+#   - the initial `docker compose -f docker-compose.prod.yml up -d`
+#   - `docker compose exec backend npx prisma migrate deploy` + seed, once, after first deploy
+#
+# apps/web (Next.js) is NOT run here — it deploys to Vercel separately (plan §8),
+# decoupled from this VPS's lifecycle. A commented fallback service is included
+# below in case that ever needs to change.
+
+name: packetpulse-prod
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - apps/backend/.env.prod # not committed — see apps/backend/.env.example for the template
+    depends_on:
+      redis:
+        condition: service_healthy
+    expose:
+      - "4000" # internal only — Caddy is the sole public entrypoint
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Added only once self-hosting Supabase is budget-approved (plan §8) — until then
+  # DATABASE_URL in apps/backend/.env.prod points at a Supabase-cloud project instead.
+  # postgres:
+  #   image: postgres:16-alpine
+  #   restart: unless-stopped
+  #   env_file:
+  #     - apps/backend/.env.prod
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U packetpulse"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 10
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    env_file:
+      - .env.prod # API_DOMAIN
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+  # Fallback only — apps/web deploys to Vercel by default (plan §8). Uncomment and
+  # add a `web` block to the Caddyfile if Vercel ever becomes a blocker.
+  # web:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/web/Dockerfile
+  #   restart: unless-stopped
+  #   env_file:
+  #     - apps/web/.env.prod
+  #   expose:
+  #     - "3000"
+
+volumes:
+  redis_data:
+  # postgres_data:
+  caddy_data:
+  caddy_config:

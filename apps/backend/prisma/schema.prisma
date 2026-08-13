@@ -2,7 +2,13 @@
 // Content domains (Phase 2) — blogs, resources, recordings.
 // New features (Phase 3) — forums, quizzes/certificates (plan §2).
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" for local dev; the musl-openssl-3.0.x engine is what Docker's
+  // node:24-alpine runtime image needs (Alpine ships OpenSSL 3.x, not 1.1 —
+  // the default musl target ships a libssl.so.1.1-linked engine that fails to
+  // load at all on modern Alpine, caught by actually running the built
+  // container, not just building it).
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {

@@ -88,3 +88,33 @@ pnpm test:e2e    # e2e regression suite (needs Postgres/Redis running)
 ```bash
 docker compose down
 ```
+
+## Deployment
+
+**Backend** (`apps/backend`) ships as a Docker image (`apps/backend/Dockerfile`, multi-stage, built from the repo root as context) behind Caddy for TLS/reverse-proxy on a single VPS:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Requires, once, on the VPS before first run:
+- DNS for your API domain pointed at the VPS
+- `.env.prod` at the repo root (copy from `.env.prod.example`) with `API_DOMAIN` set
+- `apps/backend/.env.prod` (copy from `apps/backend/.env.example`) with real production secrets
+
+And once, after first `up -d`:
+```bash
+docker compose -f docker-compose.prod.yml exec backend npx prisma migrate deploy
+docker compose -f docker-compose.prod.yml exec backend node dist/../prisma/seed.js  # or re-run via ts-node if available
+```
+
+`DATABASE_URL` can point at either a Supabase-cloud project or a self-hosted Postgres — see the comment in `apps/backend/.env.example`. Swapping between them is a one-line env change plus a re-run of `prisma migrate deploy`, no code changes.
+
+**Frontend** (`apps/web`) deploys to [Vercel](https://vercel.com) separately, decoupled from the VPS — connect the repo, set the root directory to `apps/web`, and set `API_INTERNAL_URL` to the backend's public URL in Vercel's project env vars.
+
+**Not yet done** (needs real infrastructure/accounts, not just code):
+- VPS provisioning and DNS
+- Vercel project creation/linking
+- Generating and storing real production secrets
+
+CI (`.github/workflows/ci.yml`) builds and smoke-tests the production Docker image on every PR against real Postgres/Redis service containers, so a build that looks fine but fails to actually boot (as happened once during development — see git history) can't land silently.

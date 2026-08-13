@@ -80,3 +80,27 @@ jobs:
 
       - name: E2E test (identity module regressions)
         run: pnpm --filter @packetpulse/backend run test:e2e
+
+      # Builds AND boots the actual production image against the same Postgres/Redis
+      # already running in this job — "docker build succeeds" previously masked a
+      # real crash (Prisma's musl engine needs a matching OpenSSL target + Alpine's
+      # base image has no system OpenSSL at all) that only showed up when the image
+      # was actually run, not just built (plan §11 testing discipline).
+      - name: Build production Docker image
+        run: docker build -f apps/backend/Dockerfile -t packetpulse-backend:ci .
+
+      - name: Smoke-test production Docker image
+        run: |
+          docker run --rm -d --name backend-smoke-test --network host \
+            -e DATABASE_URL="$DATABASE_URL" -e REDIS_URL="$REDIS_URL" \
+            -e JWT_ACCESS_SECRET="$JWT_ACCESS_SECRET" -e JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET" \
+            -e ADMIN_SECURE_CODE="$ADMIN_SECURE_CODE" -e CORS_ORIGINS="$CORS_ORIGINS" \
+            -e NODE_ENV=production -e PORT=4000 \
+            packetpulse-backend:ci
+          for i in $(seq 1 10); do
+            if curl -sf http://localhost:4000/api/health; then echo "Container healthy"; exit 0; fi
+            sleep 2
+          done
+          echo "Container failed health check within timeout"
+          docker logs backend-smoke-test
+          exit 1

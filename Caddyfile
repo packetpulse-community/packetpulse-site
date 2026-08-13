@@ -1,0 +1,20 @@
+{
+	# Uncomment for local testing without a real ACME cert:
+	# local_certs
+}
+
+# Set via env var at deploy time, e.g. api.packetpulse.example
+{$API_DOMAIN} {
+	# WebSocket upgrade for the realtime gateway (plan §5) — same reverse proxy
+	# rule handles both plain HTTP/JSON and the /ws Socket.IO upgrade, Caddy
+	# detects the Upgrade header automatically.
+	reverse_proxy backend:4000
+
+	encode gzip
+
+	header {
+		# Backend already sets its own security headers via helmet (main.ts) —
+		# this is just the TLS/HSTS layer Caddy owns.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+}

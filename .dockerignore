@@ -1,0 +1,13 @@
+# Docker build context exclusions — critically, .env files. The Dockerfiles COPY
+# whole app directories (apps/backend/, apps/web/); without this, a local .env with
+# real secrets would get baked permanently into an image layer.
+**/.env
+**/.env.*
+!**/.env.example
+
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/.git
