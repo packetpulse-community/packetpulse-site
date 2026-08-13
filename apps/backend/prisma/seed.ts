@@ -61,7 +61,20 @@ async function main() {
     }
   }
 
-  console.log("Seeded roles and permissions.");
+  // Default forum categories — no admin UI to create these yet (Phase 4), so a
+  // small fixed set is seeded to start.
+  const FORUM_CATEGORIES = [
+    { name: "General Discussion", slug: "general", position: 0 },
+    { name: "CCNA", slug: "ccna", position: 1 },
+    { name: "CCNP", slug: "ccnp", position: 2 },
+    { name: "Network Automation", slug: "network-automation", position: 3 },
+    { name: "Security", slug: "security", position: 4 },
+  ];
+  for (const category of FORUM_CATEGORIES) {
+    await prisma.forumCategory.upsert({ where: { slug: category.slug }, update: {}, create: category });
+  }
+
+  console.log("Seeded roles, permissions, and forum categories.");
 }
 
 main()

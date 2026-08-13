@@ -1,5 +1,6 @@
 // Identity domain (Phase 1) — users, multi-role RBAC, and token/verification tables.
-// Content domains (Phase 2) — blogs, resources, recordings. Forums/quizzes land in Phase 3 (plan §2).
+// Content domains (Phase 2) — blogs, resources, recordings.
+// New features (Phase 3) — forums, quizzes/certificates (plan §2).
 generator client {
   provider = "prisma-client-js"
 }
@@ -57,6 +58,13 @@ model User {
   recordingsAsInstructor Recording[]
   recordingParticipations RecordingParticipant[]
   recordingLikes       RecordingLike[]
+
+  forumThreads         ForumThread[]
+  forumReplies         ForumReply[]
+  forumReplyLikes      ForumReplyLike[]
+  quizzesCreated       Quiz[]
+  quizAttempts         QuizAttempt[]
+  certificates         Certificate[]
 
   @@map("users")
 }
@@ -415,4 +423,196 @@ model RecordingLike {
   @@id([recordingId, userId])
   @@index([userId])
   @@map("recording_likes")
+}
+
+// ---------------------------------------------------------------------------
+// Forums (Phase 3, NEW) — no backend model ever existed for this in the old app,
+// designed from scratch (plan §2/§3).
+// ---------------------------------------------------------------------------
+
+model ForumCategory {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  position    Int      @default(0)
+
+  threads ForumThread[]
+
+  @@map("forum_categories")
+}
+
+model ForumThread {
+  id          String   @id @default(uuid())
+  categoryId  String   @map("category_id")
+  category    ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  authorId    String   @map("author_id")
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title       String
+  content     String
+  slug        String
+  isPinned    Boolean  @default(false) @map("is_pinned")
+  isLocked    Boolean  @default(false) @map("is_locked")
+  viewCount   Int      @default(0) @map("view_count")
+  // Denormalized cache, recomputable from replies.count — not authoritative state (plan §2).
+  replyCount  Int      @default(0) @map("reply_count")
+  lastReplyAt DateTime @default(now()) @map("last_reply_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  replies ForumReply[]
+
+  @@unique([categoryId, slug])
+  @@index([categoryId, lastReplyAt])
+  @@map("forum_threads")
+}
+
+model ForumReply {
+  id             String   @id @default(uuid())
+  threadId       String   @map("thread_id")
+  thread         ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId       String   @map("author_id")
+  author         User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content        String
+  parentReplyId  String?  @map("parent_reply_id")
+  parentReply    ForumReply?  @relation("ReplyNesting", fields: [parentReplyId], references: [id], onDelete: SetNull)
+  childReplies   ForumReply[] @relation("ReplyNesting")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  editedAt       DateTime? @map("edited_at")
+
+  likes ForumReplyLike[]
+
+  @@index([threadId, createdAt])
+  @@map("forum_replies")
+}
+
+model ForumReplyLike {
+  replyId   String     @map("reply_id")
+  reply     ForumReply @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  userId    String     @map("user_id")
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@id([replyId, userId])
+  @@index([userId])
+  @@map("forum_reply_likes")
+}
+
+// ---------------------------------------------------------------------------
+// Quizzes/Certificates (Phase 3, NEW) — old app only had leftover admin-cleanup
+// references to a "quizzes" data type; no real feature ever existed. Designed
+// from scratch (plan §2/§3).
+// ---------------------------------------------------------------------------
+
+enum QuizQuestionType {
+  single_choice
+  multi_choice
+}
+
+enum QuizAttemptStatus {
+  in_progress
+  submitted
+  expired
+}
+
+model Quiz {
+  id                String   @id @default(uuid())
+  title             String
+  description       String
+  category          BlogCategory @default(general)
+  passingScorePct   Int      @default(70) @map("passing_score_pct")
+  timeLimitSeconds  Int?     @map("time_limit_seconds")
+  isPublished       Boolean  @default(false) @map("is_published")
+  createdById       String   @map("created_by_id")
+  createdBy         User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  questions    QuizQuestion[]
+  attempts     QuizAttempt[]
+  certificates Certificate[]
+
+  @@index([isPublished, category])
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id           String   @id @default(uuid())
+  quizId       String   @map("quiz_id")
+  quiz         Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionText String   @map("question_text")
+  questionType QuizQuestionType @map("question_type")
+  position     Int      @default(0)
+  points       Int      @default(1)
+
+  options QuizQuestionOption[]
+  answers QuizAttemptAnswer[]
+
+  @@index([quizId, position])
+  @@map("quiz_questions")
+}
+
+model QuizQuestionOption {
+  id         String   @id @default(uuid())
+  questionId String   @map("question_id")
+  question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  optionText String   @map("option_text")
+  isCorrect  Boolean  @default(false) @map("is_correct")
+  position   Int      @default(0)
+
+  @@index([questionId])
+  @@map("quiz_question_options")
+}
+
+model QuizAttempt {
+  id          String   @id @default(uuid())
+  quizId      String   @map("quiz_id")
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt   DateTime @default(now()) @map("started_at")
+  submittedAt DateTime? @map("submitted_at")
+  scorePct    Int?     @map("score_pct")
+  passed      Boolean?
+  status      QuizAttemptStatus @default(in_progress)
+
+  answers     QuizAttemptAnswer[]
+  certificate Certificate?
+
+  @@index([userId, quizId])
+  @@index([status])
+  @@map("quiz_attempts")
+}
+
+model QuizAttemptAnswer {
+  id                String   @id @default(uuid())
+  attemptId         String   @map("attempt_id")
+  attempt           QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId        String   @map("question_id")
+  question          QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  // Fixed-shape Postgres array, not JSONB — a set of selected option ids (plan §2
+  // JSONB-vs-relational criteria: this is queried/compared, not an opaque blob).
+  selectedOptionIds String[] @map("selected_option_ids")
+  isCorrect         Boolean  @default(false) @map("is_correct")
+
+  @@index([attemptId])
+  @@map("quiz_attempt_answers")
+}
+
+model Certificate {
+  id                String   @id @default(uuid())
+  userId            String   @map("user_id")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId            String   @map("quiz_id")
+  quiz              Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quizAttemptId     String   @unique @map("quiz_attempt_id")
+  quizAttempt       QuizAttempt @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
+  certificateNumber String   @unique @map("certificate_number")
+  issuedAt          DateTime @default(now()) @map("issued_at")
+  pdfUrl            String?  @map("pdf_url")
+  revokedAt         DateTime? @map("revoked_at")
+
+  @@index([userId])
+  @@map("certificates")
 }

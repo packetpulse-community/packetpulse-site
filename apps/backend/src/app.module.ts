@@ -15,6 +15,8 @@ import { UsersModule } from "./modules/users";
 import { BlogsModule } from "./modules/blogs";
 import { ResourcesModule } from "./modules/resources";
 import { RecordingsModule } from "./modules/recordings";
+import { ForumsModule } from "./modules/forums";
+import { QuizzesModule } from "./modules/quizzes";
 
 // Feature modules land here as they're built (migration plan phases). Global guard
 // chain — JwtAuthGuard → RolesGuard → ApprovedGuard, with @Public() opting a route
@@ -32,6 +34,8 @@ import { RecordingsModule } from "./modules/recordings";
     BlogsModule,
     ResourcesModule,
     RecordingsModule,
+    ForumsModule,
+    QuizzesModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
