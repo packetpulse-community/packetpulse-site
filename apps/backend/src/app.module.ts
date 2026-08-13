@@ -12,6 +12,9 @@ import { JwtAuthGuard } from "./modules/identity/presentation/guards/jwt-auth.gu
 import { RolesGuard } from "./modules/identity/presentation/guards/roles.guard";
 import { ApprovedGuard } from "./modules/identity/presentation/guards/approved.guard";
 import { UsersModule } from "./modules/users";
+import { BlogsModule } from "./modules/blogs";
+import { ResourcesModule } from "./modules/resources";
+import { RecordingsModule } from "./modules/recordings";
 
 // Feature modules land here as they're built (migration plan phases). Global guard
 // chain — JwtAuthGuard → RolesGuard → ApprovedGuard, with @Public() opting a route
@@ -26,6 +29,9 @@ import { UsersModule } from "./modules/users";
     HealthModule,
     IdentityModule,
     UsersModule,
+    BlogsModule,
+    ResourcesModule,
+    RecordingsModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

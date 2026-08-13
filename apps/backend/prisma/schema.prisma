@@ -1,5 +1,5 @@
 // Identity domain (Phase 1) — users, multi-role RBAC, and token/verification tables.
-// Content domains (blogs/resources/recordings/forums/quizzes/...) land in later phases (plan §2).
+// Content domains (Phase 2) — blogs, resources, recordings. Forums/quizzes land in Phase 3 (plan §2).
 generator client {
   provider = "prisma-client-js"
 }
@@ -48,6 +48,15 @@ model User {
   passwordResets        PasswordReset[]
   emailVerifications     EmailVerification[]
   roles                 UserRole[]
+
+  blogPosts            BlogPost[]
+  blogComments         BlogComment[]
+  blogLikes            BlogLike[]
+  resources            Resource[]
+  resourceLikes        ResourceLike[]
+  recordingsAsInstructor Recording[]
+  recordingParticipations RecordingParticipant[]
+  recordingLikes       RecordingLike[]
 
   @@map("users")
 }
@@ -175,4 +184,235 @@ model UserRole {
 
   @@id([userId, roleId])
   @@map("user_roles")
+}
+
+// ---------------------------------------------------------------------------
+// Content domains (Phase 2): blogs, resources, recordings.
+// Comments/likes/tags/participants are first-class join/child tables with FKs
+// — no embedded arrays, replacing Mongoose's embedded-document pattern (plan §2).
+// ---------------------------------------------------------------------------
+
+enum BlogCategory {
+  ccna
+  ccnp
+  network_automation
+  security
+  sdn
+  ipv6
+  general
+}
+
+model BlogPost {
+  id         String   @id @default(uuid())
+  title      String
+  slug       String   @unique
+  content    String
+  authorId   String   @map("author_id")
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  coverImageUrl String? @map("cover_image_url")
+  category   BlogCategory @default(general)
+  viewCount  Int      @default(0) @map("view_count")
+  isPublished Boolean @default(true) @map("is_published")
+  postedAt   DateTime @default(now()) @map("posted_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  tags     BlogPostTag[]
+  images   BlogPostImage[]
+  comments BlogComment[]
+  likes    BlogLike[]
+
+  @@index([category])
+  @@index([isPublished, postedAt])
+  @@map("blog_posts")
+}
+
+model BlogPostTag {
+  blogPostId String   @map("blog_post_id")
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  tag        String
+
+  @@id([blogPostId, tag])
+  @@index([tag])
+  @@map("blog_post_tags")
+}
+
+model BlogPostImage {
+  id         String   @id @default(uuid())
+  blogPostId String   @map("blog_post_id")
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  url        String
+  position   Int      @default(0)
+
+  @@index([blogPostId])
+  @@map("blog_post_images")
+}
+
+model BlogComment {
+  id         String   @id @default(uuid())
+  blogPostId String   @map("blog_post_id")
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content    String
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([blogPostId, createdAt])
+  @@map("blog_comments")
+}
+
+model BlogLike {
+  blogPostId String   @map("blog_post_id")
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@id([blogPostId, userId])
+  @@index([userId])
+  @@map("blog_likes")
+}
+
+enum ResourceType {
+  pdf
+  video
+  article
+  tutorial
+  diagram
+  config_template
+  tool
+  external_link
+}
+
+enum ResourceCategory {
+  ccna
+  ccnp
+  network_automation
+  security
+  sdn
+  ipv6
+  general
+}
+
+model Resource {
+  id             String   @id @default(uuid())
+  title          String
+  description    String
+  resourceType   ResourceType @map("resource_type")
+  category       ResourceCategory
+  fileUrl        String?  @map("file_url")
+  externalLink   String?  @map("external_link")
+  thumbnailUrl   String?  @map("thumbnail_url")
+  downloadable   Boolean  @default(true)
+  premium        Boolean  @default(false)
+  userId         String   @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  downloads      Int      @default(0)
+  views          Int      @default(0)
+  isFeatured     Boolean  @default(false) @map("is_featured")
+  isApproved     Boolean  @default(true) @map("is_approved")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  tags  ResourceTag[]
+  likes ResourceLike[]
+
+  @@index([category])
+  @@index([resourceType])
+  @@index([isApproved, premium])
+  @@map("resources")
+}
+
+model ResourceTag {
+  resourceId String   @map("resource_id")
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  tag        String
+
+  @@id([resourceId, tag])
+  @@index([tag])
+  @@map("resource_tags")
+}
+
+model ResourceLike {
+  resourceId String   @map("resource_id")
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@id([resourceId, userId])
+  @@index([userId])
+  @@map("resource_likes")
+}
+
+enum RecordingCategory {
+  ccna
+  ccnp
+  network_automation
+  security
+  sdn
+  ipv6
+  general
+}
+
+model Recording {
+  id             String   @id @default(uuid())
+  title          String
+  description    String
+  recordingUrl   String   @map("recording_url")
+  thumbnailUrl   String?  @map("thumbnail_url")
+  durationSeconds Int     @default(0) @map("duration_seconds")
+  category       RecordingCategory
+  instructorId   String   @map("instructor_id")
+  instructor     User     @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  premium        Boolean  @default(false)
+  isFeatured     Boolean  @default(true) @map("is_featured")
+  isApproved     Boolean  @default(true) @map("is_approved")
+  views          Int      @default(0)
+  recordedAt     DateTime @default(now()) @map("recorded_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  tags         RecordingTag[]
+  participants RecordingParticipant[]
+  likes        RecordingLike[]
+
+  @@index([category])
+  @@index([isApproved, premium])
+  @@map("recordings")
+}
+
+model RecordingTag {
+  recordingId String    @map("recording_id")
+  recording   Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  tag         String
+
+  @@id([recordingId, tag])
+  @@index([tag])
+  @@map("recording_tags")
+}
+
+model RecordingParticipant {
+  recordingId String    @map("recording_id")
+  recording   Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt    DateTime  @default(now()) @map("joined_at")
+
+  @@id([recordingId, userId])
+  @@index([userId])
+  @@map("recording_participants")
+}
+
+model RecordingLike {
+  recordingId String    @map("recording_id")
+  recording   Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@id([recordingId, userId])
+  @@index([userId])
+  @@map("recording_likes")
 }
