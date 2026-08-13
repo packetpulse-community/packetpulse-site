@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { ProfessionalExperience } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { UserRepository } from "../../domain/repositories/user.repository";
 import { userWithRolesInclude } from "../../domain/entities/user.entity";
@@ -23,6 +24,7 @@ export class UserPrismaRepository extends UserRepository {
     email: string;
     passwordHash: string;
     whatsappNumber?: string;
+    professionalExperience?: ProfessionalExperience;
     roleNames: string[];
     isApproved: boolean;
     emailVerified: boolean;
@@ -34,6 +36,7 @@ export class UserPrismaRepository extends UserRepository {
         email: data.email,
         passwordHash: data.passwordHash,
         whatsappNumber: data.whatsappNumber,
+        professionalExperience: data.professionalExperience,
         isApproved: data.isApproved,
         emailVerified: data.emailVerified,
         roles: {

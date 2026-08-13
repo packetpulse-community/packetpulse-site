@@ -1,11 +1,12 @@
 import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
 import * as bcrypt from "bcrypt";
+import { ConfigService } from "@nestjs/config";
 import { UserRepository } from "../../domain/repositories/user.repository";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { TokenService } from "./token.service";
 import { MailerService } from "../../infrastructure/email/mailer.service";
 import { toPublicUser, PublicUser } from "../../domain/entities/user.entity";
-import { RegisterDto, LoginDto } from "../dto/auth.dto";
+import { RegisterDto, RegisterAdminDto, LoginDto } from "../dto/auth.dto";
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
 const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -17,6 +18,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly tokens: TokenService,
     private readonly mailer: MailerService,
+    private readonly config: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -34,12 +36,42 @@ export class AuthService {
       email: dto.email,
       passwordHash,
       whatsappNumber: dto.whatsappNumber,
+      professionalExperience: dto.professionalExperience,
       roleNames: ["member"],
       isApproved: false,
       emailVerified: false,
     });
 
     await this.sendVerificationEmail(user.id, user.email);
+
+    return toPublicUser(user);
+  }
+
+  // Admin self-registration gated by a shared secret (kept from the old app's
+  // design), not admin-invites-admin — but unlike the old app, the code is
+  // asserted present/non-default at boot (common/config/env.schema.ts) rather than
+  // silently accepting an empty secret (plan §11). Admins are auto-approved and
+  // auto-verified on creation — made explicit here, not an implicit hook side
+  // effect (plan §4).
+  async registerAdmin(dto: RegisterAdminDto) {
+    const expected = this.config.get<string>("ADMIN_SECURE_CODE");
+    if (dto.adminSecureCode !== expected) throw new UnauthorizedException("Invalid admin registration code");
+
+    const existing = await this.users.findByEmail(dto.email);
+    if (existing) throw new ConflictException("An account with this email already exists");
+
+    const passwordHash = await bcrypt.hash(dto.password, 12);
+    const user = await this.users.create({
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      email: dto.email,
+      passwordHash,
+      whatsappNumber: dto.whatsappNumber,
+      professionalExperience: dto.professionalExperience,
+      roleNames: ["admin"],
+      isApproved: true,
+      emailVerified: true,
+    });
 
     return toPublicUser(user);
   }

@@ -1,3 +1,4 @@
+import { ProfessionalExperience } from "@prisma/client";
 import { UserWithRoles } from "../entities/user.entity";
 
 // Abstract class used as a DI token — identity is a pilot module for the repository
@@ -12,6 +13,7 @@ export abstract class UserRepository {
     email: string;
     passwordHash: string;
     whatsappNumber?: string;
+    professionalExperience?: ProfessionalExperience;
     roleNames: string[];
     isApproved: boolean;
     emailVerified: boolean;

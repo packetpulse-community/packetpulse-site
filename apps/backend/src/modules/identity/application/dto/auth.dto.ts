@@ -1,6 +1,7 @@
 import { createZodDto } from "nestjs-zod";
 import {
   RegisterSchema,
+  RegisterAdminSchema,
   LoginSchema,
   ForgotPasswordSchema,
   VerifyOtpSchema,
@@ -11,6 +12,7 @@ import {
 // Wraps the shared Zod schemas (single source of truth, also used by the frontend
 // forms) as NestJS DTOs — validated via nestjs-zod's ZodValidationPipe (plan §1/§3).
 export class RegisterDto extends createZodDto(RegisterSchema) {}
+export class RegisterAdminDto extends createZodDto(RegisterAdminSchema) {}
 export class LoginDto extends createZodDto(LoginSchema) {}
 export class ForgotPasswordDto extends createZodDto(ForgotPasswordSchema) {}
 export class VerifyOtpDto extends createZodDto(VerifyOtpSchema) {}

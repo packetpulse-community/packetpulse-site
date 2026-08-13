@@ -1,14 +1,22 @@
 import { z } from "zod";
 
+// Matches the Prisma ProfessionalExperience enum exactly (apps/backend/prisma/schema.prisma).
+export const ProfessionalExperienceSchema = z.enum(["student", "junior", "mid", "senior", "lead"]);
+
 export const RegisterSchema = z.object({
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
   email: z.string().email(),
   password: z.string().min(8).regex(/\d/, "must contain a number").regex(/[^A-Za-z0-9]/, "must contain a special character"),
   whatsappNumber: z.string().optional(),
-  professionalExperience: z.enum(["student", "0-2", "3-5", "5-10", "10+"]).optional(),
+  professionalExperience: ProfessionalExperienceSchema.optional(),
 });
 export type RegisterDto = z.infer<typeof RegisterSchema>;
+
+export const RegisterAdminSchema = RegisterSchema.extend({
+  adminSecureCode: z.string().min(1),
+});
+export type RegisterAdminDto = z.infer<typeof RegisterAdminSchema>;
 
 export const LoginSchema = z.object({
   email: z.string().email(),

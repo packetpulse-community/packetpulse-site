@@ -9,6 +9,7 @@ import { Public } from "../decorators/public.decorator";
 import { CurrentUser } from "../decorators/current-user.decorator";
 import {
   RegisterDto,
+  RegisterAdminDto,
   LoginDto,
   ForgotPasswordDto,
   VerifyOtpDto,
@@ -35,6 +36,13 @@ export class AuthController {
   @Post("register")
   async register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
+  }
+
+  @Public()
+  @Throttle(AUTH_STRICT)
+  @Post("register-admin")
+  async registerAdmin(@Body() dto: RegisterAdminDto) {
+    return this.auth.registerAdmin(dto);
   }
 
   @Public()
