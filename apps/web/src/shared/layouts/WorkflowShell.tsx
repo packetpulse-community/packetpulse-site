@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { Toaster } from "sonner";
 import { useAuth } from "@/shared/auth/AuthProvider";
 import { authApi } from "@/features/auth/api/auth.api";
 import { useRouter } from "next/navigation";
+import { NotificationBell } from "@/features/notifications/components/NotificationBell";
+import { CommandPalette } from "@/shared/components/CommandPalette";
 
 // Compact top bar carrying only global, always-relevant items — no persistent
-// nested sidebar tree (plan §6 domain-driven navigation). Domain hub links live
-// here for now; the full command-palette (cmdk) cross-domain search is follow-up
-// work layered on top of this same shell.
+// nested sidebar tree (plan §6 domain-driven navigation). The command palette
+// (⌘K) is the primary cross-domain navigation mechanism; this bar just holds the
+// logo, a hint to open it, notifications, and the user menu.
 export function WorkflowShell({ children }: { children: React.ReactNode }) {
   const user = useAuth();
   const router = useRouter();
@@ -21,6 +24,8 @@ export function WorkflowShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Toaster theme="dark" richColors />
+      <CommandPalette />
       <header className="floating-nav sticky top-4 z-40 flex items-center justify-between px-4 py-3">
         <Link href="/dashboard" className="font-semibold">
           PacketPulse
@@ -35,8 +40,21 @@ export function WorkflowShell({ children }: { children: React.ReactNode }) {
           <Link href="/recordings" className="hover:text-primary">
             Recordings
           </Link>
+          <Link href="/forums" className="hover:text-primary">
+            Forums
+          </Link>
+          <Link href="/quizzes" className="hover:text-primary">
+            Quizzes
+          </Link>
+          <button
+            onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+            className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary"
+          >
+            ⌘K Search
+          </button>
           {user && (
             <>
+              <NotificationBell />
               <span className="text-muted-foreground">{user.firstName}</span>
               <button onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
                 Log out

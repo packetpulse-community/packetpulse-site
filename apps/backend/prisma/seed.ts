@@ -22,11 +22,17 @@ const PERMISSIONS = [
   "admin:view-analytics",
 ] as const;
 
+const MEMBER_PERMISSIONS = ["blogs:create", "resources:create", "recordings:create", "forums:create", "quizzes:attempt"] as const;
+
 const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
-  member: ["blogs:create", "resources:create", "recordings:create", "forums:create", "quizzes:attempt"],
+  member: MEMBER_PERMISSIONS,
   moderator: ["blogs:moderate", "resources:moderate", "recordings:moderate", "forums:moderate"],
   instructor: ["recordings:create", "quizzes:author"],
+  // Admins can do everything a member can (found missing during manual UI testing —
+  // an admin account couldn't create a forum thread, only moderate one, since only
+  // moderate/manage permissions were seeded here) PLUS moderation/management.
   admin: [
+    ...MEMBER_PERMISSIONS,
     "blogs:publish",
     "blogs:moderate",
     "resources:moderate",

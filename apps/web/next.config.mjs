@@ -17,7 +17,21 @@ const nextConfig = {
     // auth cookies then lands on this app's own origin, which is what lets
     // Server Components' cookies() see them. Server-side (SSR) calls skip this
     // proxy entirely and hit the backend directly (see shared/api/http-client.ts).
-    return [{ source: "/api/:path*", destination: `${INTERNAL_API_URL}/api/:path*` }];
+    return [
+      { source: "/api/:path*", destination: `${INTERNAL_API_URL}/api/:path*` },
+      // Socket.IO's actual HTTP/WS transport endpoint is /socket.io/ (its own
+      // namespace concept, e.g. "/ws", is layered on top and doesn't affect this
+      // path) — proxied same-origin for the same cookie-domain reason as /api/*
+      // above (shared/hooks/useRealtime.ts connects via a relative io("/ws") URL).
+      // Engine.IO's server genuinely requires the trailing slash (verified: /socket.io
+      // 404s, /socket.io/ 200s against the raw backend) — but Next normalizes away a
+      // client request's trailing slash before rewrites run, so matching on
+      // "/socket.io/:path*" alone lets the slash-less request fall through to a 404.
+      // Both rules force it back on the *destination*, regardless of which one matched
+      // (found by curling the proxy directly, not just eyeballing the config).
+      { source: "/socket.io", destination: `${INTERNAL_API_URL}/socket.io/` },
+      { source: "/socket.io/:path*", destination: `${INTERNAL_API_URL}/socket.io/:path*` },
+    ];
   },
 };
 
