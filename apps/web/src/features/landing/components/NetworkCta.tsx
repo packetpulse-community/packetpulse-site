@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { Reveal } from "@/shared/components/Reveal";
 
 export function NetworkCta() {
   return (
     <section className="container py-20">
-      <div className="relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-brand/20 shadow-lg shadow-indigo-900/30">
+      <Reveal className="relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-brand/20 shadow-lg shadow-indigo-900/30">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -23,7 +24,7 @@ export function NetworkCta() {
             Sign In to Access Tools
           </Link>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }

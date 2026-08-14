@@ -1,12 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { Reveal } from "@/shared/components/Reveal";
 
 export function Hero() {
   return (
     <section className="container py-20 md:py-20">
       <div className="grid items-center gap-12 md:grid-cols-2">
-        <div>
+        <Reveal>
           <span className="mb-6 inline-block rounded-full bg-indigo-500/20 px-3 py-1 text-sm font-medium text-indigo-300">
             Welcome to Packet Pulse Community
           </span>
@@ -44,11 +45,11 @@ export function Hero() {
             <CheckCircle2 className="h-4 w-4 text-accent-teal" />
             Join over 2000+ network professionals
           </p>
-        </div>
+        </Reveal>
 
-        <div className="relative mx-auto w-full max-w-lg">
+        <Reveal delayMs={300} className="relative mx-auto w-full max-w-lg">
           <Image src="/hero-illustration.svg" alt="Network graph illustration" width={480} height={480} priority className="w-full" />
-        </div>
+        </Reveal>
       </div>
     </section>
   );

@@ -31,6 +31,7 @@ const QUICK_LINKS = [
   { href: "/resources", label: "Resources" },
   { href: "/recordings", label: "Recordings" },
   { href: "/blogs", label: "Blogs" },
+  { href: "/contact", label: "Contact" },
   { href: "/login", label: "Sign In" },
   { href: "/register", label: "Join Us" },
 ];

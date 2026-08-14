@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/shared/ui/primitives/Accordion";
+import { Reveal } from "@/shared/components/Reveal";
 
 const FAQ_ITEMS = [
   {
@@ -32,26 +33,28 @@ const FAQ_ITEMS = [
 export function Faq() {
   return (
     <section className="container py-20">
-      <div className="mb-12 flex flex-col items-center gap-2 text-center">
-        <h2 className="text-3xl font-semibold">Frequently Asked Questions</h2>
-        <p className="max-w-xl text-gray-300">Have questions about PacketPulse? Find answers to commonly asked questions below.</p>
-      </div>
+      <Reveal>
+        <div className="mb-12 flex flex-col items-center gap-2 text-center">
+          <h2 className="text-3xl font-semibold">Frequently Asked Questions</h2>
+          <p className="max-w-xl text-gray-300">Have questions about PacketPulse? Find answers to commonly asked questions below.</p>
+        </div>
 
-      <Accordion type="single" collapsible className="mx-auto max-w-2xl">
-        {FAQ_ITEMS.map((item, index) => (
-          <AccordionItem key={item.question} value={`item-${index}`}>
-            <AccordionTrigger>{item.question}</AccordionTrigger>
-            <AccordionContent>{item.answer}</AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+        <Accordion type="single" collapsible className="mx-auto max-w-2xl divide-y divide-white/10">
+          {FAQ_ITEMS.map((item, index) => (
+            <AccordionItem key={item.question} value={`item-${index}`}>
+              <AccordionTrigger>{item.question}</AccordionTrigger>
+              <AccordionContent>{item.answer}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
 
-      <p className="mt-10 text-center text-sm text-gray-300">
-        Still have questions?{" "}
-        <Link href="mailto:packetpulse25@gmail.com" className="font-medium text-brand hover:underline">
-          Contact Support
-        </Link>
-      </p>
+        <p className="mt-10 text-center text-sm text-gray-300">
+          Still have questions?{" "}
+          <Link href="/contact" className="font-medium text-brand hover:underline">
+            Contact Support
+          </Link>
+        </p>
+      </Reveal>
     </section>
   );
 }

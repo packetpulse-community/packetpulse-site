@@ -12,7 +12,7 @@ const NAV_LINKS = [
   { href: "/about", label: "About", Icon: Info },
   { href: "/resources", label: "Resources", Icon: Book },
   { href: "/blogs", label: "Blogs", Icon: FileText },
-  { href: "mailto:packetpulse25@gmail.com", label: "Contact", Icon: Phone },
+  { href: "/contact", label: "Contact", Icon: Phone },
 ];
 
 function NavLink({
@@ -56,7 +56,7 @@ export function Navbar() {
 
         <div className="hidden items-center gap-1 lg:flex">
           {NAV_LINKS.map((link) => (
-            <NavLink key={link.href} {...link} active={link.href === "/" ? pathname === "/" : pathname.startsWith(link.href) && link.href !== "mailto:packetpulse25@gmail.com"} />
+            <NavLink key={link.href} {...link} active={link.href === "/" ? pathname === "/" : pathname.startsWith(link.href)} />
           ))}
         </div>
 
@@ -102,7 +102,7 @@ export function Navbar() {
               <NavLink
                 key={link.href}
                 {...link}
-                active={link.href === "/" ? pathname === "/" : pathname.startsWith(link.href) && link.href !== "mailto:packetpulse25@gmail.com"}
+                active={link.href === "/" ? pathname === "/" : pathname.startsWith(link.href)}
                 onClick={() => setMobileOpen(false)}
               />
             ))}

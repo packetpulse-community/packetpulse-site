@@ -1,4 +1,5 @@
 import { Sparkles, Users, ShieldCheck } from "lucide-react";
+import { Reveal } from "@/shared/components/Reveal";
 
 const VALUES = [
   {
@@ -21,7 +22,7 @@ const VALUES = [
 export function AboutMission() {
   return (
     <section className="container flex flex-col gap-16 py-20">
-      <div className="mx-auto flex max-w-2xl flex-col gap-4 text-center">
+      <Reveal className="mx-auto flex max-w-2xl flex-col gap-4 rounded-xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-sm">
         <h2 className="text-3xl font-semibold">Our Mission</h2>
         <p className="text-gray-300">
           PacketPulse exists to give networking professionals a place to learn from each other, not just from vendor
@@ -32,17 +33,21 @@ export function AboutMission() {
           We bring together engineers at every level to troubleshoot, share resources, and keep up with a field that
           changes faster than any single person can track alone.
         </p>
-      </div>
+      </Reveal>
 
       <div>
         <h3 className="mb-8 text-center text-2xl font-semibold">Our Core Values</h3>
         <div className="grid gap-6 md:grid-cols-3">
-          {VALUES.map((value) => (
-            <div key={value.title} className="flex flex-col gap-3 rounded-xl bg-white/5 p-6 backdrop-blur-sm transition-colors hover:bg-white/10">
+          {VALUES.map((value, index) => (
+            <Reveal
+              key={value.title}
+              delayMs={index * 100}
+              className="flex flex-col gap-3 rounded-xl bg-white/5 p-6 backdrop-blur-sm transition-colors hover:bg-white/10"
+            >
               <value.icon className="h-8 w-8 text-brand" />
               <h4 className="font-semibold">{value.title}</h4>
               <p className="text-sm text-gray-300">{value.description}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
