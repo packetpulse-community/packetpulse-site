@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { resourcesServerApi, type ResourceSummary } from "@/features/resources/api/resources.api";
+import { MarketingBackground } from "@/features/landing/components/MarketingBackground";
 import { Navbar } from "@/features/landing/components/Navbar";
 import { Hero } from "@/features/landing/components/Hero";
 import { StatsStrip } from "@/features/landing/components/StatsStrip";
@@ -27,7 +28,7 @@ export default async function LandingPage() {
   const latestResources = await getLatestResources(cookieHeader);
 
   return (
-    <>
+    <MarketingBackground>
       <Navbar />
       <main>
         <Hero />
@@ -41,6 +42,6 @@ export default async function LandingPage() {
         <FinalCta />
       </main>
       <Footer />
-    </>
+    </MarketingBackground>
   );
 }

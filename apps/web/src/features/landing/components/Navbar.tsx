@@ -1,42 +1,85 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home, Info, Book, FileText, Phone, Search, LogIn, UserPlus } from "lucide-react";
+import { cn } from "@/shared/utils/cn";
 
 const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/resources", label: "Resources" },
-  { href: "/blogs", label: "Blogs" },
-  { href: "/recordings", label: "Recordings" },
+  { href: "/", label: "Home", Icon: Home },
+  { href: "/about", label: "About", Icon: Info },
+  { href: "/resources", label: "Resources", Icon: Book },
+  { href: "/blogs", label: "Blogs", Icon: FileText },
+  { href: "mailto:packetpulse25@gmail.com", label: "Contact", Icon: Phone },
 ];
+
+function NavLink({
+  href,
+  label,
+  Icon,
+  active,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  Icon: typeof Home;
+  active: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all",
+        active ? "bg-brand text-brand-foreground shadow-md" : "text-muted-foreground hover:bg-brand/50 hover:text-foreground",
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </Link>
+  );
+}
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
-      <nav className="container flex h-16 items-center justify-between">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
-          Packet<span className="text-brand">Pulse</span>
+      <nav className="container flex h-16 items-center justify-between gap-4">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Image src="/logo.png" alt="PacketPulse" width={140} height={54} className="h-10 w-auto" priority />
         </Link>
 
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-1 lg:flex">
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              {link.label}
-            </Link>
+            <NavLink key={link.href} {...link} active={link.href === "/" ? pathname === "/" : pathname.startsWith(link.href) && link.href !== "mailto:packetpulse25@gmail.com"} />
           ))}
         </div>
 
-        <div className="hidden items-center gap-3 md:flex">
-          <Link href="/login" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+        <div className="hidden flex-1 items-center justify-end gap-3 lg:flex">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              placeholder="Search"
+              disabled
+              title="Search coming soon"
+              className="w-40 rounded-md border border-input bg-background py-1.5 pl-9 pr-3 text-sm text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          </div>
+          <Link href="/login" className="flex items-center px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            <LogIn className="mr-1.5 h-4 w-4" />
             Sign In
           </Link>
           <Link
             href="/register"
-            className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90"
+            className="flex items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground shadow-sm transition-colors hover:opacity-90"
           >
+            <UserPlus className="mr-1.5 h-4 w-4" />
             Sign Up
           </Link>
         </div>
@@ -44,7 +87,7 @@ export function Navbar() {
         <button
           type="button"
           onClick={() => setMobileOpen((open) => !open)}
-          className="md:hidden"
+          className="lg:hidden"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
         >
@@ -53,27 +96,27 @@ export function Navbar() {
       </nav>
 
       {mobileOpen ? (
-        <div className="border-t border-border md:hidden">
-          <div className="container flex flex-col gap-4 py-4">
+        <div className="border-t border-border lg:hidden">
+          <div className="container flex flex-col gap-2 py-4">
             {NAV_LINKS.map((link) => (
-              <Link
+              <NavLink
                 key={link.href}
-                href={link.href}
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                {...link}
+                active={link.href === "/" ? pathname === "/" : pathname.startsWith(link.href) && link.href !== "mailto:packetpulse25@gmail.com"}
                 onClick={() => setMobileOpen(false)}
-              >
-                {link.label}
-              </Link>
+              />
             ))}
             <div className="flex flex-col gap-3 pt-2">
-              <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
+              <Link href="/login" className="flex items-center text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
+                <LogIn className="mr-1.5 h-4 w-4" />
                 Sign In
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-brand px-4 py-2 text-center text-sm font-medium text-brand-foreground"
+                className="flex items-center justify-center rounded-md bg-brand px-4 py-2 text-center text-sm font-medium text-brand-foreground"
                 onClick={() => setMobileOpen(false)}
               >
+                <UserPlus className="mr-1.5 h-4 w-4" />
                 Sign Up
               </Link>
             </div>

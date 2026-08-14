@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Send, MessageCircle } from "lucide-react";
 
 // lucide-react dropped brand/logo icons (trademark reasons) — small inline SVGs
@@ -26,6 +27,7 @@ function LinkedinIcon(props: React.SVGProps<SVGSVGElement>) {
 
 const QUICK_LINKS = [
   { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
   { href: "/resources", label: "Resources" },
   { href: "/recordings", label: "Recordings" },
   { href: "/blogs", label: "Blogs" },
@@ -43,13 +45,15 @@ const SOCIAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border">
+    // Solid bg (matches reference's bg-slate-900) — deliberately breaks out of the
+    // page's gradient background (see MarketingBackground) rather than continuing it.
+    <footer className="border-t border-white/10 bg-background">
       <div className="container grid gap-10 py-14 md:grid-cols-3">
         <div className="flex flex-col gap-4">
-          <Link href="/" className="text-lg font-semibold tracking-tight">
-            Packet<span className="text-brand">Pulse</span>
+          <Link href="/">
+            <Image src="/logo.png" alt="PacketPulse" width={140} height={54} className="h-9 w-auto" />
           </Link>
-          <p className="max-w-xs text-sm text-muted-foreground">
+          <p className="max-w-xs text-sm text-gray-300">
             A thriving community of networking professionals. Learn, share, and advance your networking career.
           </p>
           <div className="flex gap-3">
@@ -60,7 +64,7 @@ export function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={label}
-                className="text-muted-foreground transition-colors hover:text-brand"
+                className="text-gray-300 transition-colors hover:text-brand"
               >
                 <Icon className="h-5 w-5" />
               </a>
@@ -73,7 +77,7 @@ export function Footer() {
           <ul className="flex flex-col gap-2">
             {QUICK_LINKS.map((link) => (
               <li key={link.href + link.label}>
-                <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                <Link href={link.href} className="text-sm text-gray-300 transition-colors hover:text-foreground">
                   {link.label}
                 </Link>
               </li>
@@ -83,7 +87,7 @@ export function Footer() {
 
         <div>
           <h3 className="mb-4 text-sm font-semibold">Contact Us</h3>
-          <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
+          <ul className="flex flex-col gap-2 text-sm text-gray-300">
             <li>
               <a href="mailto:packetpulse25@gmail.com" className="hover:text-foreground">
                 packetpulse25@gmail.com
@@ -99,7 +103,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-border py-6 text-center text-sm text-muted-foreground">
+      <div className="border-t border-white/10 py-6 text-center text-sm text-gray-300">
         © {new Date().getFullYear()} Packet Pulse. All rights reserved.
       </div>
     </footer>

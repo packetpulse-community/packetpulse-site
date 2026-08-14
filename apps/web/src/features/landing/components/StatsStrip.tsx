@@ -12,17 +12,15 @@ const STATS = [
 
 export function StatsStrip() {
   return (
-    <section className="border-y border-border bg-card/40">
-      <div className="container py-14">
-        <h2 className="mb-10 text-center text-2xl font-semibold">Our Growth in Numbers</h2>
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-          {STATS.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="text-3xl font-bold text-brand sm:text-4xl">{stat.value}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-            </div>
-          ))}
-        </div>
+    <section className="container py-16">
+      <h2 className="mb-10 text-center text-2xl font-semibold">Our Growth in Numbers</h2>
+      <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        {STATS.map((stat) => (
+          <div key={stat.label} className="flex flex-col items-center text-center">
+            <p className="text-3xl font-bold text-brand sm:text-4xl">{stat.value}</p>
+            <p className="mt-1 text-sm text-gray-300">{stat.label}</p>
+          </div>
+        ))}
       </div>
     </section>
   );

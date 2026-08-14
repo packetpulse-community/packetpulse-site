@@ -41,6 +41,10 @@
     --brand: 243 75% 59%;
     --brand-foreground: 210 40% 98%;
     --brand-muted: 234 89% 74%;
+
+    /* Decorative-only accent for floating shapes in illustrations (hero/about) —
+       not a semantic UI color, kept separate from --accent (hover/muted surfaces). */
+    --accent-teal: 187 71% 45%;
   }
 
   .dark {
@@ -75,6 +79,8 @@
     --brand: 243 75% 59%;
     --brand-foreground: 210 40% 98%;
     --brand-muted: 234 89% 74%;
+
+    --accent-teal: 187 71% 45%;
   }
 }
 

@@ -34,7 +34,7 @@ export function Faq() {
     <section className="container py-20">
       <div className="mb-12 flex flex-col items-center gap-2 text-center">
         <h2 className="text-3xl font-semibold">Frequently Asked Questions</h2>
-        <p className="max-w-xl text-muted-foreground">Have questions about PacketPulse? Find answers to commonly asked questions below.</p>
+        <p className="max-w-xl text-gray-300">Have questions about PacketPulse? Find answers to commonly asked questions below.</p>
       </div>
 
       <Accordion type="single" collapsible className="mx-auto max-w-2xl">
@@ -46,7 +46,7 @@ export function Faq() {
         ))}
       </Accordion>
 
-      <p className="mt-10 text-center text-sm text-muted-foreground">
+      <p className="mt-10 text-center text-sm text-gray-300">
         Still have questions?{" "}
         <Link href="mailto:packetpulse25@gmail.com" className="font-medium text-brand hover:underline">
           Contact Support

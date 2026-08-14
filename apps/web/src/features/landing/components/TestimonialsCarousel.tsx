@@ -39,18 +39,18 @@ export function TestimonialsCarousel() {
     <section className="container py-20">
       <div className="mb-12 flex flex-col items-center gap-2 text-center">
         <h2 className="text-3xl font-semibold">What Our Members Say</h2>
-        <p className="max-w-xl text-muted-foreground">Join hundreds of networking professionals who have transformed their careers.</p>
+        <p className="max-w-xl text-gray-300">Join hundreds of networking professionals who have transformed their careers.</p>
       </div>
 
       <div
-        className="mx-auto flex max-w-2xl flex-col items-center gap-6 rounded-lg border border-border bg-card p-8 text-center"
+        className="mx-auto flex max-w-2xl flex-col items-center gap-6 rounded-xl bg-white/5 p-8 text-center backdrop-blur-sm"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
         <p className="text-lg italic text-foreground">&ldquo;{active.quote}&rdquo;</p>
         <div>
           <p className="font-semibold">{active.name}</p>
-          <p className="text-sm text-muted-foreground">{active.title}</p>
+          <p className="text-sm text-gray-300">{active.title}</p>
         </div>
       </div>
 
