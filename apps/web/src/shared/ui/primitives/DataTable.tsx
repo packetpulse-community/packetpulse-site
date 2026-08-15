@@ -21,6 +21,7 @@ interface DataTableBaseProps<T> {
   data: T[];
   isLoading?: boolean;
   rowKey?: (row: T, index: number) => string;
+  hideSearch?: boolean;
 }
 
 interface DataTableServerProps<T> extends DataTableBaseProps<T> {
@@ -71,7 +72,7 @@ function getPageNumbers(currentPage: number, totalPages: number): (number | "...
 }
 
 export function DataTable<T>(props: DataTableProps<T>) {
-  const { columns, data, isLoading = false, rowKey } = props;
+  const { columns, data, isLoading = false, rowKey, hideSearch = false } = props;
   const serverSide = props.serverSide === true;
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -159,19 +160,23 @@ export function DataTable<T>(props: DataTableProps<T>) {
   return (
     <div className="rounded-lg border border-border bg-card">
       <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:w-64">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              if (!serverSide) setLocalPage(1);
-            }}
-            className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
+        {hideSearch ? (
+          <div />
+        ) : (
+          <div className="relative w-full md:w-64">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                if (!serverSide) setLocalPage(1);
+              }}
+              className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        )}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Show</span>
           <Select

@@ -72,6 +72,7 @@ model User {
   quizAttempts         QuizAttempt[]
   certificates         Certificate[]
   notifications        Notification[]
+  activityLogActions   AdminActivityLog[]
 
   @@map("users")
 }
@@ -228,6 +229,11 @@ model BlogPost {
   category   BlogCategory @default(general)
   viewCount  Int      @default(0) @map("view_count")
   isPublished Boolean @default(true) @map("is_published")
+  // Moderation gate, added alongside Resource/Recording's existing isApproved (same
+  // default-true semantics — most posts pass through, admin moderation queue is
+  // opt-in via manually flagging a post false, mirroring the resources/recordings
+  // pattern rather than gating every new post behind approval).
+  isApproved Boolean @default(true) @map("is_approved")
   postedAt   DateTime @default(now()) @map("posted_at")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
@@ -239,6 +245,7 @@ model BlogPost {
 
   @@index([category])
   @@index([isPublished, postedAt])
+  @@index([isApproved])
   @@map("blog_posts")
 }
 
@@ -650,4 +657,37 @@ model Notification {
 
   @@index([userId, readAt, createdAt])
   @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Admin activity log (NEW) — the old app's "Recent Activity" dashboard table had
+// no backend behind it at all (404 route, permanently empty). This is a real
+// audit trail: every admin moderation/user-management action writes one row here.
+// ---------------------------------------------------------------------------
+
+enum AdminActivityAction {
+  user_approved
+  user_unapproved
+  user_roles_changed
+  user_deleted
+  resource_approved
+  recording_approved
+  blog_approved
+}
+
+model AdminActivityLog {
+  id         String   @id @default(uuid())
+  // Nullable + SetNull: an admin's audit trail should survive their own account
+  // being deleted later, rather than cascading the log rows away.
+  actorId    String?  @map("actor_id")
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     AdminActivityAction
+  targetType String   @map("target_type")
+  targetId   String?  @map("target_id")
+  details    Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([action])
+  @@map("admin_activity_logs")
 }

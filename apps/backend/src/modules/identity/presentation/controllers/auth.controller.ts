@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { Request, Response } from "express";
 import { AuthService } from "../../application/services/auth.service";
@@ -84,7 +84,14 @@ export class AuthController {
   @Get("me")
   async me(@CurrentUser() current: AccessTokenPayload) {
     const user = await this.users.findById(current.sub);
-    return user ? toPublicUser(user) : null;
+    // A still-unexpired JWT for a since-deleted user (e.g. an admin who deleted
+    // their own account) must not resolve as "200 OK, nobody" — the frontend's
+    // getCurrentUser() only treats 401/403 as "not logged in" (session.ts), so a
+    // bare `null` body here previously left every /admin/* page trying to
+    // res.json() an unparseable empty response instead of cleanly redirecting to
+    // /login.
+    if (!user) throw new UnauthorizedException("Session user no longer exists");
+    return toPublicUser(user);
   }
 
   @Public()

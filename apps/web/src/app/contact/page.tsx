@@ -29,7 +29,7 @@ export default function ContactPage() {
 
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-3">
           <Reveal className="rounded-xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm lg:col-span-1">
-            <h2 className="mb-6 text-2xl font-bold text-brand">Get In Touch</h2>
+            <h2 className="mb-6 text-2xl font-bold text-indigo-400">Get In Touch</h2>
             <p className="mb-8 text-gray-300">
               We're here to help and answer any questions you might have about PacketPulse. We look forward to
               hearing from you.
@@ -44,7 +44,7 @@ export default function ContactPage() {
                   <div>
                     <h3 className="mb-1 font-semibold">{detail.label}</h3>
                     {detail.href ? (
-                      <a href={detail.href} className="text-brand hover:underline">
+                      <a href={detail.href} className="text-indigo-400 hover:underline">
                         {detail.value}
                       </a>
                     ) : (
@@ -57,7 +57,7 @@ export default function ContactPage() {
           </Reveal>
 
           <Reveal delayMs={150} className="rounded-xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm lg:col-span-2">
-            <h2 className="mb-6 text-2xl font-bold text-brand">Send Us a Message</h2>
+            <h2 className="mb-6 text-2xl font-bold text-indigo-400">Send Us a Message</h2>
             <ContactForm />
           </Reveal>
         </div>

@@ -38,10 +38,10 @@ export function WhatWeOffer() {
             as="article"
             className="flex flex-col gap-4 rounded-xl bg-white/5 p-8 backdrop-blur-sm transition-colors hover:bg-white/10"
           >
-            <offering.icon className="h-8 w-8 text-brand" />
+            <offering.icon className="h-8 w-8 text-indigo-400" />
             <h3 className="text-xl font-semibold">{offering.title}</h3>
             <p className="flex-1 text-sm text-gray-300">{offering.description}</p>
-            <Link href={offering.href} className="text-sm font-medium text-brand hover:underline">
+            <Link href={offering.href} className="text-sm font-medium text-indigo-400 hover:underline">
               {offering.cta} &rarr;
             </Link>
           </Reveal>

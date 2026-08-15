@@ -63,7 +63,7 @@ export function TestimonialsCarousel() {
               type="button"
               aria-label={`View testimonial ${index + 1}`}
               onClick={() => setActiveIndex(index)}
-              className={cn("h-2 w-2 rounded-full transition-colors", index === activeIndex ? "bg-brand" : "bg-muted")}
+              className={cn("h-2 w-2 rounded-full transition-colors", index === activeIndex ? "bg-indigo-500" : "bg-muted")}
             />
           ))}
         </div>

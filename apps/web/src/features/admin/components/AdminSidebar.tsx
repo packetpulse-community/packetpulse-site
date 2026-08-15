@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, FileText, LayoutDashboard, LogOut, Users, Video, X } from "lucide-react";
+import { BarChart3, BookOpen, FileText, LayoutDashboard, LogOut, Users, Video, X } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { authApi } from "@/features/auth/api/auth.api";
 
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Resources", href: "/admin/resources", icon: FileText },
   { label: "Recordings", href: "/admin/recordings", icon: Video },
+  { label: "Blogs", href: "/admin/blogs", icon: BookOpen },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ] as const;
 
@@ -65,7 +66,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   active
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-indigo-600 text-white shadow-md"
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                 )}
               >

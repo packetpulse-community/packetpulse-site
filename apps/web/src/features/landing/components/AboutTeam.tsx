@@ -45,12 +45,12 @@ export function AboutTeam() {
             delayMs={(index % 8) * 60}
             className="flex flex-col gap-1 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-colors hover:bg-white/10"
           >
-            <a href={member.linkedin} target="_blank" rel="noreferrer" className="font-semibold hover:text-brand hover:underline">
+            <a href={member.linkedin} target="_blank" rel="noreferrer" className="font-semibold hover:text-indigo-400 hover:underline">
               {member.name}
             </a>
             <p className="text-sm text-gray-300">{member.title}</p>
             {member.employer ? <p className="text-sm text-gray-300">{member.employer}</p> : null}
-            <p className="text-xs text-brand">{member.experience}</p>
+            <p className="text-xs text-indigo-400">{member.experience}</p>
           </Reveal>
         ))}
       </div>

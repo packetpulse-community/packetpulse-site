@@ -4,7 +4,17 @@ import { PrismaService } from "../../../../prisma/prisma.service";
 import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { AdminUserListQueryDto, AssignRolesDto } from "../dto/admin.dto";
 import { userWithRolesInclude, toPublicUser } from "../../../identity";
+import type { UserWithRoles } from "../../../identity";
 import { EmailQueueService, NotificationsService } from "../../../notifications";
+import { AdminActivityLogService } from "./admin-activity-log.service";
+
+// toPublicUser (identity module) deliberately omits createdAt/lastLoginAt since it's
+// also used for /auth/me — those fields shouldn't leak into every session response.
+// Admin list/detail views need them (dashboard's "Joined"/"Last Login" columns), so
+// this admin-only wrapper adds them back on top of the shared safe-fields subset.
+function toAdminUser(user: UserWithRoles) {
+  return { ...toPublicUser(user), createdAt: user.createdAt, lastLoginAt: user.lastLoginAt };
+}
 
 @Injectable()
 export class AdminUsersService {
@@ -12,6 +22,7 @@ export class AdminUsersService {
     private readonly prisma: PrismaService,
     private readonly emailQueue: EmailQueueService,
     private readonly notifications: NotificationsService,
+    private readonly activityLog: AdminActivityLogService,
   ) {}
 
   async list(query: AdminUserListQueryDto) {
@@ -37,7 +48,7 @@ export class AdminUsersService {
       }),
       this.prisma.user.count({ where }),
     ]);
-    return paginate(data.map(toPublicUser), query.page, query.limit, total);
+    return paginate(data.map(toAdminUser), query.page, query.limit, total);
   }
 
   pendingApproval() {
@@ -45,13 +56,13 @@ export class AdminUsersService {
       where: { isApproved: false, emailVerified: true },
       include: userWithRolesInclude,
       orderBy: { createdAt: "asc" },
-    }).then((users) => users.map(toPublicUser));
+    }).then((users) => users.map(toAdminUser));
   }
 
   async getById(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id }, include: userWithRolesInclude });
     if (!user) throw new NotFoundException("User not found");
-    return toPublicUser(user);
+    return toAdminUser(user);
   }
 
   async setApproval(id: string, approvedById: string, approved: boolean) {
@@ -75,12 +86,15 @@ export class AdminUsersService {
     await Promise.all([
       this.emailQueue.sendApprovalNotice(user.email, approved),
       this.notifications.notify(id, "approval", { approved }),
+      this.activityLog.log(approvedById, approved ? "user_approved" : "user_unapproved", "user", id, {
+        email: user.email,
+      }),
     ]);
 
     return this.getById(id);
   }
 
-  async assignRoles(id: string, dto: AssignRolesDto) {
+  async assignRoles(id: string, dto: AssignRolesDto, actorId: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException("User not found");
 
@@ -92,14 +106,23 @@ export class AdminUsersService {
       this.prisma.userRole.createMany({ data: roles.map((role) => ({ userId: id, roleId: role.id })) }),
     ]);
 
-    await this.emailQueue.sendRoleChangeNotice(user.email, dto.roleNames);
+    await Promise.all([
+      this.emailQueue.sendRoleChangeNotice(user.email, dto.roleNames),
+      this.activityLog.log(actorId, "user_roles_changed", "user", id, { email: user.email, roles: dto.roleNames }),
+    ]);
 
     return this.getById(id);
   }
 
-  async delete(id: string) {
+  async delete(id: string, actorId: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException("User not found");
+    // Logged BEFORE deleting: if id === actorId (an admin deleting their own
+    // account), inserting the log row after the delete would violate the
+    // admin_activity_logs.actor_id FK, since it'd reference an id that no longer
+    // exists — onDelete: SetNull only rewrites *existing* rows on a later delete,
+    // it doesn't let a *new* insert reference an already-gone id.
+    await this.activityLog.log(actorId, "user_deleted", "user", undefined, { email: user.email });
     await this.prisma.user.delete({ where: { id } });
   }
 }

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Send } from "lucide-react";
+import { cn } from "@/shared/utils/cn";
+import { buttonVariants } from "@/shared/ui/primitives/Button";
 
 interface FormState {
   name: string;
@@ -47,7 +49,7 @@ export function ContactForm() {
   }
 
   const inputClass = (hasError: boolean) =>
-    `w-full rounded-md border bg-background px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand ${
+    `w-full rounded-md border bg-background px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
       hasError ? "border-destructive" : "border-input"
     }`;
 
@@ -113,10 +115,7 @@ export function ContactForm() {
         {errors.message && <p className="mt-1 text-sm text-destructive">{errors.message}</p>}
       </div>
 
-      <button
-        type="submit"
-        className="flex w-full items-center justify-center gap-2 rounded-md bg-brand px-6 py-3 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90 md:w-auto"
-      >
+      <button type="submit" className={cn(buttonVariants({ variant: "gradient", size: "lg" }), "w-full md:w-auto")}>
         Send Message
         <Send className="h-4 w-4" />
       </button>

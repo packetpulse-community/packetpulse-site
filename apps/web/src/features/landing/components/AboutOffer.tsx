@@ -20,7 +20,7 @@ export function AboutOffer() {
             delayMs={index * 100}
             className="flex flex-col gap-3 rounded-xl bg-white/5 p-5 backdrop-blur-sm transition-colors hover:bg-white/10"
           >
-            <offering.icon className="h-7 w-7 text-brand" />
+            <offering.icon className="h-7 w-7 text-indigo-400" />
             <h3 className="font-semibold">{offering.title}</h3>
             <p className="text-sm text-gray-300">{offering.description}</p>
           </Reveal>

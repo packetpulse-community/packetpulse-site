@@ -26,8 +26,8 @@ export function UpcomingEvents() {
           <Reveal key={event.title} delayMs={index * 100}>
             <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
               <div className="flex items-center justify-between">
-                <Calendar className="h-5 w-5 text-brand" />
-                <span className="rounded-full bg-brand/10 px-2.5 py-0.5 text-xs font-medium text-brand">Coming soon</span>
+                <Calendar className="h-5 w-5 text-indigo-400" />
+                <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-medium text-indigo-400">Coming soon</span>
               </div>
               <h3 className="font-semibold">{event.title}</h3>
               <p className="text-sm text-gray-300">{event.description}</p>

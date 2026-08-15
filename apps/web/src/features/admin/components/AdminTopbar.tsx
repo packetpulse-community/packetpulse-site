@@ -49,9 +49,9 @@ export function AdminTopbar({ user, onMenuClick }: AdminTopbarProps) {
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setMenuOpen((o) => !o)}
-            className="flex items-center gap-2 text-sm text-foreground hover:text-primary"
+            className="flex items-center gap-2 text-sm text-foreground hover:text-indigo-500"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">
               {initials || "A"}
             </span>
             <span className="hidden md:block">{user.firstName}</span>

@@ -12,7 +12,7 @@ export function LatestResources({ resources }: { resources: ResourceSummary[] })
         <p className="max-w-xl text-gray-300">
           Stay up-to-date with our most recent networking guides, tutorials, and case studies.
         </p>
-        <Link href="/resources" className="mt-2 text-sm font-medium text-brand hover:underline">
+        <Link href="/resources" className="mt-2 text-sm font-medium text-indigo-400 hover:underline">
           View All Resources &rarr;
         </Link>
       </div>
@@ -36,7 +36,7 @@ export function LatestResources({ resources }: { resources: ResourceSummary[] })
                 )}
               </div>
               <div className="flex flex-col gap-2 p-4">
-                <span className="w-fit rounded-full bg-brand/10 px-2.5 py-0.5 text-xs font-medium capitalize text-brand">
+                <span className="w-fit rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-medium capitalize text-indigo-400">
                   {resource.resourceType.replace(/_/g, " ")}
                 </span>
                 <h3 className="font-semibold">{resource.title}</h3>

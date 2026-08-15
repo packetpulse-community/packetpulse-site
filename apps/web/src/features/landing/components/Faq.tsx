@@ -50,7 +50,7 @@ export function Faq() {
 
         <p className="mt-10 text-center text-sm text-gray-300">
           Still have questions?{" "}
-          <Link href="/contact" className="font-medium text-brand hover:underline">
+          <Link href="/contact" className="font-medium text-indigo-400 hover:underline">
             Contact Support
           </Link>
         </p>

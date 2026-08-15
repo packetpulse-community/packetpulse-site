@@ -17,14 +17,15 @@ import {
 } from "@packetpulse/types";
 import { authApi } from "../api/auth.api";
 import { ApiError } from "@/shared/api/http-client";
+import { cn } from "@/shared/utils/cn";
+import { buttonVariants } from "@/shared/ui/primitives/Button";
 
 function errorMessage(err: unknown, fallback: string) {
   return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
 }
 
 const inputClass = "rounded-md border border-input bg-background px-3 py-2.5";
-const buttonClass =
-  "flex items-center justify-center gap-2 rounded-md bg-brand px-4 py-2.5 font-medium text-brand-foreground transition-opacity hover:opacity-90 disabled:opacity-50";
+const buttonClass = cn(buttonVariants({ variant: "gradient" }), "w-full");
 
 function RequestOtpStep({ onRequested }: { onRequested: (email: string) => void }) {
   const {

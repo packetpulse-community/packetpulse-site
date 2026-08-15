@@ -44,7 +44,7 @@ export function AboutMission() {
               delayMs={index * 100}
               className="flex flex-col gap-3 rounded-xl bg-white/5 p-6 backdrop-blur-sm transition-colors hover:bg-white/10"
             >
-              <value.icon className="h-8 w-8 text-brand" />
+              <value.icon className="h-8 w-8 text-indigo-400" />
               <h4 className="font-semibold">{value.title}</h4>
               <p className="text-sm text-gray-300">{value.description}</p>
             </Reveal>

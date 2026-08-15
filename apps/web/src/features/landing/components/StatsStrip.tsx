@@ -19,7 +19,7 @@ const STATS = [
 function StatValue({ target, suffix, active }: { target: number; suffix: string; active: boolean }) {
   const count = useCountUp(target, active);
   return (
-    <p className="text-3xl font-bold text-brand sm:text-4xl">
+    <p className="text-3xl font-bold text-indigo-400 sm:text-4xl">
       {count}
       {suffix}
     </p>

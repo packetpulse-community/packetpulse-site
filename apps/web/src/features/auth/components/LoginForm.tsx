@@ -10,6 +10,8 @@ import { LoginSchema, type LoginDto } from "@packetpulse/types";
 import { authApi } from "../api/auth.api";
 import { ApiError } from "@/shared/api/http-client";
 import { SocialLoginRow } from "./SocialLoginRow";
+import { cn } from "@/shared/utils/cn";
+import { buttonVariants } from "@/shared/ui/primitives/Button";
 
 export function LoginForm() {
   const router = useRouter();
@@ -70,7 +72,7 @@ export function LoginForm() {
             <input type="checkbox" className="rounded border-input" />
             Remember me
           </label>
-          <Link href="/forgot-password" className="font-medium text-brand hover:underline">
+          <Link href="/forgot-password" className="font-medium text-indigo-400 hover:underline">
             Forgot your password?
           </Link>
         </div>
@@ -80,7 +82,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={isSubmitting || mutation.isPending}
-          className="flex items-center justify-center gap-2 rounded-md bg-brand px-4 py-2.5 font-medium text-brand-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+          className={cn(buttonVariants({ variant: "gradient" }), "w-full")}
         >
           <Lock className="h-4 w-4" />
           {mutation.isPending ? "Signing in…" : "Sign in"}

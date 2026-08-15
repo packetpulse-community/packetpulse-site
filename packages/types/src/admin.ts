@@ -24,3 +24,26 @@ export const AdminUserListQuerySchema = PaginationQuerySchema.extend({
   approved: z.coerce.boolean().optional(),
 });
 export type AdminUserListQuery = z.infer<typeof AdminUserListQuerySchema>;
+
+// Optional date-range bounds shared by /admin/stats and /admin/analytics — drives
+// the dashboard's From/To date filter. Both default to a trailing 30-day window
+// server-side when omitted (see admin-analytics.service.ts).
+export const AdminDateRangeQuerySchema = z.object({
+  fromDate: z.coerce.date().optional(),
+  toDate: z.coerce.date().optional(),
+});
+export type AdminDateRangeQuery = z.infer<typeof AdminDateRangeQuerySchema>;
+
+export const AdminActivityActionSchema = z.enum([
+  "user_approved",
+  "user_unapproved",
+  "user_roles_changed",
+  "user_deleted",
+  "resource_approved",
+  "recording_approved",
+  "blog_approved",
+]);
+export type AdminActivityAction = z.infer<typeof AdminActivityActionSchema>;
+
+export const AdminActivityListQuerySchema = PaginationQuerySchema;
+export type AdminActivityListQuery = z.infer<typeof AdminActivityListQuerySchema>;

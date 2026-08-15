@@ -12,7 +12,7 @@ export default function PrivacyPage() {
           PacketPulse stores only what's needed to run your account — your name, email, and the content you choose
           to publish. We don't sell your data. A full, formal privacy policy is in progress — for questions in the
           meantime, reach out at{" "}
-          <a href="mailto:packetpulse25@gmail.com" className="text-brand hover:underline">
+          <a href="mailto:packetpulse25@gmail.com" className="text-indigo-400 hover:underline">
             packetpulse25@gmail.com
           </a>
           .

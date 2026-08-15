@@ -17,9 +17,9 @@ export function AboutStats() {
         <Reveal
           key={stat.label}
           delayMs={index * 100}
-          className="flex flex-col items-center rounded-xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm transition-colors hover:border-brand/50"
+          className="flex flex-col items-center rounded-xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm transition-colors hover:border-indigo-500/50"
         >
-          <p className="text-3xl font-bold text-brand sm:text-4xl">{stat.value}</p>
+          <p className="text-3xl font-bold text-indigo-400 sm:text-4xl">{stat.value}</p>
           <p className="mt-1 text-sm text-gray-300">{stat.label}</p>
         </Reveal>
       ))}

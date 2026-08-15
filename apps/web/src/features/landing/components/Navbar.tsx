@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Menu, X, Home, Info, Book, FileText, Phone, Search, LogIn, UserPlus } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { buttonVariants } from "@/shared/ui/primitives/Button";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", Icon: Home },
@@ -35,7 +36,7 @@ function NavLink({
       onClick={onClick}
       className={cn(
         "flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all",
-        active ? "bg-brand text-brand-foreground shadow-md" : "text-muted-foreground hover:bg-brand/50 hover:text-foreground",
+        active ? "bg-indigo-600 text-white shadow-md" : "text-muted-foreground hover:bg-indigo-600/50 hover:text-foreground",
       )}
     >
       <Icon className="h-4 w-4" />
@@ -68,8 +69,8 @@ export function Navbar() {
       animate={{ y: hidden ? -100 : 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className={cn(
-        "sticky top-0 z-50 border-b transition-colors",
-        scrolled ? "border-border bg-background/90 shadow-lg shadow-indigo-500/10 backdrop-blur-md" : "border-transparent bg-background/80 backdrop-blur",
+        "floating-nav sticky top-4 z-50 transition-colors",
+        scrolled ? "floating-nav-scrolled bg-background/90" : "bg-background/80",
       )}
     >
       <nav className="container flex h-16 items-center justify-between gap-4">
@@ -98,10 +99,7 @@ export function Navbar() {
             <LogIn className="mr-1.5 h-4 w-4" />
             Sign In
           </Link>
-          <Link
-            href="/register"
-            className="flex items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground shadow-sm transition-colors hover:opacity-90"
-          >
+          <Link href="/register" className={cn(buttonVariants({ variant: "gradient", size: "sm" }), "h-auto py-2")}>
             <UserPlus className="mr-1.5 h-4 w-4" />
             Sign Up
           </Link>
@@ -139,7 +137,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="/register"
-                className="flex items-center justify-center rounded-md bg-brand px-4 py-2 text-center text-sm font-medium text-brand-foreground"
+                className={cn(buttonVariants({ variant: "gradient" }), "w-full")}
                 onClick={() => setMobileOpen(false)}
               >
                 <UserPlus className="mr-1.5 h-4 w-4" />

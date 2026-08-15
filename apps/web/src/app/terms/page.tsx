@@ -12,7 +12,7 @@ export default function TermsPage() {
           By creating a PacketPulse account you agree to use the platform respectfully, keep your account credentials
           secure, and follow the community's guidelines when posting resources, blogs, or forum replies. A full,
           formal terms document is in progress — for questions in the meantime, reach out at{" "}
-          <a href="mailto:packetpulse25@gmail.com" className="text-brand hover:underline">
+          <a href="mailto:packetpulse25@gmail.com" className="text-indigo-400 hover:underline">
             packetpulse25@gmail.com
           </a>
           .

@@ -65,7 +65,7 @@ export function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={label}
-                className="text-gray-300 transition-colors hover:text-brand"
+                className="text-gray-300 transition-colors hover:text-indigo-400"
               >
                 <Icon className="h-5 w-5" />
               </a>
