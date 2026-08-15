@@ -3,7 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Menu, X, Home, Info, Book, FileText, Phone, Search, LogIn, UserPlus } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
@@ -45,10 +46,32 @@ function NavLink({
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
 
+  const { scrollY } = useScroll();
+  const lastScrollY = useRef(0);
+
+  useMotionValueEvent(scrollY, "change", (current) => {
+    const previous = lastScrollY.current;
+    setScrolled(current > 10);
+    // Never hide the mobile menu mid-scroll — it'd clip open links off-screen.
+    if (!mobileOpen) {
+      setHidden(current > previous && current > 120);
+    }
+    lastScrollY.current = current;
+  });
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
+    <motion.header
+      animate={{ y: hidden ? -100 : 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className={cn(
+        "sticky top-0 z-50 border-b transition-colors",
+        scrolled ? "border-border bg-background/90 shadow-lg shadow-indigo-500/10 backdrop-blur-md" : "border-transparent bg-background/80 backdrop-blur",
+      )}
+    >
       <nav className="container flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <Image src="/logo.png" alt="PacketPulse" width={140} height={54} className="h-10 w-auto" priority />
@@ -86,7 +109,10 @@ export function Navbar() {
 
         <button
           type="button"
-          onClick={() => setMobileOpen((open) => !open)}
+          onClick={() => {
+            setMobileOpen((open) => !open);
+            setHidden(false);
+          }}
           className="lg:hidden"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
@@ -123,6 +149,6 @@ export function Navbar() {
           </div>
         </div>
       ) : null}
-    </header>
+    </motion.header>
   );
 }

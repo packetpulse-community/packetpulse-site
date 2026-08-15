@@ -8,6 +8,7 @@ import { WhatWeOffer } from "@/features/landing/components/WhatWeOffer";
 import { LatestResources } from "@/features/landing/components/LatestResources";
 import { NetworkCta } from "@/features/landing/components/NetworkCta";
 import { TestimonialsCarousel } from "@/features/landing/components/TestimonialsCarousel";
+import { UpcomingEvents } from "@/features/landing/components/UpcomingEvents";
 import { CommunityValues } from "@/features/landing/components/CommunityValues";
 import { Faq } from "@/features/landing/components/Faq";
 import { FinalCta } from "@/features/landing/components/FinalCta";
@@ -37,6 +38,7 @@ export default async function LandingPage() {
         <LatestResources resources={latestResources} />
         <NetworkCta />
         <TestimonialsCarousel />
+        <UpcomingEvents />
         <CommunityValues />
         <Faq />
         <FinalCta />

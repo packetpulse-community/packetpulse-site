@@ -7,7 +7,7 @@ export function Hero() {
   return (
     <section className="container py-20 md:py-20">
       <div className="grid items-center gap-12 md:grid-cols-2">
-        <Reveal>
+        <Reveal immediate>
           <span className="mb-6 inline-block rounded-full bg-indigo-500/20 px-3 py-1 text-sm font-medium text-indigo-300">
             Welcome to Packet Pulse Community
           </span>
@@ -47,7 +47,7 @@ export function Hero() {
           </p>
         </Reveal>
 
-        <Reveal delayMs={300} className="relative mx-auto w-full max-w-lg">
+        <Reveal immediate delayMs={300} className="relative mx-auto w-full max-w-lg">
           <Image src="/hero-illustration.svg" alt="Network graph illustration" width={480} height={480} priority className="w-full" />
         </Reveal>
       </div>
