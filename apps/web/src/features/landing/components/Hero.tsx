@@ -73,9 +73,34 @@ export function Hero() {
           </p>
         </Reveal>
 
-        <Reveal immediate delayMs={300} className="relative mx-auto w-full max-w-lg">
-          <div className="animate-float">
-            <Image src="/hero-illustration.svg" alt="Network graph illustration" width={480} height={480} priority className="w-full" />
+        <Reveal immediate delayMs={300}>
+          <div className="relative mx-auto aspect-square w-full max-w-lg">
+            {/* Pulsing gradient rings + circular glass-framed illustration + floating
+                frosted accent shapes — ported verbatim from the reference site's hero
+                (verified against its production JS bundle, not just local source). */}
+            <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-br from-indigo-600/20 to-purple-600/20" />
+            <div
+              className="absolute inset-4 animate-pulse rounded-full bg-gradient-to-br from-indigo-600/40 to-purple-600/40"
+              style={{ animationDelay: "1s" }}
+            />
+            <div className="absolute inset-8 overflow-hidden rounded-full border border-white/10 shadow-2xl shadow-indigo-500/20 backdrop-blur-sm">
+              <Image
+                src="/hero-illustration.svg"
+                alt="Network graph illustration"
+                fill
+                priority
+                className="object-cover"
+              />
+            </div>
+            <div className="absolute right-8 top-0 h-16 w-16 animate-float rounded-xl bg-cyan-400/80 backdrop-blur-md" style={{ transform: "rotate(12deg)" }} />
+            <div
+              className="absolute -left-8 bottom-12 h-20 w-20 animate-float rounded-xl bg-indigo-500/80 backdrop-blur-md"
+              style={{ transform: "rotate(-12deg)", animationDelay: "1s" }}
+            />
+            <div
+              className="absolute bottom-4 right-4 h-12 w-12 animate-float rounded-full bg-purple-500/80 backdrop-blur-md"
+              style={{ animationDelay: "2s" }}
+            />
           </div>
         </Reveal>
       </div>

@@ -36,7 +36,7 @@ function NavLink({
       onClick={onClick}
       className={cn(
         "flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all",
-        active ? "bg-indigo-600 text-white shadow-md" : "text-muted-foreground hover:bg-indigo-600/50 hover:text-foreground",
+        active ? "bg-indigo-600 text-white shadow-md" : "text-gray-300 hover:bg-indigo-600/50 hover:text-white",
       )}
     >
       <Icon className="h-4 w-4" />
@@ -50,6 +50,10 @@ export function Navbar() {
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  // The reference site's nav is only transparent-at-top on the home page — every
+  // other page (about/contact/etc.) always shows the solid glass background,
+  // confirmed against the live bundle's `transparent` prop usage.
+  const isHome = pathname === "/";
 
   const { scrollY } = useScroll();
   const lastScrollY = useRef(0);
@@ -64,13 +68,17 @@ export function Navbar() {
     lastScrollY.current = current;
   });
 
+  const showTransparent = isHome && !scrolled;
+
   return (
     <motion.header
       animate={{ y: hidden ? -100 : 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className={cn(
-        "floating-nav sticky top-4 z-50 transition-colors",
-        scrolled ? "floating-nav-scrolled bg-background/90" : "bg-background/80",
+        "sticky top-4 z-50 transition-all duration-300",
+        scrolled && "floating-nav floating-nav-scrolled",
+        showTransparent ? "bg-transparent" : "bg-slate-900/95 backdrop-blur-md shadow-lg",
+        scrolled && "shadow-indigo-500/10",
       )}
     >
       <nav className="container flex h-16 items-center justify-between gap-4">
