@@ -6,6 +6,8 @@ import { AdminCleanDataService } from "./application/services/admin-clean-data.s
 import { AdminModerationService } from "./application/services/admin-moderation.service";
 import { AdminAnalyticsService } from "./application/services/admin-analytics.service";
 import { AdminActivityLogService } from "./application/services/admin-activity-log.service";
+import { AdminSettingsService } from "./application/services/admin-settings.service";
+import { AdminSystemStatusService } from "./application/services/admin-system-status.service";
 
 @Module({
   imports: [NotificationsModule],
@@ -16,6 +18,8 @@ import { AdminActivityLogService } from "./application/services/admin-activity-l
     AdminModerationService,
     AdminAnalyticsService,
     AdminActivityLogService,
+    AdminSettingsService,
+    AdminSystemStatusService,
   ],
 })
 export class AdminModule {}

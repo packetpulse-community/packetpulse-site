@@ -20,6 +20,7 @@ const PERMISSIONS = [
   "users:manage-roles",
   "admin:clean-data",
   "admin:view-analytics",
+  "admin:manage-settings",
 ] as const;
 
 const MEMBER_PERMISSIONS = ["blogs:create", "resources:create", "recordings:create", "forums:create", "quizzes:attempt"] as const;
@@ -43,6 +44,7 @@ const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
     "users:manage-roles",
     "admin:clean-data",
     "admin:view-analytics",
+    "admin:manage-settings",
   ],
   // super_admin bypasses permission checks entirely in RolesGuard (plan §4) — no
   // role_permissions rows needed for it.

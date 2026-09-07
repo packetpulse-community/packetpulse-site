@@ -691,3 +691,50 @@ model AdminActivityLog {
   @@index([action])
   @@map("admin_activity_logs")
 }
+
+// Singleton row (id fixed to "default") holding site-wide admin configuration —
+// upserted, never multi-row, so there's no query/list surface for it.
+model SiteSettings {
+  id                        String   @id @default("default")
+  siteName                  String   @default("PacketPulse") @map("site_name")
+  siteDescription           String   @default("A community platform for networking professionals") @map("site_description")
+  maintenanceMode           Boolean  @default(false) @map("maintenance_mode")
+  registrationEnabled       Boolean  @default(true) @map("registration_enabled")
+  maxUploadSizeMb           Int      @default(10) @map("max_upload_size_mb")
+  maxUserResourcesCount     Int      @default(50) @map("max_user_resources_count")
+  emailVerificationRequired Boolean  @default(true) @map("email_verification_required")
+  adminEmail                String   @default("packetpulse25@gmail.com") @map("admin_email")
+  apiRateLimit              Int      @default(100) @map("api_rate_limit")
+  sessionTimeoutMinutes     Int      @default(60) @map("session_timeout_minutes")
+  theme                     String   @default("dark")
+  logLevel                  String   @default("error") @map("log_level")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
+
+enum ClientLogLevel {
+  debug
+  info
+  warn
+  error
+}
+
+// Client-side error/event log ingestion — mirrors the legacy app's client-log
+// pipeline (browser errors POSTed here, viewable by admins), now DB-backed
+// instead of flat files.
+model ClientLog {
+  id        String         @id @default(uuid())
+  level     ClientLogLevel
+  context   String?
+  message   String
+  data      Json?
+  userId    String?        @map("user_id")
+  ip        String?
+  userAgent String?        @map("user_agent")
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([level])
+  @@map("client_logs")
+}

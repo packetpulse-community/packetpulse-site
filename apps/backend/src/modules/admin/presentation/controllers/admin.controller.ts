@@ -5,6 +5,8 @@ import { AdminCleanDataService } from "../../application/services/admin-clean-da
 import { AdminModerationService } from "../../application/services/admin-moderation.service";
 import { AdminAnalyticsService } from "../../application/services/admin-analytics.service";
 import { AdminActivityLogService } from "../../application/services/admin-activity-log.service";
+import { AdminSettingsService } from "../../application/services/admin-settings.service";
+import { AdminSystemStatusService } from "../../application/services/admin-system-status.service";
 import {
   AssignRolesDto,
   CleanDataDto,
@@ -12,6 +14,7 @@ import {
   AdminUserListQueryDto,
   AdminDateRangeQueryDto,
   AdminActivityListQueryDto,
+  UpdateSiteSettingsDto,
 } from "../../application/dto/admin.dto";
 import { CurrentUser, RequirePermission, PERMISSIONS } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
@@ -27,7 +30,30 @@ export class AdminController {
     private readonly moderation: AdminModerationService,
     private readonly analytics: AdminAnalyticsService,
     private readonly activityLog: AdminActivityLogService,
+    private readonly settings: AdminSettingsService,
+    private readonly systemStatus: AdminSystemStatusService,
   ) {}
+
+  @Throttle(ADMIN_TIER)
+  @RequirePermission(PERMISSIONS.ADMIN_VIEW_ANALYTICS)
+  @Get("status")
+  getSystemStatus() {
+    return this.systemStatus.status();
+  }
+
+  @Throttle(ADMIN_TIER)
+  @RequirePermission(PERMISSIONS.ADMIN_MANAGE_SETTINGS)
+  @Get("settings")
+  getSettings() {
+    return this.settings.get();
+  }
+
+  @Throttle(ADMIN_TIER)
+  @RequirePermission(PERMISSIONS.ADMIN_MANAGE_SETTINGS)
+  @Put("settings")
+  updateSettings(@Body() dto: UpdateSiteSettingsDto) {
+    return this.settings.update(dto);
+  }
 
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.USERS_APPROVE)

@@ -6,3 +6,4 @@ export * from "./forums";
 export * from "./quizzes";
 export * from "./admin";
 export * from "./network-tools";
+export * from "./logs";

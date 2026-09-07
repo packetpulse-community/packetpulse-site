@@ -23,6 +23,7 @@ import { NotificationsModule } from "./modules/notifications";
 import { RealtimeModule } from "./modules/realtime";
 import { NetworkToolsModule } from "./modules/network-tools";
 import { DashboardModule } from "./modules/dashboard";
+import { LogsModule } from "./modules/logs";
 
 // Feature modules land here as they're built (migration plan phases). Global guard
 // chain — JwtAuthGuard → RolesGuard → ApprovedGuard, with @Public() opting a route
@@ -48,6 +49,7 @@ import { DashboardModule } from "./modules/dashboard";
     AdminModule,
     NetworkToolsModule,
     DashboardModule,
+    LogsModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

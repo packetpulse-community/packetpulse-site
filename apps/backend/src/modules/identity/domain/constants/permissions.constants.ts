@@ -16,6 +16,7 @@ export const PERMISSIONS = {
   USERS_MANAGE_ROLES: "users:manage-roles",
   ADMIN_CLEAN_DATA: "admin:clean-data",
   ADMIN_VIEW_ANALYTICS: "admin:view-analytics",
+  ADMIN_MANAGE_SETTINGS: "admin:manage-settings",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

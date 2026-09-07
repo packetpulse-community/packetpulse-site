@@ -2,7 +2,20 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, BookOpen, FileText, LayoutDashboard, LogOut, Users, Video, X } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  BookOpen,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  ScrollText,
+  Settings,
+  Terminal,
+  Users,
+  Video,
+  X,
+} from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { authApi } from "@/features/auth/api/auth.api";
 
@@ -13,6 +26,10 @@ const NAV_ITEMS = [
   { label: "Recordings", href: "/admin/recordings", icon: Video },
   { label: "Blogs", href: "/admin/blogs", icon: BookOpen },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { label: "System Status", href: "/admin/status", icon: Activity },
+  { label: "Logs", href: "/admin/logs", icon: ScrollText },
+  { label: "API Docs", href: "/admin/api-docs", icon: Terminal },
+  { label: "Settings", href: "/admin/settings", icon: Settings },
 ] as const;
 
 interface AdminSidebarProps {

@@ -47,3 +47,19 @@ export type AdminActivityAction = z.infer<typeof AdminActivityActionSchema>;
 
 export const AdminActivityListQuerySchema = PaginationQuerySchema;
 export type AdminActivityListQuery = z.infer<typeof AdminActivityListQuerySchema>;
+
+export const UpdateSiteSettingsSchema = z.object({
+  siteName: z.string().min(1).max(200),
+  siteDescription: z.string().min(1).max(1000),
+  maintenanceMode: z.boolean(),
+  registrationEnabled: z.boolean(),
+  maxUploadSizeMb: z.coerce.number().int().min(1).max(500),
+  maxUserResourcesCount: z.coerce.number().int().min(1).max(1000),
+  emailVerificationRequired: z.boolean(),
+  adminEmail: z.string().email(),
+  apiRateLimit: z.coerce.number().int().min(10).max(10000),
+  sessionTimeoutMinutes: z.coerce.number().int().min(5).max(1440),
+  theme: z.enum(["light", "dark", "system"]),
+  logLevel: z.enum(["debug", "info", "warn", "error"]),
+});
+export type UpdateSiteSettingsDto = z.infer<typeof UpdateSiteSettingsSchema>;

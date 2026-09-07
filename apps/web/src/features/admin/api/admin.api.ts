@@ -1,5 +1,50 @@
 import { apiFetch, apiFetchClient } from "@/shared/api/http-client";
-import type { AssignRolesDto, AdminUserListQuery, AdminActivityAction } from "@packetpulse/types";
+import type { AssignRolesDto, AdminUserListQuery, AdminActivityAction, UpdateSiteSettingsDto } from "@packetpulse/types";
+
+export interface SiteSettings {
+  id: string;
+  siteName: string;
+  siteDescription: string;
+  maintenanceMode: boolean;
+  registrationEnabled: boolean;
+  maxUploadSizeMb: number;
+  maxUserResourcesCount: number;
+  emailVerificationRequired: boolean;
+  adminEmail: string;
+  apiRateLimit: number;
+  sessionTimeoutMinutes: number;
+  theme: "light" | "dark" | "system";
+  logLevel: "debug" | "info" | "warn" | "error";
+  updatedAt: string;
+}
+
+export interface ClientLogEntry {
+  id: string;
+  level: "debug" | "info" | "warn" | "error";
+  context: string | null;
+  message: string;
+  data: unknown;
+  userId: string | null;
+  ip: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+export interface ClientLogListQuery {
+  level?: string;
+  search?: string;
+  fromDate?: string;
+  toDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface SystemStatus {
+  server: { status: "operational"; uptimeSeconds: number; nodeEnv: string; nodeVersion: string };
+  memory: { rssMb: number; heapUsedMb: number; heapTotalMb: number };
+  database: { status: "operational" | "down"; latencyMs: number };
+  timestamp: string;
+}
 
 export interface AdminUser {
   id: string;
@@ -109,6 +154,10 @@ export const adminServerApi = {
   getUser: (cookieHeader: string, id: string) => apiFetch<AdminUser>(`/admin/users/${id}`, { cookieHeader }),
   activity: (cookieHeader: string, query: { page?: number; limit?: number } = {}) =>
     apiFetch<PaginatedResponse<AdminActivityLogEntry>>(`/admin/activity${toQueryString(query)}`, { cookieHeader }),
+  settings: (cookieHeader: string) => apiFetch<SiteSettings>("/admin/settings", { cookieHeader }),
+  status: (cookieHeader: string) => apiFetch<SystemStatus>("/admin/status", { cookieHeader }),
+  logs: (cookieHeader: string, query: ClientLogListQuery = {}) =>
+    apiFetch<PaginatedResponse<ClientLogEntry>>(`/logs${toQueryString(query)}`, { cookieHeader }),
 };
 
 export const adminClientApi = {
@@ -127,4 +176,7 @@ export const adminClientApi = {
     apiFetchClient<AdminAnalytics>(`/admin/analytics${toQueryString(query)}`),
   activity: (query: { page?: number; limit?: number } = {}) =>
     apiFetchClient<PaginatedResponse<AdminActivityLogEntry>>(`/admin/activity${toQueryString(query)}`),
+  updateSettings: (dto: UpdateSiteSettingsDto) =>
+    apiFetchClient<SiteSettings>("/admin/settings", { method: "PUT", body: JSON.stringify(dto) }),
+  status: () => apiFetchClient<SystemStatus>("/admin/status"),
 };

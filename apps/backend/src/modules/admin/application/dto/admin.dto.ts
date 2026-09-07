@@ -6,6 +6,7 @@ import {
   AdminUserListQuerySchema,
   AdminDateRangeQuerySchema,
   AdminActivityListQuerySchema,
+  UpdateSiteSettingsSchema,
 } from "@packetpulse/types";
 
 export class AssignRolesDto extends createZodDto(AssignRolesSchema) {}
@@ -14,3 +15,4 @@ export class BulkCleanDataDto extends createZodDto(BulkCleanDataSchema) {}
 export class AdminUserListQueryDto extends createZodDto(AdminUserListQuerySchema) {}
 export class AdminDateRangeQueryDto extends createZodDto(AdminDateRangeQuerySchema) {}
 export class AdminActivityListQueryDto extends createZodDto(AdminActivityListQuerySchema) {}
+export class UpdateSiteSettingsDto extends createZodDto(UpdateSiteSettingsSchema) {}
