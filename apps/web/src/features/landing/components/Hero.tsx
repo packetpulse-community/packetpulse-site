@@ -83,7 +83,7 @@ export function Hero() {
               className="absolute inset-4 animate-pulse rounded-full bg-gradient-to-br from-indigo-600/40 to-purple-600/40"
               style={{ animationDelay: "1s" }}
             />
-            <div className="absolute inset-8 overflow-hidden rounded-full border border-white/10 shadow-2xl shadow-indigo-500/20 backdrop-blur-sm">
+            <div className="absolute inset-8 overflow-hidden rounded-full glass-panel shadow-glass-glow">
               <Image
                 src="/hero-illustration.svg"
                 alt="Network graph illustration"

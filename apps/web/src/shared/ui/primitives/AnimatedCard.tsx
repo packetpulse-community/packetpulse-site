@@ -7,12 +7,18 @@ interface AnimatedCardProps {
   children: React.ReactNode;
   className?: string;
   glowColor?: string;
+  variant?: "solid" | "glass";
 }
 
 // Mouse-tracking tilt + spotlight + colored glow, ported from the reference
 // project's src/components/ui/animated-card.jsx (framer-motion, already a
 // dependency here).
-export function AnimatedCard({ children, className, glowColor = "rgba(100,100,255,0.15)" }: AnimatedCardProps) {
+export function AnimatedCard({
+  children,
+  className,
+  glowColor = "rgba(100,100,255,0.15)",
+  variant = "solid",
+}: AnimatedCardProps) {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -43,7 +49,10 @@ export function AnimatedCard({ children, className, glowColor = "rgba(100,100,25
       whileHover={{ boxShadow: `0 20px 25px -5px ${glowColor}, 0 8px 10px -6px ${glowColor}` }}
       initial={{ boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)" }}
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-gray-900",
+        "relative overflow-hidden rounded-2xl p-4",
+        variant === "glass"
+          ? "glass-panel glass-interactive"
+          : "border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-gray-900",
         className,
       )}
     >

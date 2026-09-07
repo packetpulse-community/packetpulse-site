@@ -24,7 +24,7 @@ export function UpcomingEvents() {
       <div className="grid gap-6 md:grid-cols-3">
         {EVENTS.map((event, index) => (
           <Reveal key={event.title} delayMs={index * 100}>
-            <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+            <div className="flex flex-col gap-3 rounded-xl glass-panel p-6">
               <div className="flex items-center justify-between">
                 <Calendar className="h-5 w-5 text-indigo-400" />
                 <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-medium text-indigo-400">Coming soon</span>
@@ -35,7 +35,7 @@ export function UpcomingEvents() {
                 type="button"
                 disabled
                 title="Registration coming soon"
-                className="mt-2 w-fit rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-gray-300 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-2 w-fit rounded-md glass-panel px-4 py-2 text-sm font-medium text-gray-300 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Register Now
               </button>

@@ -48,7 +48,7 @@ export function StatsStrip() {
 
   return (
     <section ref={ref} className="container py-16">
-      <Reveal className="rounded-2xl border border-white/10 bg-indigo-900/10 p-8 shadow-xl backdrop-blur-md md:p-10">
+      <Reveal className="rounded-2xl glass-panel-strong p-8 md:p-10">
         <h2 className="mb-10 text-center text-2xl font-semibold">Our Growth in Numbers</h2>
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {STATS.map((stat) => (

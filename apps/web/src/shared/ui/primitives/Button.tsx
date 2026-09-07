@@ -18,6 +18,7 @@ export const buttonVariants = cva(
         link: "text-indigo-600 underline-offset-4 hover:underline hover:text-indigo-700 p-0 h-auto",
         gradient:
           "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-md",
+        glass: "glass-panel glass-interactive text-foreground",
       },
       size: {
         default: "h-10 px-4 py-2",

@@ -22,7 +22,7 @@ export function LatestResources({ resources }: { resources: ResourceSummary[] })
           <Reveal key={resource.id} delayMs={index * 100}>
             <Link
               href={`/resources/${resource.id}`}
-              className="group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm transition-colors hover:bg-white/10"
+              className="group flex flex-col overflow-hidden rounded-xl glass-panel glass-interactive"
             >
               <div className="aspect-video w-full overflow-hidden bg-muted">
                 {resource.thumbnailUrl ? (

@@ -36,7 +36,7 @@ export function WhatWeOffer() {
             key={offering.title}
             delayMs={index * 100}
             as="article"
-            className="flex flex-col gap-4 rounded-xl bg-white/5 p-8 backdrop-blur-sm transition-colors hover:bg-white/10"
+            className="flex flex-col gap-4 rounded-xl glass-panel glass-interactive p-8"
           >
             <offering.icon className="h-8 w-8 text-indigo-400" />
             <h3 className="text-xl font-semibold">{offering.title}</h3>

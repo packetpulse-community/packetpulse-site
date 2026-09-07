@@ -15,7 +15,7 @@ export function FinalCta() {
           </Link>
           <Link
             href="/login"
-            className="rounded-md border border-white/30 bg-white/5 px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-white/10"
+            className="rounded-md glass-panel glass-interactive px-6 py-3 text-sm font-medium text-foreground"
           >
             Sign In
           </Link>

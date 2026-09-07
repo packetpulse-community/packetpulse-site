@@ -43,7 +43,7 @@ export function AboutTeam() {
           <Reveal
             key={member.name}
             delayMs={(index % 8) * 60}
-            className="flex flex-col gap-1 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition-colors hover:bg-white/10"
+            className="flex flex-col gap-1 rounded-xl glass-panel glass-interactive p-4"
           >
             <a href={member.linkedin} target="_blank" rel="noreferrer" className="font-semibold hover:text-indigo-400 hover:underline">
               {member.name}

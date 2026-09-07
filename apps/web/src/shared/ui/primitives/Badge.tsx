@@ -17,6 +17,7 @@ export const badgeVariants = cva(
         success: "border-transparent bg-green-500 text-white hover:bg-green-600",
         warning: "border-transparent bg-yellow-500 text-white hover:bg-yellow-600",
         danger: "border-transparent bg-red-500 text-white hover:bg-red-600",
+        glass: "border-transparent glass-panel text-foreground",
       },
       size: {
         default: "h-6 px-2.5 py-0.5 text-xs",

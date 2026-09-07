@@ -1,21 +1,27 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef } from "react";
 import { cn } from "@/shared/utils/cn";
 
 // Raw-slate recipe ported verbatim from the reference project's
 // src/components/ui/card.jsx — not the bg-card/border-border CSS-variable
 // tokens (the reference never used those for Card, despite them existing).
-export const Card = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        "rounded-lg border border-slate-200 bg-white text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50",
-        className,
-      )}
-      {...props}
-    />
-  ),
-);
+export const cardVariants = cva("rounded-lg", {
+  variants: {
+    variant: {
+      solid: "border border-slate-200 bg-white text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50",
+      glass: "glass-panel glass-interactive text-foreground",
+    },
+  },
+  defaultVariants: {
+    variant: "solid",
+  },
+});
+
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof cardVariants> {}
+
+export const Card = forwardRef<HTMLDivElement, CardProps>(({ className, variant, ...props }, ref) => (
+  <div ref={ref} className={cn(cardVariants({ variant }), className)} {...props} />
+));
 Card.displayName = "Card";
 
 export const CardHeader = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(

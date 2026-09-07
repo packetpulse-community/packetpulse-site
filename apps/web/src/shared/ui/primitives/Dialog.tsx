@@ -35,7 +35,7 @@ export function Dialog({ open, onClose, title, description, children, className 
         onClick={onClose}
         aria-hidden="true"
       />
-      <Card className={cn("relative z-10 w-full max-w-md shadow-lg", className)}>
+      <Card variant="glass" className={cn("relative z-10 w-full max-w-md", className)}>
         <div className="flex items-start justify-between p-6 pb-0">
           <div>
             <h2 className="text-lg font-semibold">{title}</h2>

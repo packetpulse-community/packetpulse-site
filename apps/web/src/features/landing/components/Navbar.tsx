@@ -77,7 +77,7 @@ export function Navbar() {
       className={cn(
         "sticky top-4 z-50 transition-all duration-300",
         scrolled && "floating-nav floating-nav-scrolled",
-        showTransparent ? "bg-transparent" : "bg-slate-900/95 backdrop-blur-md shadow-lg",
+        showTransparent ? "bg-transparent" : "glass-panel-strong",
         scrolled && "shadow-indigo-500/10",
       )}
     >

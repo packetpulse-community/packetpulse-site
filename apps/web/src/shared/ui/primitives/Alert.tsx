@@ -17,6 +17,7 @@ export const alertVariants = cva(
         success: "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200",
         warning: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200",
         error: "border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200",
+        glass: "glass-panel text-foreground",
       },
     },
     defaultVariants: {
@@ -31,6 +32,7 @@ const VARIANT_ICONS = {
   success: CheckCircle2,
   warning: AlertTriangle,
   error: AlertCircle,
+  glass: Info,
 } as const;
 
 export interface AlertProps

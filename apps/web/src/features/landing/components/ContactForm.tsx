@@ -49,8 +49,8 @@ export function ContactForm() {
   }
 
   const inputClass = (hasError: boolean) =>
-    `w-full rounded-md border bg-background px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-      hasError ? "border-destructive" : "border-input"
+    `w-full rounded-md border bg-glass px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+      hasError ? "border-destructive" : "border-glass-border"
     }`;
 
   return (

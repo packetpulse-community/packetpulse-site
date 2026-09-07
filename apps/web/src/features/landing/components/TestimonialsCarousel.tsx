@@ -45,7 +45,7 @@ export function TestimonialsCarousel() {
         </div>
 
         <div
-          className="mx-auto flex max-w-2xl flex-col items-center gap-6 rounded-2xl border border-white/10 bg-white/5 p-8 text-center shadow-xl backdrop-blur-md md:p-10"
+          className="mx-auto flex max-w-2xl flex-col items-center gap-6 rounded-2xl glass-panel-strong p-8 text-center md:p-10"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >
