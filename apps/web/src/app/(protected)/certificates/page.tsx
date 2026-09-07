@@ -9,8 +9,11 @@ export default async function CertificatesPage() {
   const certificates = await quizzesServerApi.myCertificates(cookieHeader);
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">My Certificates</h1>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-2 text-center">
+        <h1 className="text-3xl font-semibold">My Certificates</h1>
+        <p className="text-muted-foreground">Certificates you've earned by passing quizzes.</p>
+      </div>
       <div className="flex flex-col gap-3">
         {certificates.map((cert) => (
           <Card key={cert.id} variant="glass" className="flex items-center justify-between p-4">

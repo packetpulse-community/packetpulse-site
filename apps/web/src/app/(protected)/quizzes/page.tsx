@@ -13,9 +13,12 @@ export default async function QuizzesPage() {
   const canAuthor = isSuperAdmin || (user?.permissions.includes("quizzes:author") ?? false);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Quizzes</h1>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col items-center gap-2 text-center">
+        <h1 className="text-3xl font-semibold">Test Your Knowledge</h1>
+        <p className="text-muted-foreground">
+          Take quizzes on networking topics, track your progress, and earn certificates as you go.
+        </p>
         {canAuthor && (
           <Link href="/quizzes/new" className={cn(buttonVariants({ variant: "gradient" }))}>
             Create Quiz

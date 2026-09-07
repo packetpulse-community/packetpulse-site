@@ -14,6 +14,7 @@ export interface BlogPostSummary {
   slug: string;
   content: string;
   category: string;
+  coverImageUrl: string | null;
   viewCount: number;
   postedAt: string;
   author: BlogAuthor;
@@ -28,8 +29,15 @@ export interface BlogComment {
   user: BlogAuthor;
 }
 
+export interface BlogImage {
+  id: string;
+  url: string;
+  position: number;
+}
+
 export interface BlogPostDetail extends BlogPostSummary {
   comments: BlogComment[];
+  images: BlogImage[];
 }
 
 export interface Paginated<T> {
@@ -43,6 +51,7 @@ export interface Paginated<T> {
 // Server-side (Server Components) — forwards the incoming request's cookies (plan §6).
 export const blogsServerApi = {
   list: (cookieHeader: string, query = "") => apiFetch<Paginated<BlogPostSummary>>(`/blogs${query}`, { cookieHeader }),
+  featured: (cookieHeader: string) => apiFetch<BlogPostSummary[]>("/blogs/featured", { cookieHeader }),
   getBySlug: (slug: string, cookieHeader: string) => apiFetch<BlogPostDetail>(`/blogs/slug/${slug}`, { cookieHeader }),
   // No dedicated "related posts" endpoint exists — reuses the list endpoint filtered
   // to the current post's category, capped at 4 + the post itself so the caller can

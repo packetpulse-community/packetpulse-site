@@ -1,71 +1,30 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { Toaster } from "sonner";
-import { useAuth } from "@/shared/auth/AuthProvider";
-import { authApi } from "@/features/auth/api/auth.api";
-import { useRouter } from "next/navigation";
-import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 import { CommandPalette } from "@/shared/components/CommandPalette";
+import { Breadcrumbs } from "@/shared/components/Breadcrumbs";
+import { AppSidebar } from "./AppSidebar";
+import { AppTopbar } from "./AppTopbar";
 
-// Compact top bar carrying only global, always-relevant items — no persistent
-// nested sidebar tree (plan §6 domain-driven navigation). The command palette
-// (⌘K) is the primary cross-domain navigation mechanism; this bar just holds the
-// logo, a hint to open it, notifications, and the user menu.
+// Sidebar-based app shell (matches the legacy reference app's layout) — the
+// persistent left rail + top bar is the general end-user experience now, not
+// just an admin-only exception.
 export function WorkflowShell({ children }: { children: React.ReactNode }) {
-  const user = useAuth();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await authApi.logout();
-    router.push("/login");
-    router.refresh();
-  };
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Toaster theme="dark" richColors />
       <CommandPalette />
-      <header className="floating-nav sticky top-4 z-40 flex items-center justify-between px-4 py-3">
-        <Link href="/dashboard" className="font-semibold">
-          PacketPulse
-        </Link>
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/blogs" className="hover:text-primary">
-            Blogs
-          </Link>
-          <Link href="/resources" className="hover:text-primary">
-            Resources
-          </Link>
-          <Link href="/recordings" className="hover:text-primary">
-            Recordings
-          </Link>
-          <Link href="/forums" className="hover:text-primary">
-            Forums
-          </Link>
-          <Link href="/quizzes" className="hover:text-primary">
-            Quizzes
-          </Link>
-          <button
-            onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
-            className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary"
-          >
-            ⌘K Search
-          </button>
-          {user && (
-            <>
-              <NotificationBell />
-              <Link href="/profile" className="text-muted-foreground hover:text-primary">
-                {user.firstName}
-              </Link>
-              <button onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
-                Log out
-              </button>
-            </>
-          )}
-        </nav>
-      </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <AppSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="lg:ml-64">
+        <AppTopbar onMenuClick={() => setSidebarOpen(true)} />
+        <div className="border-b border-glass-border px-4 py-2 lg:px-8">
+          <Breadcrumbs />
+        </div>
+        <main className="mx-auto max-w-5xl px-4 py-8 lg:px-8">{children}</main>
+      </div>
     </div>
   );
 }

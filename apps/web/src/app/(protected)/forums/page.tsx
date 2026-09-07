@@ -11,8 +11,13 @@ export default async function ForumsPage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Forums</h1>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-2 text-center">
+        <h1 className="text-3xl font-semibold">Community Forums</h1>
+        <p className="text-muted-foreground">
+          Ask questions, share solutions, and troubleshoot together with other networking professionals.
+        </p>
+      </div>
 
       <NewThreadForm categories={categories} />
 

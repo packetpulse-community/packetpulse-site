@@ -32,6 +32,10 @@ export interface ResourceSummary {
 export const resourcesServerApi = {
   list: (cookieHeader: string, query = "") => apiFetch<Paginated<ResourceSummary>>(`/resources${query}`, { cookieHeader }),
   getById: (id: string, cookieHeader: string) => apiFetch<ResourceSummary>(`/resources/${id}`, { cookieHeader }),
+  related: (category: string, excludeId: string, cookieHeader: string) =>
+    apiFetch<Paginated<ResourceSummary>>(`/resources?category=${category}&limit=5`, { cookieHeader }).then((res) =>
+      res.data.filter((r) => r.id !== excludeId).slice(0, 4),
+    ),
 };
 
 // Client-side (mutations) — same-origin /api proxy.
