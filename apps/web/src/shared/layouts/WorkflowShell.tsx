@@ -55,7 +55,9 @@ export function WorkflowShell({ children }: { children: React.ReactNode }) {
           {user && (
             <>
               <NotificationBell />
-              <span className="text-muted-foreground">{user.firstName}</span>
+              <Link href="/profile" className="text-muted-foreground hover:text-primary">
+                {user.firstName}
+              </Link>
               <button onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
                 Log out
               </button>
