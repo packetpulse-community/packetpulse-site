@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, FileText, Video, Users, BookOpen, HelpCircle, ShieldCheck, LogOut, X } from "lucide-react";
+import { Home, FileText, Video, Users, BookOpen, HelpCircle, Activity, ShieldCheck, LogOut, X } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { useAuth } from "@/shared/auth/AuthProvider";
 import { authApi } from "@/features/auth/api/auth.api";
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
   { label: "Resources", href: "/resources", icon: FileText },
   { label: "Recordings", href: "/recordings", icon: Video },
+  { label: "Network Tools", href: "/network-tools", icon: Activity },
   { label: "Blogs", href: "/blogs", icon: BookOpen },
   { label: "Forums", href: "/forums", icon: Users },
   { label: "Quizzes", href: "/quizzes", icon: HelpCircle },
