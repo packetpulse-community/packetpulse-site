@@ -10,8 +10,11 @@ const ACTION_LABELS: Record<AdminActivityAction, string> = {
   user_roles_changed: "Role changes",
   user_deleted: "User deletions",
   resource_approved: "Resource approvals",
+  resource_unapproved: "Resource unapprovals",
   recording_approved: "Recording approvals",
+  recording_unapproved: "Recording unapprovals",
   blog_approved: "Blog approvals",
+  blog_unapproved: "Blog unapprovals",
 };
 
 // Segment colors from the design system's real palette (indigo/cyan/yellow/

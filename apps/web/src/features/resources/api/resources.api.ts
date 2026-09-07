@@ -1,5 +1,6 @@
 import { apiFetch, apiFetchClient } from "@/shared/api/http-client";
 import type { Paginated } from "@/features/blogs/api/blogs.api";
+import type { CreateResourceDto, UpdateResourceDto } from "@packetpulse/types";
 
 export interface ResourceOwner {
   id: string;
@@ -42,4 +43,8 @@ export const resourcesServerApi = {
 export const resourcesClientApi = {
   toggleLike: (id: string) => apiFetchClient<{ liked: boolean }>(`/resources/${id}/like`, { method: "PUT" }),
   incrementDownload: (id: string) => apiFetchClient<{ success: boolean }>(`/resources/${id}/download`, { method: "PUT" }),
+  create: (dto: CreateResourceDto) => apiFetchClient<ResourceSummary>("/resources", { method: "POST", body: JSON.stringify(dto) }),
+  update: (id: string, dto: UpdateResourceDto) =>
+    apiFetchClient<ResourceSummary>(`/resources/${id}`, { method: "PUT", body: JSON.stringify(dto) }),
+  delete: (id: string) => apiFetchClient<{ success: boolean }>(`/resources/${id}`, { method: "DELETE" }),
 };

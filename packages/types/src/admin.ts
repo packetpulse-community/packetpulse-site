@@ -40,8 +40,11 @@ export const AdminActivityActionSchema = z.enum([
   "user_roles_changed",
   "user_deleted",
   "resource_approved",
+  "resource_unapproved",
   "recording_approved",
+  "recording_unapproved",
   "blog_approved",
+  "blog_unapproved",
 ]);
 export type AdminActivityAction = z.infer<typeof AdminActivityActionSchema>;
 

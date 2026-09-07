@@ -5,6 +5,7 @@ export interface BlogPostFilter {
   category?: BlogCategory;
   tag?: string;
   search?: string;
+  isAdmin?: boolean;
 }
 
 // Blogs is a pilot module for the repository pattern alongside identity (plan §3).

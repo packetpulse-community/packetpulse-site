@@ -12,8 +12,11 @@ const ACTION_LABELS: Record<AdminActivityAction, string> = {
   user_roles_changed: "Changed roles",
   user_deleted: "Deleted user",
   resource_approved: "Approved resource",
+  resource_unapproved: "Unapproved resource",
   recording_approved: "Approved recording",
+  recording_unapproved: "Unapproved recording",
   blog_approved: "Approved blog post",
+  blog_unapproved: "Unapproved blog post",
 };
 
 function describeDetails(entry: AdminActivityLogEntry): string {

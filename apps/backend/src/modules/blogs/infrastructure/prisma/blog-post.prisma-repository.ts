@@ -13,6 +13,11 @@ export class BlogPostPrismaRepository extends BlogPostRepository {
   private buildWhere(filter: BlogPostFilter): Prisma.BlogPostWhereInput {
     return {
       isPublished: true,
+      // Non-admin visitors only ever see approved posts, matching resources/
+      // recordings' isApproved-gating pattern — previously ungated here, so
+      // admins had no way to see (and moderate) unapproved posts via this
+      // endpoint at all.
+      isApproved: filter.isAdmin ? undefined : true,
       category: filter.category,
       tags: filter.tag ? { some: { tag: filter.tag } } : undefined,
       OR: filter.search

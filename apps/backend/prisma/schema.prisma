@@ -671,8 +671,11 @@ enum AdminActivityAction {
   user_roles_changed
   user_deleted
   resource_approved
+  resource_unapproved
   recording_approved
+  recording_unapproved
   blog_approved
+  blog_unapproved
 }
 
 model AdminActivityLog {

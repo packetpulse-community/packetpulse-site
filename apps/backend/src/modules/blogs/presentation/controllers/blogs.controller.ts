@@ -4,11 +4,15 @@ import { BlogPostsService } from "../../application/services/blog-posts.service"
 import { BlogCommentsService } from "../../application/services/blog-comments.service";
 import { BlogLikesService } from "../../application/services/blog-likes.service";
 import { CreateBlogPostDto, UpdateBlogPostDto, CreateCommentDto, BlogListQueryDto } from "../../application/dto/blogs.dto";
-import { Public, CurrentUser, RequirePermission, PERMISSIONS } from "../../../identity";
+import { Public, CurrentUser, RequirePermission, PERMISSIONS, SUPER_ADMIN_ROLE } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
 
 // write-standard tier (plan §4): 100 requests/15min for authenticated writes.
 const WRITE_STANDARD = { default: { limit: 100, ttl: 900_000 } };
+
+function isAdminRoles(roles: string[]) {
+  return roles.includes("admin") || roles.includes(SUPER_ADMIN_ROLE);
+}
 
 @Controller("blogs")
 export class BlogsController {
@@ -20,8 +24,8 @@ export class BlogsController {
 
   @Public()
   @Get()
-  list(@Query() query: BlogListQueryDto) {
-    return this.posts.list(query);
+  list(@Query() query: BlogListQueryDto, @CurrentUser() user?: AccessTokenPayload) {
+    return this.posts.list(query, !!user && isAdminRoles(user.roles));
   }
 
   @Public()

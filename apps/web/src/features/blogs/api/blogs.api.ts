@@ -1,5 +1,5 @@
 import { apiFetch, apiFetchClient } from "@/shared/api/http-client";
-import type { CreateCommentDto } from "@packetpulse/types";
+import type { CreateCommentDto, CreateBlogPostDto, UpdateBlogPostDto } from "@packetpulse/types";
 
 export interface BlogAuthor {
   id: string;
@@ -17,6 +17,7 @@ export interface BlogPostSummary {
   coverImageUrl: string | null;
   viewCount: number;
   postedAt: string;
+  isApproved: boolean;
   author: BlogAuthor;
   tags: { tag: string }[];
   _count: { likes: number; comments: number };
@@ -67,4 +68,8 @@ export const blogsClientApi = {
   addComment: (postId: string, dto: CreateCommentDto) =>
     apiFetchClient<BlogComment>(`/blogs/${postId}/comments`, { method: "POST", body: JSON.stringify(dto) }),
   toggleLike: (postId: string) => apiFetchClient<{ liked: boolean }>(`/blogs/${postId}/like`, { method: "PUT" }),
+  create: (dto: CreateBlogPostDto) => apiFetchClient<BlogPostDetail>("/blogs", { method: "POST", body: JSON.stringify(dto) }),
+  update: (id: string, dto: UpdateBlogPostDto) =>
+    apiFetchClient<BlogPostDetail>(`/blogs/${id}`, { method: "PUT", body: JSON.stringify(dto) }),
+  delete: (id: string) => apiFetchClient<{ success: boolean }>(`/blogs/${id}`, { method: "DELETE" }),
 };

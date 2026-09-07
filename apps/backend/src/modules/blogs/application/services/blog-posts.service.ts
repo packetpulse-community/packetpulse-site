@@ -13,10 +13,10 @@ export class BlogPostsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async list(query: BlogListQueryDto) {
+  async list(query: BlogListQueryDto, isAdmin = false) {
     const skip = prismaSkip(query.page, query.limit);
     const [data, total] = await this.posts.findMany(
-      { category: query.category, tag: query.tag, search: query.search },
+      { category: query.category, tag: query.tag, search: query.search, isAdmin },
       skip,
       query.limit,
     );

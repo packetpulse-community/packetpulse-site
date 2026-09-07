@@ -135,6 +135,13 @@ export class AdminController {
   }
 
   @Throttle(ADMIN_TIER)
+  @RequirePermission(PERMISSIONS.RESOURCES_MODERATE)
+  @Put("resources/:id/unapprove")
+  unapproveResource(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
+    return this.moderation.unapproveResource(id, admin.sub);
+  }
+
+  @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.RECORDINGS_MODERATE)
   @Get("recordings/pending")
   pendingRecordings() {
@@ -149,6 +156,13 @@ export class AdminController {
   }
 
   @Throttle(ADMIN_TIER)
+  @RequirePermission(PERMISSIONS.RECORDINGS_MODERATE)
+  @Put("recordings/:id/unapprove")
+  unapproveRecording(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
+    return this.moderation.unapproveRecording(id, admin.sub);
+  }
+
+  @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.BLOGS_MODERATE)
   @Get("blogs/pending")
   pendingBlogs() {
@@ -160,6 +174,13 @@ export class AdminController {
   @Put("blogs/:id/approve")
   approveBlog(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
     return this.moderation.approveBlog(id, admin.sub);
+  }
+
+  @Throttle(ADMIN_TIER)
+  @RequirePermission(PERMISSIONS.BLOGS_MODERATE)
+  @Put("blogs/:id/unapprove")
+  unapproveBlog(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
+    return this.moderation.unapproveBlog(id, admin.sub);
   }
 
   @Throttle(ADMIN_TIER)

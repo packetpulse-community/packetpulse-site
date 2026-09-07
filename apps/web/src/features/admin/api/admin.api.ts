@@ -164,8 +164,11 @@ export const adminClientApi = {
   approveUser: (id: string) => apiFetchClient<AdminUser>(`/admin/users/${id}/approve`, { method: "PUT" }),
   unapproveUser: (id: string) => apiFetchClient<AdminUser>(`/admin/users/${id}/unapprove`, { method: "PUT" }),
   approveResource: (id: string) => apiFetchClient(`/admin/resources/${id}/approve`, { method: "PUT" }),
+  unapproveResource: (id: string) => apiFetchClient(`/admin/resources/${id}/unapprove`, { method: "PUT" }),
   approveRecording: (id: string) => apiFetchClient(`/admin/recordings/${id}/approve`, { method: "PUT" }),
+  unapproveRecording: (id: string) => apiFetchClient(`/admin/recordings/${id}/unapprove`, { method: "PUT" }),
   approveBlog: (id: string) => apiFetchClient(`/admin/blogs/${id}/approve`, { method: "PUT" }),
+  unapproveBlog: (id: string) => apiFetchClient(`/admin/blogs/${id}/unapprove`, { method: "PUT" }),
   listUsers: (query: Partial<AdminUserListQuery>) =>
     apiFetchClient<PaginatedResponse<AdminUser>>(`/admin/users${toQueryString(query)}`),
   assignRoles: (id: string, dto: AssignRolesDto) =>

@@ -1,5 +1,6 @@
 import { apiFetch, apiFetchClient } from "@/shared/api/http-client";
 import type { Paginated } from "@/features/blogs/api/blogs.api";
+import type { CreateRecordingDto, UpdateRecordingDto } from "@packetpulse/types";
 
 export interface RecordingInstructor {
   id: string;
@@ -39,4 +40,9 @@ export const recordingsServerApi = {
 export const recordingsClientApi = {
   toggleLike: (id: string) => apiFetchClient<{ liked: boolean }>(`/recordings/${id}/like`, { method: "PUT" }),
   join: (id: string) => apiFetchClient<{ joined: boolean }>(`/recordings/${id}/join`, { method: "POST" }),
+  create: (dto: CreateRecordingDto) =>
+    apiFetchClient<RecordingSummary>("/recordings", { method: "POST", body: JSON.stringify(dto) }),
+  update: (id: string, dto: UpdateRecordingDto) =>
+    apiFetchClient<RecordingSummary>(`/recordings/${id}`, { method: "PUT", body: JSON.stringify(dto) }),
+  delete: (id: string) => apiFetchClient<{ success: boolean }>(`/recordings/${id}`, { method: "DELETE" }),
 };
