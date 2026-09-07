@@ -53,4 +53,10 @@ export class ResourcesController {
   toggleLike(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
     return this.resources.toggleLike(id, user.sub);
   }
+
+  @Throttle(WRITE_STANDARD)
+  @Put(":id/download")
+  incrementDownload(@Param("id") id: string) {
+    return this.resources.incrementDownload(id);
+  }
 }

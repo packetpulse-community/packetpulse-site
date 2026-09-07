@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 import { resourcesServerApi } from "@/features/resources/api/resources.api";
 import { ResourceLikeButton } from "@/features/resources/components/LikeButton";
+import { DownloadButton } from "@/features/resources/components/DownloadButton";
+import { ResourcePreviewModal } from "@/features/resources/components/ResourcePreviewModal";
+import { Badge } from "@/shared/ui/primitives/Badge";
 
 export default async function ResourceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,22 +32,22 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
 
       <div className="flex flex-wrap gap-2">
         {resource.tags.map((t) => (
-          <span key={t.tag} className="rounded bg-muted px-2 py-1 text-xs text-muted-foreground">
+          <Badge key={t.tag} variant="glass">
             {t.tag}
-          </span>
+          </Badge>
         ))}
       </div>
 
-      {(resource.fileUrl || resource.externalLink) && (
-        <a
-          href={resource.fileUrl ?? resource.externalLink ?? "#"}
-          target="_blank"
-          rel="noreferrer"
-          className="w-fit rounded-md bg-primary px-4 py-2 text-primary-foreground"
-        >
-          {resource.downloadable ? "Download" : "View resource"}
-        </a>
-      )}
+      <div className="flex items-center gap-3">
+        {(resource.fileUrl || resource.externalLink) && (
+          <DownloadButton
+            resourceId={resource.id}
+            href={resource.fileUrl ?? resource.externalLink ?? "#"}
+            label={resource.downloadable ? "Download" : "View resource"}
+          />
+        )}
+        <ResourcePreviewModal title={resource.title} resourceType={resource.resourceType} fileUrl={resource.fileUrl} />
+      </div>
     </article>
   );
 }

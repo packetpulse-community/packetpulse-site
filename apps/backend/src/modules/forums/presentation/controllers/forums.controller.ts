@@ -55,6 +55,20 @@ export class ForumsController {
   }
 
   @Throttle(WRITE_STANDARD)
+  @RequirePermission(PERMISSIONS.FORUMS_MODERATE)
+  @Put("threads/:id/pin")
+  pin(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
+    return this.threads.setPinned(id, user.sub, user.roles, true);
+  }
+
+  @Throttle(WRITE_STANDARD)
+  @RequirePermission(PERMISSIONS.FORUMS_MODERATE)
+  @Put("threads/:id/unpin")
+  unpin(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
+    return this.threads.setPinned(id, user.sub, user.roles, false);
+  }
+
+  @Throttle(WRITE_STANDARD)
   @RequirePermission(PERMISSIONS.FORUMS_CREATE)
   @Post("threads/:id/replies")
   addReply(

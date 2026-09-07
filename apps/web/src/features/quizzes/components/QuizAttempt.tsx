@@ -1,12 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
+import { cn } from "@/shared/utils/cn";
+import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { quizzesClientApi } from "../api/quizzes.api";
 import type { QuizForTaking, SubmitResult } from "../api/quizzes.api";
 
 type AnswerMap = Record<string, string[]>; // questionId -> selected option ids
+
+function formatTime(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+// Advisory-only countdown — the backend doesn't enforce time limits server-side
+// either (no expiry check in quiz-attempts.service.ts's submit), so this never
+// blocks submission past zero, it just signals urgency to the user.
+function TimerBadge({ seconds }: { seconds: number }) {
+  const [remaining, setRemaining] = useState(seconds);
+
+  useEffect(() => {
+    const interval = setInterval(() => setRemaining((r) => Math.max(0, r - 1)), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className={cn("rounded-md px-2 py-1 text-sm font-medium", remaining <= 30 ? "text-destructive" : "text-muted-foreground")}>
+      {formatTime(remaining)}
+    </span>
+  );
+}
 
 export function QuizAttempt({ quiz }: { quiz: QuizForTaking }) {
   const [attemptId, setAttemptId] = useState<string | null>(null);
@@ -38,7 +64,7 @@ export function QuizAttempt({ quiz }: { quiz: QuizForTaking }) {
 
   if (result) {
     return (
-      <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-6 text-center">
+      <div className="glass-panel flex flex-col gap-4 rounded-lg p-6 text-center">
         <h2 className="text-2xl font-semibold">{result.passed ? "You passed! 🎉" : "Not quite there"}</h2>
         <p className="text-lg">Score: {result.scorePct}%</p>
         {result.certificate ? (
@@ -57,14 +83,15 @@ export function QuizAttempt({ quiz }: { quiz: QuizForTaking }) {
 
   if (!attemptId) {
     return (
-      <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-6">
+      <div className="glass-panel flex flex-col gap-4 rounded-lg p-6">
         <p className="text-muted-foreground">
           {quiz.questions.length} questions · pass at {quiz.passingScorePct}%
+          {quiz.timeLimitSeconds ? ` · ${formatTime(quiz.timeLimitSeconds)} time limit` : ""}
         </p>
         <button
           onClick={() => startMutation.mutate()}
           disabled={startMutation.isPending}
-          className="w-fit rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
+          className={cn(buttonVariants({ variant: "gradient" }), "w-fit")}
         >
           {startMutation.isPending ? "Starting…" : "Start quiz"}
         </button>
@@ -80,8 +107,15 @@ export function QuizAttempt({ quiz }: { quiz: QuizForTaking }) {
       }}
       className="flex flex-col gap-6"
     >
+      {quiz.timeLimitSeconds && (
+        <div className="glass-panel flex items-center justify-between rounded-lg p-3">
+          <span className="text-sm text-muted-foreground">Time remaining (advisory — submitting late still works)</span>
+          <TimerBadge seconds={quiz.timeLimitSeconds} />
+        </div>
+      )}
+
       {quiz.questions.map((question, qIndex) => (
-        <fieldset key={question.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
+        <fieldset key={question.id} className="glass-panel flex flex-col gap-2 rounded-lg p-4">
           <legend className="px-1 font-medium">
             {qIndex + 1}. {question.questionText}
           </legend>
@@ -105,7 +139,7 @@ export function QuizAttempt({ quiz }: { quiz: QuizForTaking }) {
       <button
         type="submit"
         disabled={submitMutation.isPending}
-        className="w-fit rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
+        className={cn(buttonVariants({ variant: "gradient" }), "w-fit")}
       >
         {submitMutation.isPending ? "Submitting…" : "Submit quiz"}
       </button>

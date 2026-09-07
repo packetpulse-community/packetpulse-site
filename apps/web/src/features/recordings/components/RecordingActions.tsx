@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { Button } from "@/shared/ui/primitives/Button";
 import { recordingsClientApi } from "../api/recordings.api";
 
 export function RecordingActions({ recordingId, initialLikes }: { recordingId: string; initialLikes: number }) {
@@ -24,20 +25,12 @@ export function RecordingActions({ recordingId, initialLikes }: { recordingId: s
 
   return (
     <div className="flex items-center gap-2">
-      <button
-        onClick={() => likeMutation.mutate()}
-        disabled={likeMutation.isPending}
-        className="rounded-md border border-border px-3 py-1 text-sm hover:border-primary disabled:opacity-50"
-      >
+      <Button variant="glass" size="sm" onClick={() => likeMutation.mutate()} disabled={likeMutation.isPending}>
         {liked ? "♥" : "♡"} {likeCount}
-      </button>
-      <button
-        onClick={() => joinMutation.mutate()}
-        disabled={joinMutation.isPending || joined}
-        className="rounded-md border border-border px-3 py-1 text-sm hover:border-primary disabled:opacity-50"
-      >
+      </Button>
+      <Button variant="glass" size="sm" onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending || joined}>
         {joined ? "Joined" : "Join session"}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -28,6 +28,12 @@ export interface RecordingSummary {
 export const recordingsServerApi = {
   list: (cookieHeader: string, query = "") => apiFetch<Paginated<RecordingSummary>>(`/recordings${query}`, { cookieHeader }),
   getById: (id: string, cookieHeader: string) => apiFetch<RecordingSummary>(`/recordings/${id}`, { cookieHeader }),
+  // No dedicated "related recordings" endpoint — reuses the list endpoint filtered
+  // to the current recording's category, same pattern as blogs' related posts.
+  related: (category: string, excludeId: string, cookieHeader: string) =>
+    apiFetch<Paginated<RecordingSummary>>(`/recordings?category=${category}&limit=5`, { cookieHeader }).then((res) =>
+      res.data.filter((r) => r.id !== excludeId).slice(0, 4),
+    ),
 };
 
 export const recordingsClientApi = {

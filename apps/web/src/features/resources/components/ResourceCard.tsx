@@ -1,17 +1,15 @@
 import Link from "next/link";
+import { cardVariants } from "@/shared/ui/primitives/Card";
+import { Badge } from "@/shared/ui/primitives/Badge";
+import { cn } from "@/shared/utils/cn";
 import type { ResourceSummary } from "../api/resources.api";
 
 export function ResourceCard({ resource }: { resource: ResourceSummary }) {
   return (
-    <Link
-      href={`/resources/${resource.id}`}
-      className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-card-foreground transition hover:border-primary"
-    >
+    <Link href={`/resources/${resource.id}`} className={cn(cardVariants({ variant: "glass" }), "flex flex-col gap-2 p-4")}>
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">{resource.title}</h2>
-        {resource.premium && (
-          <span className="rounded bg-accent px-2 py-0.5 text-xs text-accent-foreground">Premium</span>
-        )}
+        {resource.premium && <Badge variant="glass">Premium</Badge>}
       </div>
       <p className="line-clamp-2 text-sm text-muted-foreground">{resource.description}</p>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">

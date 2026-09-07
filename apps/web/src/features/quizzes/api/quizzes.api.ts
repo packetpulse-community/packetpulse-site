@@ -1,5 +1,6 @@
 import { apiFetch, apiFetchClient } from "@/shared/api/http-client";
 import type { Paginated } from "@/features/blogs/api/blogs.api";
+import type { CreateQuizDto } from "@packetpulse/types";
 
 export interface QuizSummary {
   id: string;
@@ -61,10 +62,55 @@ export interface Certificate {
   quiz: { id: string; title: string; category: string };
 }
 
+export interface CertificateVerification {
+  certificateNumber: string;
+  issuedAt: string;
+  quiz: { id: string; title: string };
+  user: { id: string; firstName: string; lastName: string };
+}
+
+// Raw Prisma projection (question/option isCorrect included) — only reachable by
+// the quiz's owner or an admin (service-level assertOwnerOrAdmin); the taking view
+// (QuizForTaking) deliberately strips isCorrect, this authoring view doesn't.
+export interface QuizAuthoringOption {
+  id: string;
+  optionText: string;
+  position: number;
+  isCorrect: boolean;
+}
+
+export interface QuizAuthoringQuestion {
+  id: string;
+  questionText: string;
+  questionType: "single_choice" | "multi_choice";
+  position: number;
+  points: number;
+  options: QuizAuthoringOption[];
+}
+
+export interface QuizForAuthoring extends Omit<QuizSummary, "_count"> {
+  questions: QuizAuthoringQuestion[];
+}
+
+export interface QuizAttemptWithCertificate extends QuizAttempt {
+  startedAt: string;
+  submittedAt: string | null;
+  certificate: { id: string; certificateNumber: string } | null;
+}
+
 export const quizzesServerApi = {
   list: (cookieHeader: string, query = "") => apiFetch<Paginated<QuizSummary>>(`/quizzes${query}`, { cookieHeader }),
   getForTaking: (id: string, cookieHeader: string) => apiFetch<QuizForTaking>(`/quizzes/${id}`, { cookieHeader }),
+  // No route-level permission decorator — ownership enforced inside the service
+  // via assertOwnerOrAdmin, so a non-owner/non-admin gets a 403 from this call
+  // rather than being blocked client-side.
+  getForAuthoring: (id: string, cookieHeader: string) =>
+    apiFetch<QuizForAuthoring>(`/quizzes/${id}/edit`, { cookieHeader }),
   myCertificates: (cookieHeader: string) => apiFetch<Certificate[]>("/quizzes/certificates/mine", { cookieHeader }),
+  verifyCertificate: (certificateNumber: string, cookieHeader = "") =>
+    apiFetch<CertificateVerification>(`/quizzes/certificates/verify/${certificateNumber}`, { cookieHeader }),
+  myAttempts: (quizId: string, cookieHeader: string) =>
+    apiFetch<QuizAttemptWithCertificate[]>(`/quizzes/${quizId}/attempts/mine`, { cookieHeader }),
 };
 
 export const quizzesClientApi = {
@@ -74,4 +120,5 @@ export const quizzesClientApi = {
       method: "POST",
       body: JSON.stringify({ answers }),
     }),
+  createQuiz: (dto: CreateQuizDto) => apiFetchClient<QuizForAuthoring>("/quizzes", { method: "POST", body: JSON.stringify(dto) }),
 };

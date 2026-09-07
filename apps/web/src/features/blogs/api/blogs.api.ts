@@ -44,6 +44,13 @@ export interface Paginated<T> {
 export const blogsServerApi = {
   list: (cookieHeader: string, query = "") => apiFetch<Paginated<BlogPostSummary>>(`/blogs${query}`, { cookieHeader }),
   getBySlug: (slug: string, cookieHeader: string) => apiFetch<BlogPostDetail>(`/blogs/slug/${slug}`, { cookieHeader }),
+  // No dedicated "related posts" endpoint exists — reuses the list endpoint filtered
+  // to the current post's category, capped at 4 + the post itself so the caller can
+  // drop a self-match and still have up to 4 real related posts to show.
+  related: (category: string, excludeId: string, cookieHeader: string) =>
+    apiFetch<Paginated<BlogPostSummary>>(`/blogs?category=${category}&limit=5`, { cookieHeader }).then((res) =>
+      res.data.filter((p) => p.id !== excludeId).slice(0, 4),
+    ),
 };
 
 // Client-side (mutations from "use client" components) — same-origin /api proxy (plan §6).

@@ -1,11 +1,13 @@
 import Link from "next/link";
+import { cardVariants } from "@/shared/ui/primitives/Card";
+import { cn } from "@/shared/utils/cn";
 import type { BlogPostSummary } from "../api/blogs.api";
 
 export function PostCard({ post }: { post: BlogPostSummary }) {
   return (
     <Link
       href={`/blogs/${post.slug}`}
-      className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-card-foreground transition hover:border-primary"
+      className={cn(cardVariants({ variant: "glass" }), "flex flex-col gap-2 p-4")}
     >
       <h2 className="text-lg font-semibold">{post.title}</h2>
       <p className="line-clamp-2 text-sm text-muted-foreground">{post.content}</p>

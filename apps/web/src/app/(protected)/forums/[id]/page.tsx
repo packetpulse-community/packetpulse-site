@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { forumsServerApi } from "@/features/forums/api/forums.api";
 import { ReplySection } from "@/features/forums/components/ReplySection";
+import { ThreadModerationControls } from "@/features/forums/components/ThreadModerationControls";
 
 export default async function ThreadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -25,6 +26,7 @@ export default async function ThreadDetailPage({ params }: { params: Promise<{ i
           <span>·</span>
           <span>{thread.viewCount} views</span>
         </div>
+        <ThreadModerationControls threadId={thread.id} isLocked={thread.isLocked} isPinned={thread.isPinned} />
       </header>
 
       <p className="whitespace-pre-wrap text-base leading-relaxed">{thread.content}</p>

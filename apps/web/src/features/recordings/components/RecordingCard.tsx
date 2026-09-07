@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { cardVariants } from "@/shared/ui/primitives/Card";
+import { Badge } from "@/shared/ui/primitives/Badge";
+import { cn } from "@/shared/utils/cn";
 import type { RecordingSummary } from "../api/recordings.api";
 
 function formatDuration(seconds: number) {
@@ -9,15 +12,10 @@ function formatDuration(seconds: number) {
 
 export function RecordingCard({ recording }: { recording: RecordingSummary }) {
   return (
-    <Link
-      href={`/recordings/${recording.id}`}
-      className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-card-foreground transition hover:border-primary"
-    >
+    <Link href={`/recordings/${recording.id}`} className={cn(cardVariants({ variant: "glass" }), "flex flex-col gap-2 p-4")}>
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">{recording.title}</h2>
-        {recording.premium && (
-          <span className="rounded bg-accent px-2 py-0.5 text-xs text-accent-foreground">Premium</span>
-        )}
+        {recording.premium && <Badge variant="glass">Premium</Badge>}
       </div>
       <p className="line-clamp-2 text-sm text-muted-foreground">{recording.description}</p>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">

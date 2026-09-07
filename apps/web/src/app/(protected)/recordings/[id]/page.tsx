@@ -1,11 +1,14 @@
 import { cookies } from "next/headers";
 import { recordingsServerApi } from "@/features/recordings/api/recordings.api";
 import { RecordingActions } from "@/features/recordings/components/RecordingActions";
+import { VideoPlayer } from "@/features/recordings/components/VideoPlayer";
+import { RelatedRecordings } from "@/features/recordings/components/RelatedRecordings";
 
 export default async function RecordingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const cookieHeader = (await cookies()).toString();
   const recording = await recordingsServerApi.getById(id, cookieHeader);
+  const related = await recordingsServerApi.related(recording.category, recording.id, cookieHeader);
 
   return (
     <article className="flex flex-col gap-6">
@@ -23,16 +26,11 @@ export default async function RecordingDetailPage({ params }: { params: Promise<
         </div>
       </header>
 
-      <video controls className="w-full rounded-lg border border-border" poster={recording.thumbnailUrl ?? undefined}>
-        <source src={recording.recordingUrl} />
-        Your browser does not support embedded video.{" "}
-        <a href={recording.recordingUrl} target="_blank" rel="noreferrer">
-          Open the recording directly
-        </a>
-        .
-      </video>
+      <VideoPlayer src={recording.recordingUrl} poster={recording.thumbnailUrl ?? undefined} />
 
       <p className="whitespace-pre-wrap text-base leading-relaxed">{recording.description}</p>
+
+      <RelatedRecordings recordings={related} />
     </article>
   );
 }

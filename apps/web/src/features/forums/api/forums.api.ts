@@ -57,5 +57,11 @@ export const forumsClientApi = {
     apiFetchClient<ForumThreadDetail>("/forums/threads", { method: "POST", body: JSON.stringify(dto) }),
   addReply: (threadId: string, content: string) =>
     apiFetchClient<ForumReply>(`/forums/threads/${threadId}/replies`, { method: "POST", body: JSON.stringify({ content }) }),
+  deleteReply: (threadId: string, replyId: string) =>
+    apiFetchClient<{ success: boolean }>(`/forums/threads/${threadId}/replies/${replyId}`, { method: "DELETE" }),
   toggleReplyLike: (replyId: string) => apiFetchClient<{ liked: boolean }>(`/forums/replies/${replyId}/like`, { method: "PUT" }),
+  lockThread: (id: string) => apiFetchClient<ForumThreadDetail>(`/forums/threads/${id}/lock`, { method: "PUT" }),
+  unlockThread: (id: string) => apiFetchClient<ForumThreadDetail>(`/forums/threads/${id}/unlock`, { method: "PUT" }),
+  pinThread: (id: string) => apiFetchClient<ForumThreadDetail>(`/forums/threads/${id}/pin`, { method: "PUT" }),
+  unpinThread: (id: string) => apiFetchClient<ForumThreadDetail>(`/forums/threads/${id}/unpin`, { method: "PUT" }),
 };

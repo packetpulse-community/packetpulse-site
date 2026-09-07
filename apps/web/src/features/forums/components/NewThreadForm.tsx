@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { cn } from "@/shared/utils/cn";
+import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { forumsClientApi } from "../api/forums.api";
 import type { ForumCategory } from "../api/forums.api";
 
@@ -26,7 +28,7 @@ export function NewThreadForm({ categories }: { categories: ForumCategory[] }) {
         e.preventDefault();
         if (categoryId && title.trim() && content.trim()) mutation.mutate();
       }}
-      className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4"
+      className="glass-panel flex flex-col gap-4 rounded-lg p-4"
     >
       <h2 className="text-lg font-semibold">Start a new thread</h2>
 
@@ -57,11 +59,7 @@ export function NewThreadForm({ categories }: { categories: ForumCategory[] }) {
         className="rounded-md border border-input bg-background px-3 py-2"
       />
 
-      <button
-        type="submit"
-        disabled={mutation.isPending}
-        className="w-fit rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
-      >
+      <button type="submit" disabled={mutation.isPending} className={cn(buttonVariants({ variant: "gradient" }), "w-fit")}>
         {mutation.isPending ? "Posting…" : "Post thread"}
       </button>
     </form>

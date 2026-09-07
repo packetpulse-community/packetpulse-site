@@ -37,4 +37,5 @@ export const resourcesServerApi = {
 // Client-side (mutations) — same-origin /api proxy.
 export const resourcesClientApi = {
   toggleLike: (id: string) => apiFetchClient<{ liked: boolean }>(`/resources/${id}/like`, { method: "PUT" }),
+  incrementDownload: (id: string) => apiFetchClient<{ success: boolean }>(`/resources/${id}/download`, { method: "PUT" }),
 };

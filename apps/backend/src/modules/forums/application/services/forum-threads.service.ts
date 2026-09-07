@@ -81,6 +81,13 @@ export class ForumThreadsService {
     return this.prisma.forumThread.update({ where: { id }, data: { isLocked: locked } });
   }
 
+  async setPinned(id: string, userId: string, roles: string[], pinned: boolean) {
+    const thread = await this.prisma.forumThread.findUnique({ where: { id } });
+    if (!thread) throw new NotFoundException("Thread not found");
+    this.assertModeratorOrOwner(thread.authorId, userId, roles);
+    return this.prisma.forumThread.update({ where: { id }, data: { isPinned: pinned } });
+  }
+
   assertModeratorOrOwner(ownerId: string, userId: string, roles: string[]) {
     const isOwner = ownerId === userId;
     const isModerator = roles.includes("admin") || roles.includes(SUPER_ADMIN_ROLE) || roles.includes("moderator");

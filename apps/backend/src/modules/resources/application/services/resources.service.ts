@@ -109,6 +109,13 @@ export class ResourcesService {
     await this.prisma.resource.delete({ where: { id } });
   }
 
+  async incrementDownload(id: string) {
+    const resource = await this.prisma.resource.findUnique({ where: { id }, select: { id: true } });
+    if (!resource) throw new NotFoundException("Resource not found");
+    await this.prisma.resource.update({ where: { id }, data: { downloads: { increment: 1 } } });
+    return { success: true };
+  }
+
   async toggleLike(id: string, userId: string) {
     const resource = await this.prisma.resource.findUnique({ where: { id }, select: { id: true } });
     if (!resource) throw new NotFoundException("Resource not found");

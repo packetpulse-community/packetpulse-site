@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { Button } from "@/shared/ui/primitives/Button";
 import { blogsClientApi } from "../api/blogs.api";
 
 export function LikeButton({ postId, initialCount }: { postId: string; initialCount: number }) {
@@ -17,12 +18,8 @@ export function LikeButton({ postId, initialCount }: { postId: string; initialCo
   });
 
   return (
-    <button
-      onClick={() => mutation.mutate()}
-      disabled={mutation.isPending}
-      className="rounded-md border border-border px-3 py-1 text-sm hover:border-primary disabled:opacity-50"
-    >
+    <Button variant="glass" size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
       {liked ? "♥" : "♡"} {count}
-    </button>
+    </Button>
   );
 }
