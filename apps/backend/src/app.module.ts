@@ -19,6 +19,7 @@ import { ForumsModule } from "./modules/forums";
 import { QuizzesModule } from "./modules/quizzes";
 import { AdminModule } from "./modules/admin";
 import { RedisModule } from "./common/redis/redis.module";
+import { SupabaseModule } from "./common/supabase/supabase.module";
 import { NotificationsModule } from "./modules/notifications";
 import { RealtimeModule } from "./modules/realtime";
 import { NetworkToolsModule } from "./modules/network-tools";
@@ -34,6 +35,7 @@ import { LogsModule } from "./modules/logs";
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]), // global read-standard default
     PrismaModule,
+    SupabaseModule,
     RedisModule,
     ObservabilityLoggerModule,
     HealthModule,

@@ -12,7 +12,7 @@ import { UserPrismaRepository } from "./infrastructure/prisma/user.prisma-reposi
 import { CredentialProvider } from "./domain/providers/credential-provider";
 import { LocalCredentialProvider } from "./infrastructure/local/local-credential.provider";
 import { SupabaseCredentialProvider } from "./infrastructure/supabase/supabase-credential.provider";
-import { SUPABASE_CLIENT, supabaseClientProvider } from "../../common/supabase/supabase-client.provider";
+import { SUPABASE_CLIENT } from "../../common/supabase/supabase-client.provider";
 import { JwtStrategy } from "./presentation/strategies/jwt.strategy";
 import { JwtAuthGuard } from "./presentation/guards/jwt-auth.guard";
 import { RolesGuard } from "./presentation/guards/roles.guard";
@@ -38,7 +38,6 @@ import { EmailVerifiedGuard } from "./presentation/guards/email-verified.guard";
     AuthCookieService,
     TokenService,
     { provide: UserRepository, useClass: UserPrismaRepository },
-    supabaseClientProvider,
     {
       provide: CredentialProvider,
       inject: [ConfigService, SUPABASE_CLIENT],
