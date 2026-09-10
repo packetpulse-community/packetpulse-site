@@ -27,14 +27,18 @@ const BaseEnvSchema = z.object({
   SMTP_PASSWORD: z.string().optional(),
   // Required only when PLATFORM_MODE=supabase (enforced below) — Auth, Realtime,
   // and Storage provider selection all key off these (see platform-mode plan §2-4).
+  // SUPABASE_SECRET_KEY is Supabase's current "secret key" (sb_secret_...), the
+  // replacement for the legacy JWT-format service_role key — same bypass-RLS
+  // privileges, works as a drop-in value for supabase-js's server client.
+  // No JWT-secret/JWKS var needed: our own JWT_ACCESS_SECRET still signs session
+  // tokens in both modes — Supabase only stores/verifies credentials (plan §2).
   SUPABASE_URL: z.string().url().optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
-  SUPABASE_JWT_SECRET: z.string().min(1).optional(),
+  SUPABASE_SECRET_KEY: z.string().min(1).optional(),
 });
 
 export const EnvSchema = BaseEnvSchema.superRefine((env, ctx) => {
   if (env.PLATFORM_MODE !== "supabase") return;
-  const required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_JWT_SECRET"] as const;
+  const required = ["SUPABASE_URL", "SUPABASE_SECRET_KEY"] as const;
   for (const key of required) {
     if (!env[key]) {
       ctx.addIssue({

@@ -26,7 +26,14 @@ export class AuthService {
     const existing = await this.users.findByEmail(dto.email);
     if (existing) throw new ConflictException("An account with this email already exists");
 
-    const credential = await this.credentials.createCredential(dto.email, dto.password);
+    // autoConfirm: true regardless of role — Supabase mode's own "email confirmed"
+    // flag is a login gate at the Supabase Auth layer, separate from and unrelated
+    // to this app's own emailVerified/OTP flow below, which gates specific actions
+    // rather than login itself (matches docker mode, where login never checked
+    // emailVerified). Leaving Supabase's flag false would block signInWithPassword
+    // entirely until a Supabase-side confirmation email was clicked — a flow this
+    // app doesn't use.
+    const credential = await this.credentials.createCredential(dto.email, dto.password, { autoConfirm: true });
 
     // New registrants start unapproved + unverified. Admin auto-approval/verification
     // is an explicit branch here, not an implicit model-lifecycle side effect like the
