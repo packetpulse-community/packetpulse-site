@@ -29,7 +29,9 @@ model User {
   firstName              String    @map("first_name")
   lastName               String    @map("last_name")
   email                  String    @unique
-  passwordHash           String    @map("password_hash")
+  // Null for users whose credentials live in Supabase Auth instead of here
+  // (PLATFORM_MODE=supabase — see CredentialProvider) — never null in docker mode.
+  passwordHash           String?   @map("password_hash")
   whatsappNumber         String?   @map("whatsapp_number")
   professionalExperience ProfessionalExperience? @map("professional_experience")
   avatarUrl              String?   @map("avatar_url")

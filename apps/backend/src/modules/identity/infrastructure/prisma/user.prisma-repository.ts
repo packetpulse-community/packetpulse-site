@@ -19,10 +19,11 @@ export class UserPrismaRepository extends UserRepository {
   }
 
   async create(data: {
+    id?: string;
     firstName: string;
     lastName: string;
     email: string;
-    passwordHash: string;
+    passwordHash?: string;
     whatsappNumber?: string;
     professionalExperience?: ProfessionalExperience;
     roleNames: string[];
@@ -31,6 +32,7 @@ export class UserPrismaRepository extends UserRepository {
   }) {
     return this.prisma.user.create({
       data: {
+        id: data.id,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,

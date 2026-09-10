@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
-import * as bcrypt from "bcrypt";
 import { ConfigService } from "@nestjs/config";
 import { UserRepository } from "../../domain/repositories/user.repository";
+import { CredentialProvider } from "../../domain/providers/credential-provider";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { TokenService } from "./token.service";
 import { EmailQueueService } from "../../../notifications";
@@ -15,6 +15,7 @@ const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000;
 export class AuthService {
   constructor(
     private readonly users: UserRepository,
+    private readonly credentials: CredentialProvider,
     private readonly prisma: PrismaService,
     private readonly tokens: TokenService,
     private readonly emailQueue: EmailQueueService,
@@ -25,16 +26,17 @@ export class AuthService {
     const existing = await this.users.findByEmail(dto.email);
     if (existing) throw new ConflictException("An account with this email already exists");
 
-    const passwordHash = await bcrypt.hash(dto.password, 12);
+    const credential = await this.credentials.createCredential(dto.email, dto.password);
 
     // New registrants start unapproved + unverified. Admin auto-approval/verification
     // is an explicit branch here, not an implicit model-lifecycle side effect like the
     // old app's Mongoose pre-save hook (plan §4).
     const user = await this.users.create({
+      id: credential.id,
       firstName: dto.firstName,
       lastName: dto.lastName,
       email: dto.email,
-      passwordHash,
+      passwordHash: credential.passwordHash,
       whatsappNumber: dto.whatsappNumber,
       professionalExperience: dto.professionalExperience,
       roleNames: ["member"],
@@ -60,12 +62,13 @@ export class AuthService {
     const existing = await this.users.findByEmail(dto.email);
     if (existing) throw new ConflictException("An account with this email already exists");
 
-    const passwordHash = await bcrypt.hash(dto.password, 12);
+    const credential = await this.credentials.createCredential(dto.email, dto.password, { autoConfirm: true });
     const user = await this.users.create({
+      id: credential.id,
       firstName: dto.firstName,
       lastName: dto.lastName,
       email: dto.email,
-      passwordHash,
+      passwordHash: credential.passwordHash,
       whatsappNumber: dto.whatsappNumber,
       professionalExperience: dto.professionalExperience,
       roleNames: ["admin"],
@@ -80,8 +83,7 @@ export class AuthService {
     const user = await this.users.findByEmail(dto.email);
     if (!user) throw new UnauthorizedException("Invalid credentials");
 
-    const matches = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!matches) throw new UnauthorizedException("Invalid credentials");
+    await this.credentials.verifyCredential(dto.email, dto.password, user.passwordHash);
 
     await this.users.markLastLogin(user.id);
     return toPublicUser(user);
@@ -149,8 +151,11 @@ export class AuthService {
       throw new BadRequestException("Invalid or expired reset session");
     }
 
-    const passwordHash = await bcrypt.hash(newPassword, 12);
-    await this.users.updatePasswordHash(record.userId, passwordHash);
+    const user = await this.users.findById(record.userId);
+    if (!user) throw new BadRequestException("Invalid or expired reset session");
+
+    const result = await this.credentials.updateCredential(user.id, user.email, newPassword);
+    if (result.passwordHash) await this.users.updatePasswordHash(user.id, result.passwordHash);
 
     // Password changed via reset — revoke all existing sessions for safety.
     await this.prisma.refreshToken.updateMany({
@@ -158,8 +163,7 @@ export class AuthService {
       data: { revokedAt: new Date() },
     });
 
-    const user = await this.users.findById(record.userId);
-    if (user) await this.emailQueue.sendPasswordChangedNotice(user.email);
+    await this.emailQueue.sendPasswordChangedNotice(user.email);
   }
 
   async sendVerificationEmail(userId: string, email: string) {

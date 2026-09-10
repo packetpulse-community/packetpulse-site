@@ -8,10 +8,14 @@ export abstract class UserRepository {
   abstract findByEmail(email: string): Promise<UserWithRoles | null>;
   abstract findById(id: string): Promise<UserWithRoles | null>;
   abstract create(data: {
+    // Set only in PLATFORM_MODE=supabase, where Supabase Auth mints the id first
+    // (CredentialProvider.createCredential) so it can double as the RBAC/approval FK.
+    id?: string;
     firstName: string;
     lastName: string;
     email: string;
-    passwordHash: string;
+    // Absent in PLATFORM_MODE=supabase — the credential lives in Supabase Auth, not here.
+    passwordHash?: string;
     whatsappNumber?: string;
     professionalExperience?: ProfessionalExperience;
     roleNames: string[];
