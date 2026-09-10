@@ -2,7 +2,7 @@ import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/commo
 import { Prisma, BlogCategory } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
-import { CreateQuizDto, QuizListQueryDto } from "../dto/quizzes.dto";
+import { CreateQuizDto, QuizListQueryDto, UpdateQuizDto } from "../dto/quizzes.dto";
 import { SUPER_ADMIN_ROLE } from "../../../identity";
 
 const summarySelect = {
@@ -92,6 +92,32 @@ export class QuizzesService {
       },
       include: { questions: { include: { options: true } } },
     });
+  }
+
+  async update(id: string, userId: string, roles: string[], dto: UpdateQuizDto) {
+    const quiz = await this.prisma.quiz.findUnique({ where: { id } });
+    if (!quiz) throw new NotFoundException("Quiz not found");
+    this.assertOwnerOrAdmin(quiz.createdById, userId, roles);
+    return this.prisma.quiz.update({
+      where: { id },
+      data: {
+        title: dto.title,
+        description: dto.description,
+        category: dto.category as BlogCategory | undefined,
+        passingScorePct: dto.passingScorePct,
+        timeLimitSeconds: dto.timeLimitSeconds,
+        isPublished: dto.isPublished,
+      },
+      select: summarySelect,
+    });
+  }
+
+  async delete(id: string, userId: string, roles: string[]) {
+    const quiz = await this.prisma.quiz.findUnique({ where: { id } });
+    if (!quiz) throw new NotFoundException("Quiz not found");
+    this.assertOwnerOrAdmin(quiz.createdById, userId, roles);
+    await this.prisma.quiz.delete({ where: { id } });
+    return { success: true };
   }
 
   private assertOwnerOrAdmin(ownerId: string, userId: string, roles: string[]) {

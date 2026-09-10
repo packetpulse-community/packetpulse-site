@@ -64,4 +64,7 @@ export const forumsClientApi = {
   unlockThread: (id: string) => apiFetchClient<ForumThreadDetail>(`/forums/threads/${id}/unlock`, { method: "PUT" }),
   pinThread: (id: string) => apiFetchClient<ForumThreadDetail>(`/forums/threads/${id}/pin`, { method: "PUT" }),
   unpinThread: (id: string) => apiFetchClient<ForumThreadDetail>(`/forums/threads/${id}/unpin`, { method: "PUT" }),
+  updateThread: (id: string, dto: { title?: string; content?: string }) =>
+    apiFetchClient<ForumThreadDetail>(`/forums/threads/${id}`, { method: "PUT", body: JSON.stringify(dto) }),
+  deleteThread: (id: string) => apiFetchClient<{ success: boolean }>(`/forums/threads/${id}`, { method: "DELETE" }),
 };

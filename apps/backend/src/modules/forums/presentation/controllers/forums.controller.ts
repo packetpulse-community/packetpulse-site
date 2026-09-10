@@ -2,7 +2,12 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from
 import { Throttle } from "@nestjs/throttler";
 import { ForumThreadsService } from "../../application/services/forum-threads.service";
 import { ForumRepliesService } from "../../application/services/forum-replies.service";
-import { CreateForumThreadDto, CreateForumReplyDto, ForumThreadListQueryDto } from "../../application/dto/forums.dto";
+import {
+  CreateForumThreadDto,
+  CreateForumReplyDto,
+  ForumThreadListQueryDto,
+  UpdateForumThreadDto,
+} from "../../application/dto/forums.dto";
 import { Public, CurrentUser, RequirePermission, PERMISSIONS } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
 
@@ -66,6 +71,19 @@ export class ForumsController {
   @Put("threads/:id/unpin")
   unpin(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
     return this.threads.setPinned(id, user.sub, user.roles, false);
+  }
+
+  @Throttle(WRITE_STANDARD)
+  @Put("threads/:id")
+  update(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload, @Body() dto: UpdateForumThreadDto) {
+    return this.threads.update(id, user.sub, user.roles, dto);
+  }
+
+  @Throttle(WRITE_STANDARD)
+  @Delete("threads/:id")
+  @HttpCode(200)
+  deleteThread(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
+    return this.threads.delete(id, user.sub, user.roles);
   }
 
   @Throttle(WRITE_STANDARD)

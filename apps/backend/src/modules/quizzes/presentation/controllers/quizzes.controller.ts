@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { QuizzesService } from "../../application/services/quizzes.service";
 import { QuizAttemptsService } from "../../application/services/quiz-attempts.service";
 import { CertificatesService } from "../../application/services/certificates.service";
-import { CreateQuizDto, QuizListQueryDto, SubmitQuizAttemptDto } from "../../application/dto/quizzes.dto";
+import { CreateQuizDto, QuizListQueryDto, SubmitQuizAttemptDto, UpdateQuizDto } from "../../application/dto/quizzes.dto";
 import { Public, CurrentUser, RequirePermission, PERMISSIONS, SUPER_ADMIN_ROLE } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
 
@@ -56,6 +56,19 @@ export class QuizzesController {
   @Get(":id/edit")
   getForAuthoring(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
     return this.quizzes.getForAuthoring(id, user.sub, user.roles);
+  }
+
+  @Throttle(WRITE_STANDARD)
+  @Put(":id")
+  update(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload, @Body() dto: UpdateQuizDto) {
+    return this.quizzes.update(id, user.sub, user.roles, dto);
+  }
+
+  @Throttle(WRITE_STANDARD)
+  @Delete(":id")
+  @HttpCode(200)
+  delete(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
+    return this.quizzes.delete(id, user.sub, user.roles);
   }
 
   @Throttle(WRITE_STANDARD)

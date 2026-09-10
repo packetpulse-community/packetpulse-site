@@ -30,6 +30,9 @@ export const QuizListQuerySchema = PaginationQuerySchema.extend({
 });
 export type QuizListQuery = z.infer<typeof QuizListQuerySchema>;
 
+export const UpdateQuizSchema = CreateQuizSchema.omit({ questions: true }).partial();
+export type UpdateQuizDto = z.infer<typeof UpdateQuizSchema>;
+
 export const SubmitQuizAnswerSchema = z.object({
   questionId: z.string().uuid(),
   selectedOptionIds: z.array(z.string().uuid()),

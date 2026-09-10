@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { slugify } from "../../../../common/utils/slugify";
-import { CreateForumThreadDto, ForumThreadListQueryDto } from "../dto/forums.dto";
+import { CreateForumThreadDto, ForumThreadListQueryDto, UpdateForumThreadDto } from "../dto/forums.dto";
 import { SUPER_ADMIN_ROLE } from "../../../identity";
 
 const authorSelect = { id: true, firstName: true, lastName: true, avatarUrl: true } satisfies Prisma.UserSelect;
@@ -86,6 +86,25 @@ export class ForumThreadsService {
     if (!thread) throw new NotFoundException("Thread not found");
     this.assertModeratorOrOwner(thread.authorId, userId, roles);
     return this.prisma.forumThread.update({ where: { id }, data: { isPinned: pinned } });
+  }
+
+  async update(id: string, userId: string, roles: string[], dto: UpdateForumThreadDto) {
+    const thread = await this.prisma.forumThread.findUnique({ where: { id } });
+    if (!thread) throw new NotFoundException("Thread not found");
+    this.assertModeratorOrOwner(thread.authorId, userId, roles);
+    return this.prisma.forumThread.update({
+      where: { id },
+      data: { title: dto.title, content: dto.content },
+      include: threadDetailInclude,
+    });
+  }
+
+  async delete(id: string, userId: string, roles: string[]) {
+    const thread = await this.prisma.forumThread.findUnique({ where: { id } });
+    if (!thread) throw new NotFoundException("Thread not found");
+    this.assertModeratorOrOwner(thread.authorId, userId, roles);
+    await this.prisma.forumThread.delete({ where: { id } });
+    return { success: true };
   }
 
   assertModeratorOrOwner(ownerId: string, userId: string, roles: string[]) {

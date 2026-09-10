@@ -19,3 +19,9 @@ export const ForumThreadListQuerySchema = PaginationQuerySchema.extend({
   search: z.string().optional(),
 });
 export type ForumThreadListQuery = z.infer<typeof ForumThreadListQuerySchema>;
+
+export const UpdateForumThreadSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  content: z.string().min(1).max(10000).optional(),
+});
+export type UpdateForumThreadDto = z.infer<typeof UpdateForumThreadSchema>;

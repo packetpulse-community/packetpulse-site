@@ -9,12 +9,14 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  MessageSquare,
   ScrollText,
   Settings,
   Terminal,
   Users,
   Video,
   X,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { authApi } from "@/features/auth/api/auth.api";
@@ -25,6 +27,8 @@ const NAV_ITEMS = [
   { label: "Resources", href: "/admin/resources", icon: FileText },
   { label: "Recordings", href: "/admin/recordings", icon: Video },
   { label: "Blogs", href: "/admin/blogs", icon: BookOpen },
+  { label: "Forums", href: "/admin/forums", icon: MessageSquare },
+  { label: "Quizzes", href: "/admin/quizzes", icon: HelpCircle },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "System Status", href: "/admin/status", icon: Activity },
   { label: "Logs", href: "/admin/logs", icon: ScrollText },

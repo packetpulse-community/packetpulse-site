@@ -1,6 +1,6 @@
 import { apiFetch, apiFetchClient } from "@/shared/api/http-client";
 import type { Paginated } from "@/features/blogs/api/blogs.api";
-import type { CreateQuizDto } from "@packetpulse/types";
+import type { CreateQuizDto, UpdateQuizDto } from "@packetpulse/types";
 
 export interface QuizSummary {
   id: string;
@@ -121,4 +121,7 @@ export const quizzesClientApi = {
       body: JSON.stringify({ answers }),
     }),
   createQuiz: (dto: CreateQuizDto) => apiFetchClient<QuizForAuthoring>("/quizzes", { method: "POST", body: JSON.stringify(dto) }),
+  updateQuiz: (id: string, dto: UpdateQuizDto) =>
+    apiFetchClient<QuizSummary>(`/quizzes/${id}`, { method: "PUT", body: JSON.stringify(dto) }),
+  deleteQuiz: (id: string) => apiFetchClient<{ success: boolean }>(`/quizzes/${id}`, { method: "DELETE" }),
 };
