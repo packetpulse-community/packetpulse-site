@@ -25,7 +25,7 @@ export function useRealtime(onNotification?: (payload: unknown) => void): void {
       if (!userId) return;
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
       );
       const channel = supabase
         .channel(`user:${userId}`)
