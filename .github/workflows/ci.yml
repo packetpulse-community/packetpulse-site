@@ -60,6 +60,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # @prisma/client's own postinstall can't auto-detect the schema location in a
+      # monorepo (apps/backend/prisma/schema.prisma isn't a default search path), so
+      # `pnpm install` alone silently ships a stale/mismatched client — explicit here
+      # rather than relying only on the backend's own postinstall script.
+      - name: Generate Prisma Client
+        run: pnpm --filter @packetpulse/backend run prisma:generate
+
       - name: Lint
         run: pnpm turbo run lint
 
