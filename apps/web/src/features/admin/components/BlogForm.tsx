@@ -4,17 +4,16 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CreateBlogPostSchema, type CreateBlogPostDto } from "@packetpulse/types";
 import { blogsClientApi, type BlogPostSummary } from "@/features/blogs/api/blogs.api";
+import { categoriesClientApi } from "@/features/categories/api/categories.api";
 import { ApiError } from "@/shared/api/http-client";
 import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { Button } from "@/shared/ui/primitives/Button";
 
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
-
-const CATEGORIES = ["ccna", "ccnp", "network_automation", "security", "sdn", "ipv6", "general"] as const;
 
 const optionalUrl = z.preprocess((val) => (val === "" ? undefined : val), z.string().url().optional());
 
@@ -52,13 +51,15 @@ export function BlogForm({
       ? {
           title: post.title,
           content: post.content,
-          category: post.category as CreateBlogPostDto["category"],
+          categoryId: post.category.id,
           coverImageUrl: post.coverImageUrl ?? undefined,
           tags: post.tags.map((t) => t.tag).join(", "),
         }
       : undefined,
     defaultValues: { tags: "" },
   });
+
+  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: categoriesClientApi.list });
 
   const mutation = useMutation({
     mutationFn: (dto: CreateBlogPostDto) => (isEdit ? blogsClientApi.update(post!.id, dto) : blogsClientApi.create(dto)),
@@ -99,10 +100,10 @@ export function BlogForm({
 
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">Category</label>
-          <select className={inputClass} {...register("category")}>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
+          <select className={inputClass} {...register("categoryId")}>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
               </option>
             ))}
           </select>

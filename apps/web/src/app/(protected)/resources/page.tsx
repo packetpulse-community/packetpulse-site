@@ -9,7 +9,7 @@ import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { cn } from "@/shared/utils/cn";
 
 interface ResourcesPageProps {
-  searchParams: Promise<{ search?: string; category?: string; resourceType?: string; tag?: string; page?: string }>;
+  searchParams: Promise<{ search?: string; categoryId?: string; resourceType?: string; tag?: string; page?: string }>;
 }
 
 export default async function ResourcesPage({ searchParams }: ResourcesPageProps) {
@@ -18,7 +18,7 @@ export default async function ResourcesPage({ searchParams }: ResourcesPageProps
 
   const query = new URLSearchParams();
   if (params.search) query.set("search", params.search);
-  if (params.category) query.set("category", params.category);
+  if (params.categoryId) query.set("categoryId", params.categoryId);
   if (params.resourceType) query.set("resourceType", params.resourceType);
   if (params.tag) query.set("tag", params.tag);
   if (params.page) query.set("page", params.page);

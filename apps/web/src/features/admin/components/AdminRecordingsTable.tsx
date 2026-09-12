@@ -58,7 +58,7 @@ export function AdminRecordingsTable({ recordings }: { recordings: RecordingSumm
                 {recording.premium && <Badge variant="glass">Premium</Badge>}
               </div>
               <p className="text-xs text-muted-foreground">
-                {recording.category} · {recording.instructor.firstName} {recording.instructor.lastName}
+                {recording.category.name} · {recording.instructor.firstName} {recording.instructor.lastName}
               </p>
             </div>
             <div className="flex items-center gap-2">

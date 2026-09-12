@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
-
-const CATEGORIES = ["ccna", "ccnp", "network_automation", "security", "sdn", "ipv6", "general"] as const;
+import { categoriesClientApi } from "@/features/categories/api/categories.api";
 
 export function RecordingFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const debouncedSearch = useDebouncedValue(search, 300);
-  const category = searchParams.get("category") ?? "";
+  const categoryId = searchParams.get("categoryId") ?? "";
+  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: categoriesClientApi.list });
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -23,8 +24,8 @@ export function RecordingFilters() {
 
   function handleCategoryChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set("category", value);
-    else params.delete("category");
+    if (value) params.set("categoryId", value);
+    else params.delete("categoryId");
     params.delete("page");
     router.push(`/recordings?${params.toString()}`);
   }
@@ -38,14 +39,14 @@ export function RecordingFilters() {
         className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
       />
       <select
-        value={category}
+        value={categoryId}
         onChange={(e) => handleCategoryChange(e.target.value)}
         className="rounded-md border border-input bg-background px-3 py-2 text-sm"
       >
         <option value="">All categories</option>
-        {CATEGORIES.map((c) => (
-          <option key={c} value={c}>
-            {c}
+        {categories.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
           </option>
         ))}
       </select>

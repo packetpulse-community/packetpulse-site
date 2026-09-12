@@ -16,7 +16,7 @@ export function PostCard({ post }: { post: BlogPostSummary }) {
       )}
       <div className="flex flex-col gap-2 p-4">
         <div className="flex items-center justify-between">
-          <Badge variant="glass">{post.category}</Badge>
+          <Badge variant="glass">{post.category.name}</Badge>
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
             {estimateReadTime(post.content)} min read

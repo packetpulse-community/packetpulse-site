@@ -21,7 +21,7 @@ export function ResourceCard({ resource }: { resource: ResourceSummary }) {
         <p className="line-clamp-2 text-sm text-muted-foreground">{resource.description}</p>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="glass">{resource.resourceType}</Badge>
-          <Badge variant="glass">{resource.category}</Badge>
+          <Badge variant="glass">{resource.category.name}</Badge>
           {!resource.isApproved && <span className="text-xs text-destructive">Pending approval</span>}
         </div>
         <div className="flex items-center gap-3 border-t border-glass-border pt-2 text-xs text-muted-foreground">

@@ -15,7 +15,7 @@ export default async function RecordingDetailPage({ params }: { params: Promise<
   const { id } = await params;
   const cookieHeader = (await cookies()).toString();
   const recording = await recordingsServerApi.getById(id, cookieHeader);
-  const related = await recordingsServerApi.related(recording.category, recording.id, cookieHeader);
+  const related = await recordingsServerApi.related(recording.category.id, recording.id, cookieHeader);
 
   return (
     <article className="flex flex-col gap-6">
@@ -26,7 +26,7 @@ export default async function RecordingDetailPage({ params }: { params: Promise<
 
       <Card variant="glass" className="flex flex-col gap-6 p-6">
         <div className="flex flex-wrap gap-2">
-          <Badge variant="glass">{recording.category}</Badge>
+          <Badge variant="glass">{recording.category.name}</Badge>
           {recording.premium && <Badge variant="glass">Premium</Badge>}
         </div>
 
@@ -58,9 +58,9 @@ export default async function RecordingDetailPage({ params }: { params: Promise<
 
         <CalloutBox
           title="Deepen Your Knowledge"
-          description={`Want to explore more about ${recording.category}? Check out related resources or join the discussion.`}
+          description={`Want to explore more about ${recording.category.name}? Check out related resources or join the discussion.`}
         >
-          <Link href={`/resources?category=${recording.category}`} className={cn(buttonVariants({ variant: "gradient" }))}>
+          <Link href={`/resources?categoryId=${recording.category.id}`} className={cn(buttonVariants({ variant: "gradient" }))}>
             Explore Related Resources
           </Link>
           <Link href="/forums" className={cn(buttonVariants({ variant: "glass" }))}>

@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import { categoriesClientApi } from "@/features/categories/api/categories.api";
 
-const CATEGORIES = ["ccna", "ccnp", "network_automation", "security", "sdn", "ipv6", "general"] as const;
 const RESOURCE_TYPES = [
   "pdf",
   "video",
@@ -21,8 +22,9 @@ export function ResourceFilters() {
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const debouncedSearch = useDebouncedValue(search, 300);
-  const category = searchParams.get("category") ?? "";
+  const categoryId = searchParams.get("categoryId") ?? "";
   const resourceType = searchParams.get("resourceType") ?? "";
+  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: categoriesClientApi.list });
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -32,7 +34,7 @@ export function ResourceFilters() {
     router.push(`/resources?${params.toString()}`);
   }, [debouncedSearch]);
 
-  function handleFilterChange(key: "category" | "resourceType", value: string) {
+  function handleFilterChange(key: "categoryId" | "resourceType", value: string) {
     const params = new URLSearchParams(searchParams.toString());
     if (value) params.set(key, value);
     else params.delete(key);
@@ -61,14 +63,14 @@ export function ResourceFilters() {
         ))}
       </select>
       <select
-        value={category}
-        onChange={(e) => handleFilterChange("category", e.target.value)}
+        value={categoryId}
+        onChange={(e) => handleFilterChange("categoryId", e.target.value)}
         className="rounded-md border border-input bg-background px-3 py-2 text-sm"
       >
         <option value="">All categories</option>
-        {CATEGORIES.map((c) => (
-          <option key={c} value={c}>
-            {c}
+        {categories.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
           </option>
         ))}
       </select>

@@ -4,14 +4,14 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { UpdateQuizSchema } from "@packetpulse/types";
 import { quizzesClientApi, type QuizForAuthoring } from "../api/quizzes.api";
+import { categoriesClientApi } from "@/features/categories/api/categories.api";
 import { ApiError } from "@/shared/api/http-client";
 import { Button } from "@/shared/ui/primitives/Button";
 
-const CATEGORIES = ["ccna", "ccnp", "network_automation", "security", "sdn", "ipv6", "general"] as const;
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
 type QuizMetaFormValues = z.infer<typeof UpdateQuizSchema>;
@@ -33,12 +33,14 @@ export function QuizMetaEditForm({ quiz }: { quiz: QuizForAuthoring }) {
     defaultValues: {
       title: quiz.title,
       description: quiz.description,
-      category: quiz.category as QuizMetaFormValues["category"],
+      categoryId: quiz.category.id,
       passingScorePct: quiz.passingScorePct,
       timeLimitSeconds: quiz.timeLimitSeconds ?? undefined,
       isPublished: quiz.isPublished,
     },
   });
+
+  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: categoriesClientApi.list });
 
   const mutation = useMutation({
     mutationFn: (dto: QuizMetaFormValues) => quizzesClientApi.updateQuiz(quiz.id, dto),
@@ -66,10 +68,10 @@ export function QuizMetaEditForm({ quiz }: { quiz: QuizForAuthoring }) {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">Category</label>
-          <select className={inputClass} {...register("category")}>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
+          <select className={inputClass} {...register("categoryId")}>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
               </option>
             ))}
           </select>

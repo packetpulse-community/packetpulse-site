@@ -54,7 +54,7 @@ export function AdminBlogsTable({ posts }: { posts: BlogPostSummary[] }) {
                 <Badge variant={post.isApproved ? "success" : "warning"}>{post.isApproved ? "Approved" : "Pending"}</Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                {post.category} · {post.author.firstName} {post.author.lastName}
+                {post.category.name} · {post.author.firstName} {post.author.lastName}
               </p>
             </div>
             <div className="flex items-center gap-2">

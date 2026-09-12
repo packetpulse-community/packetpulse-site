@@ -9,12 +9,18 @@ export interface ResourceOwner {
   avatarUrl: string | null;
 }
 
+export interface CategoryRef {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface ResourceSummary {
   id: string;
   title: string;
   description: string;
   resourceType: string;
-  category: string;
+  category: CategoryRef;
   fileUrl: string | null;
   externalLink: string | null;
   thumbnailUrl: string | null;
@@ -33,8 +39,8 @@ export interface ResourceSummary {
 export const resourcesServerApi = {
   list: (cookieHeader: string, query = "") => apiFetch<Paginated<ResourceSummary>>(`/resources${query}`, { cookieHeader }),
   getById: (id: string, cookieHeader: string) => apiFetch<ResourceSummary>(`/resources/${id}`, { cookieHeader }),
-  related: (category: string, excludeId: string, cookieHeader: string) =>
-    apiFetch<Paginated<ResourceSummary>>(`/resources?category=${category}&limit=5`, { cookieHeader }).then((res) =>
+  related: (categoryId: string, excludeId: string, cookieHeader: string) =>
+    apiFetch<Paginated<ResourceSummary>>(`/resources?categoryId=${categoryId}&limit=5`, { cookieHeader }).then((res) =>
       res.data.filter((r) => r.id !== excludeId).slice(0, 4),
     ),
 };

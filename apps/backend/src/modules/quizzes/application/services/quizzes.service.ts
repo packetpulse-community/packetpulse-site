@@ -43,6 +43,7 @@ export class QuizzesService {
     const quiz = await this.prisma.quiz.findUnique({
       where: { id },
       include: {
+        category: { select: { id: true, name: true, slug: true } },
         questions: {
           orderBy: { position: "asc" },
           include: { options: { orderBy: { position: "asc" }, select: { id: true, optionText: true, position: true } } },
@@ -57,7 +58,10 @@ export class QuizzesService {
   async getForAuthoring(id: string, userId: string, roles: string[]) {
     const quiz = await this.prisma.quiz.findUnique({
       where: { id },
-      include: { questions: { orderBy: { position: "asc" }, include: { options: { orderBy: { position: "asc" } } } } },
+      include: {
+        category: { select: { id: true, name: true, slug: true } },
+        questions: { orderBy: { position: "asc" }, include: { options: { orderBy: { position: "asc" } } } },
+      },
     });
     if (!quiz) throw new NotFoundException("Quiz not found");
     this.assertOwnerOrAdmin(quiz.createdById, userId, roles);

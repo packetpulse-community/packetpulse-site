@@ -9,7 +9,7 @@ export function QuizCard({ quiz }: { quiz: QuizSummary }) {
       <h2 className="text-lg font-semibold">{quiz.title}</h2>
       <p className="line-clamp-2 text-sm text-muted-foreground">{quiz.description}</p>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span>{quiz.category}</span>
+        <span>{quiz.category.name}</span>
         <span>·</span>
         <span>{quiz._count.questions} questions</span>
         <span>·</span>

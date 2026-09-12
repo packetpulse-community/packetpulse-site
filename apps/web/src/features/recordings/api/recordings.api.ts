@@ -9,6 +9,12 @@ export interface RecordingInstructor {
   avatarUrl: string | null;
 }
 
+export interface CategoryRef {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface RecordingSummary {
   id: string;
   title: string;
@@ -16,7 +22,7 @@ export interface RecordingSummary {
   recordingUrl: string;
   thumbnailUrl: string | null;
   durationSeconds: number;
-  category: string;
+  category: CategoryRef;
   premium: boolean;
   isApproved: boolean;
   views: number;
@@ -31,8 +37,8 @@ export const recordingsServerApi = {
   getById: (id: string, cookieHeader: string) => apiFetch<RecordingSummary>(`/recordings/${id}`, { cookieHeader }),
   // No dedicated "related recordings" endpoint — reuses the list endpoint filtered
   // to the current recording's category, same pattern as blogs' related posts.
-  related: (category: string, excludeId: string, cookieHeader: string) =>
-    apiFetch<Paginated<RecordingSummary>>(`/recordings?category=${category}&limit=5`, { cookieHeader }).then((res) =>
+  related: (categoryId: string, excludeId: string, cookieHeader: string) =>
+    apiFetch<Paginated<RecordingSummary>>(`/recordings?categoryId=${categoryId}&limit=5`, { cookieHeader }).then((res) =>
       res.data.filter((r) => r.id !== excludeId).slice(0, 4),
     ),
 };

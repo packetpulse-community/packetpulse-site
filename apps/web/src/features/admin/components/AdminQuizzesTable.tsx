@@ -51,7 +51,7 @@ export function AdminQuizzesTable({ quizzes }: { quizzes: QuizSummary[] }) {
                 <Badge variant={quiz.isPublished ? "success" : "warning"}>{quiz.isPublished ? "Published" : "Draft"}</Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                {quiz.category} · pass at {quiz.passingScorePct}% · {quiz._count.questions} questions
+                {quiz.category.name} · pass at {quiz.passingScorePct}% · {quiz._count.questions} questions
               </p>
             </div>
             <div className="flex items-center gap-2">

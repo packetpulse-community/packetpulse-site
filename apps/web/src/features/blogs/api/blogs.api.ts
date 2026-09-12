@@ -8,12 +8,18 @@ export interface BlogAuthor {
   avatarUrl: string | null;
 }
 
+export interface BlogCategoryRef {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface BlogPostSummary {
   id: string;
   title: string;
   slug: string;
   content: string;
-  category: string;
+  category: BlogCategoryRef;
   coverImageUrl: string | null;
   viewCount: number;
   postedAt: string;
@@ -57,8 +63,8 @@ export const blogsServerApi = {
   // No dedicated "related posts" endpoint exists — reuses the list endpoint filtered
   // to the current post's category, capped at 4 + the post itself so the caller can
   // drop a self-match and still have up to 4 real related posts to show.
-  related: (category: string, excludeId: string, cookieHeader: string) =>
-    apiFetch<Paginated<BlogPostSummary>>(`/blogs?category=${category}&limit=5`, { cookieHeader }).then((res) =>
+  related: (categoryId: string, excludeId: string, cookieHeader: string) =>
+    apiFetch<Paginated<BlogPostSummary>>(`/blogs?categoryId=${categoryId}&limit=5`, { cookieHeader }).then((res) =>
       res.data.filter((p) => p.id !== excludeId).slice(0, 4),
     ),
 };

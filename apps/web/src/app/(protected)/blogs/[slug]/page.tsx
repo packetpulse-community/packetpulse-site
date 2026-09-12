@@ -20,7 +20,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
   const { slug } = await params;
   const cookieHeader = (await cookies()).toString();
   const post = await blogsServerApi.getBySlug(slug, cookieHeader);
-  const related = await blogsServerApi.related(post.category, post.id, cookieHeader);
+  const related = await blogsServerApi.related(post.category.id, post.id, cookieHeader);
 
   const host = (await headers()).get("host");
   const shareUrl = `${host ? `https://${host}` : ""}/blogs/${post.slug}`;
@@ -36,7 +36,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
 
       <Card variant="glass" className="flex flex-col gap-6 p-6">
         <div className="flex flex-wrap gap-2">
-          <Badge variant="glass">{post.category}</Badge>
+          <Badge variant="glass">{post.category.name}</Badge>
           {post.tags.map((t) => (
             <Link key={t.tag} href={`/blogs?tag=${t.tag}`}>
               <Badge variant="glass">#{t.tag}</Badge>
@@ -79,9 +79,9 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
 
         <CalloutBox
           title="Deepen Your Knowledge"
-          description={`Want to explore more about ${post.tags[0]?.tag ?? post.category}? Check out our related resources or join the discussion below.`}
+          description={`Want to explore more about ${post.tags[0]?.tag ?? post.category.name}? Check out our related resources or join the discussion below.`}
         >
-          <Link href={`/resources?category=${post.category}`} className={cn(buttonVariants({ variant: "gradient" }))}>
+          <Link href={`/resources?categoryId=${post.category.id}`} className={cn(buttonVariants({ variant: "gradient" }))}>
             Explore Related Topics
           </Link>
           <Link href="/forums" className={cn(buttonVariants({ variant: "glass" }))}>

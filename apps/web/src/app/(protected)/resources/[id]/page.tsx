@@ -16,7 +16,7 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
   const { id } = await params;
   const cookieHeader = (await cookies()).toString();
   const resource = await resourcesServerApi.getById(id, cookieHeader);
-  const related = await resourcesServerApi.related(resource.category, resource.id, cookieHeader);
+  const related = await resourcesServerApi.related(resource.category.id, resource.id, cookieHeader);
 
   return (
     <article className="flex flex-col gap-6">
@@ -28,7 +28,7 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
       <Card variant="glass" className="flex flex-col gap-6 p-6">
         <div className="flex flex-wrap gap-2">
           <Badge variant="glass">{resource.resourceType}</Badge>
-          <Badge variant="glass">{resource.category}</Badge>
+          <Badge variant="glass">{resource.category.name}</Badge>
           {resource.premium && <Badge variant="glass">Premium</Badge>}
         </div>
 
@@ -77,9 +77,9 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
 
         <CalloutBox
           title="Deepen Your Knowledge"
-          description={`Want to explore more about ${resource.category}? Check out related articles or join the discussion.`}
+          description={`Want to explore more about ${resource.category.name}? Check out related articles or join the discussion.`}
         >
-          <Link href={`/blogs?category=${resource.category}`} className={cn(buttonVariants({ variant: "gradient" }))}>
+          <Link href={`/blogs?categoryId=${resource.category.id}`} className={cn(buttonVariants({ variant: "gradient" }))}>
             Read Related Articles
           </Link>
           <Link href="/forums" className={cn(buttonVariants({ variant: "glass" }))}>

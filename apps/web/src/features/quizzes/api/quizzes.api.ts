@@ -2,11 +2,17 @@ import { apiFetch, apiFetchClient } from "@/shared/api/http-client";
 import type { Paginated } from "@/features/blogs/api/blogs.api";
 import type { CreateQuizDto, UpdateQuizDto } from "@packetpulse/types";
 
+export interface CategoryRef {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface QuizSummary {
   id: string;
   title: string;
   description: string;
-  category: string;
+  category: CategoryRef;
   passingScorePct: number;
   timeLimitSeconds: number | null;
   isPublished: boolean;
@@ -59,7 +65,7 @@ export interface Certificate {
   certificateNumber: string;
   issuedAt: string;
   pdfUrl: string | null;
-  quiz: { id: string; title: string; category: string };
+  quiz: { id: string; title: string; category: CategoryRef };
 }
 
 export interface CertificateVerification {

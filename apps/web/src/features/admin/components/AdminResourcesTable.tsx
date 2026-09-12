@@ -58,7 +58,7 @@ export function AdminResourcesTable({ resources }: { resources: ResourceSummary[
                 {resource.premium && <Badge variant="glass">Premium</Badge>}
               </div>
               <p className="text-xs text-muted-foreground">
-                {resource.resourceType} · {resource.category} · {resource.user.firstName} {resource.user.lastName}
+                {resource.resourceType} · {resource.category.name} · {resource.user.firstName} {resource.user.lastName}
               </p>
             </div>
             <div className="flex items-center gap-2">

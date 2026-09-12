@@ -9,7 +9,7 @@ import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { cn } from "@/shared/utils/cn";
 
 interface RecordingsPageProps {
-  searchParams: Promise<{ search?: string; category?: string; tag?: string; page?: string }>;
+  searchParams: Promise<{ search?: string; categoryId?: string; tag?: string; page?: string }>;
 }
 
 export default async function RecordingsPage({ searchParams }: RecordingsPageProps) {
@@ -18,7 +18,7 @@ export default async function RecordingsPage({ searchParams }: RecordingsPagePro
 
   const query = new URLSearchParams();
   if (params.search) query.set("search", params.search);
-  if (params.category) query.set("category", params.category);
+  if (params.categoryId) query.set("categoryId", params.categoryId);
   if (params.tag) query.set("tag", params.tag);
   if (params.page) query.set("page", params.page);
   const queryString = query.toString() ? `?${query.toString()}` : "";

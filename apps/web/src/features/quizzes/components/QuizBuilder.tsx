@@ -1,16 +1,17 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm, useFieldArray, type Control, type UseFormRegister } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { CreateQuizSchema, type CreateQuizDto } from "@packetpulse/types";
 import { cn } from "@/shared/utils/cn";
 import { Button, buttonVariants } from "@/shared/ui/primitives/Button";
 import { quizzesClientApi } from "../api/quizzes.api";
+import { categoriesClientApi } from "@/features/categories/api/categories.api";
 import { ApiError } from "@/shared/api/http-client";
 
-const CATEGORIES = ["ccna", "ccnp", "network_automation", "security", "sdn", "ipv6", "general"] as const;
 const inputClass = "rounded-md border border-input bg-background px-3 py-2";
 
 function errorMessage(err: unknown, fallback: string) {
@@ -58,21 +59,30 @@ function QuestionOptions({
 
 export function QuizBuilder() {
   const router = useRouter();
+  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: categoriesClientApi.list });
+
   const {
     register,
     control,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateQuizDto>({
     resolver: zodResolver(CreateQuizSchema),
     defaultValues: {
-      category: "general",
       passingScorePct: 70,
       isPublished: false,
       questions: [{ questionText: "", questionType: "single_choice", points: 1, options: [{ optionText: "", isCorrect: false }, { optionText: "", isCorrect: false }] }],
     },
   });
+
+  // categories load asynchronously, after the form's initial defaultValues are
+  // set, so categoryId can't be defaulted up front — seed it once the list arrives.
+  useEffect(() => {
+    const first = categories[0];
+    if (first) setValue("categoryId", first.id);
+  }, [categories, setValue]);
 
   const { fields: questionFields, append: appendQuestion, remove: removeQuestion } = useFieldArray({
     control,
@@ -109,10 +119,10 @@ export function QuizBuilder() {
             <label htmlFor="category" className="text-sm font-medium">
               Category
             </label>
-            <select id="category" className={inputClass} {...register("category")}>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+            <select id="category" className={inputClass} {...register("categoryId")}>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
                 </option>
               ))}
             </select>

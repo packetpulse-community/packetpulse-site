@@ -4,10 +4,11 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CreateResourceSchema, type CreateResourceDto } from "@packetpulse/types";
 import { resourcesClientApi, type ResourceSummary } from "@/features/resources/api/resources.api";
+import { categoriesClientApi } from "@/features/categories/api/categories.api";
 import { ApiError } from "@/shared/api/http-client";
 import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { Button } from "@/shared/ui/primitives/Button";
@@ -30,7 +31,6 @@ const ResourceFormSchema = CreateResourceSchema.innerType().extend({
 });
 type ResourceFormValues = z.infer<typeof ResourceFormSchema>;
 
-const CATEGORIES = ["ccna", "ccnp", "network_automation", "security", "sdn", "ipv6", "general"] as const;
 const RESOURCE_TYPES = ["pdf", "video", "article", "tutorial", "diagram", "config_template", "tool", "external_link"] as const;
 
 function errorMessage(err: unknown, fallback: string) {
@@ -62,7 +62,7 @@ export function ResourceForm({
           title: resource.title,
           description: resource.description,
           resourceType: resource.resourceType as CreateResourceDto["resourceType"],
-          category: resource.category as CreateResourceDto["category"],
+          categoryId: resource.category.id,
           fileUrl: resource.fileUrl ?? undefined,
           externalLink: resource.externalLink ?? undefined,
           thumbnailUrl: resource.thumbnailUrl ?? undefined,
@@ -73,6 +73,8 @@ export function ResourceForm({
       : undefined,
     defaultValues: { downloadable: true, premium: false, tags: "" },
   });
+
+  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: categoriesClientApi.list });
 
   const mutation = useMutation({
     mutationFn: (dto: CreateResourceDto) => (isEdit ? resourcesClientApi.update(resource!.id, dto) : resourcesClientApi.create(dto)),
@@ -118,10 +120,10 @@ export function ResourceForm({
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Category</label>
-            <select className={inputClass} {...register("category")}>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+            <select className={inputClass} {...register("categoryId")}>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
                 </option>
               ))}
             </select>

@@ -24,7 +24,7 @@ export default async function CertificatesPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant="glass">{cert.quiz.category}</Badge>
+              <Badge variant="glass">{cert.quiz.category.name}</Badge>
               <CopyVerifyLinkButton certificateNumber={cert.certificateNumber} />
             </div>
           </Card>

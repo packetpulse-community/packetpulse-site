@@ -16,7 +16,7 @@ function FeaturedCard({ post, large }: { post: BlogPostSummary; large?: boolean 
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
       <div className="relative mt-auto flex flex-col gap-1 p-4">
         <Badge variant="glass" className="w-fit">
-          {post.category}
+          {post.category.name}
         </Badge>
         <h3 className={`font-semibold text-white ${large ? "text-xl" : "text-sm"} line-clamp-2`}>{post.title}</h3>
         <p className="text-xs text-gray-300">
