@@ -662,6 +662,14 @@ enum AdminActivityAction {
   recording_unapproved
   blog_approved
   blog_unapproved
+  forum_thread_locked
+  forum_thread_unlocked
+  forum_thread_pinned
+  forum_thread_unpinned
+  forum_thread_deleted
+  quiz_created
+  quiz_updated
+  quiz_deleted
 }
 
 model AdminActivityLog {
