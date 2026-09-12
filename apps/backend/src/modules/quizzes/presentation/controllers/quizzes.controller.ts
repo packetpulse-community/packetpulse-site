@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, ForbiddenException, Get, HttpCode, Param, Post, Put, Query } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { QuizzesService } from "../../application/services/quizzes.service";
 import { QuizAttemptsService } from "../../application/services/quiz-attempts.service";
@@ -40,10 +40,18 @@ export class QuizzesController {
     return this.certificates.verify(certificateNumber);
   }
 
+  // Not gated with @RequirePermission — that would 403 an admin who has the
+  // admin/super_admin role but wasn't separately granted quizzes:author (the
+  // "redirects to normal user side" bug: an admin with a stale/incomplete
+  // permission grant lost access to their own quiz-creation UI). Admin role is
+  // an explicit OR here rather than a change to RolesGuard's global bypass
+  // semantics, to keep the blast radius scoped to quizzes.
   @Throttle(WRITE_STANDARD)
-  @RequirePermission(PERMISSIONS.QUIZZES_AUTHOR)
   @Post()
   create(@CurrentUser() user: AccessTokenPayload, @Body() dto: CreateQuizDto) {
+    if (!isAdminRoles(user.roles) && !user.permissions.includes(PERMISSIONS.QUIZZES_AUTHOR)) {
+      throw new ForbiddenException(`Missing required permission: ${PERMISSIONS.QUIZZES_AUTHOR}`);
+    }
     return this.quizzes.create(user.sub, dto);
   }
 

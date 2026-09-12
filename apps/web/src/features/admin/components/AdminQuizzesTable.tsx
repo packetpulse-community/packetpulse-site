@@ -37,7 +37,7 @@ export function AdminQuizzesTable({ quizzes }: { quizzes: QuizSummary[] }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">
-        <Link href="/quizzes/new" className="inline-flex">
+        <Link href="/admin/quizzes/new" className="inline-flex">
           <Button variant="gradient">Create Quiz</Button>
         </Link>
       </div>
@@ -58,7 +58,7 @@ export function AdminQuizzesTable({ quizzes }: { quizzes: QuizSummary[] }) {
               <Button variant="glass" size="sm" onClick={() => publishMutation.mutate(quiz)} disabled={publishMutation.isPending}>
                 {quiz.isPublished ? "Unpublish" : "Publish"}
               </Button>
-              <Link href={`/quizzes/${quiz.id}/edit`} className="inline-flex">
+              <Link href={`/admin/quizzes/${quiz.id}/edit`} className="inline-flex">
                 <Button variant="glass" size="sm">
                   Edit
                 </Button>
