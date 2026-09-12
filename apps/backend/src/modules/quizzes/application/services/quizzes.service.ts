@@ -4,6 +4,7 @@ import { PrismaService } from "../../../../prisma/prisma.service";
 import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { CreateQuizDto, QuizListQueryDto, UpdateQuizDto } from "../dto/quizzes.dto";
 import { SUPER_ADMIN_ROLE } from "../../../identity";
+import { AdminActivityLogService } from "../../../admin";
 
 const summarySelect = {
   id: true,
@@ -20,7 +21,10 @@ const summarySelect = {
 
 @Injectable()
 export class QuizzesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activityLog: AdminActivityLogService,
+  ) {}
 
   async list(query: QuizListQueryDto, userId?: string, isAdmin = false) {
     const skip = prismaSkip(query.page, query.limit);
@@ -69,7 +73,7 @@ export class QuizzesService {
   }
 
   async create(createdById: string, dto: CreateQuizDto) {
-    return this.prisma.quiz.create({
+    const quiz = await this.prisma.quiz.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -96,13 +100,15 @@ export class QuizzesService {
       },
       include: { questions: { include: { options: true } } },
     });
+    await this.activityLog.log(createdById, "quiz_created", "quiz", quiz.id, { title: quiz.title });
+    return quiz;
   }
 
   async update(id: string, userId: string, roles: string[], dto: UpdateQuizDto) {
     const quiz = await this.prisma.quiz.findUnique({ where: { id } });
     if (!quiz) throw new NotFoundException("Quiz not found");
     this.assertOwnerOrAdmin(quiz.createdById, userId, roles);
-    return this.prisma.quiz.update({
+    const updated = await this.prisma.quiz.update({
       where: { id },
       data: {
         title: dto.title,
@@ -114,6 +120,8 @@ export class QuizzesService {
       },
       select: summarySelect,
     });
+    await this.activityLog.log(userId, "quiz_updated", "quiz", id, { title: updated.title });
+    return updated;
   }
 
   async delete(id: string, userId: string, roles: string[]) {
@@ -121,6 +129,7 @@ export class QuizzesService {
     if (!quiz) throw new NotFoundException("Quiz not found");
     this.assertOwnerOrAdmin(quiz.createdById, userId, roles);
     await this.prisma.quiz.delete({ where: { id } });
+    await this.activityLog.log(userId, "quiz_deleted", "quiz", id, { title: quiz.title });
     return { success: true };
   }
 

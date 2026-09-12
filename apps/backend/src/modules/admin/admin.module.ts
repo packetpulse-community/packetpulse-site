@@ -21,5 +21,8 @@ import { AdminSystemStatusService } from "./application/services/admin-system-st
     AdminSettingsService,
     AdminSystemStatusService,
   ],
+  // AdminActivityLogService is consumed outside this module too (forums, quizzes)
+  // so their moderation/CRUD actions can write to the same audit trail.
+  exports: [AdminActivityLogService],
 })
 export class AdminModule {}

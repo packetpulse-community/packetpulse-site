@@ -5,6 +5,11 @@ import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { slugify } from "../../../../common/utils/slugify";
 import { CreateForumThreadDto, ForumThreadListQueryDto, UpdateForumThreadDto } from "../dto/forums.dto";
 import { SUPER_ADMIN_ROLE } from "../../../identity";
+import { AdminActivityLogService } from "../../../admin";
+
+function isModeratorRole(roles: string[]) {
+  return roles.includes("admin") || roles.includes(SUPER_ADMIN_ROLE) || roles.includes("moderator");
+}
 
 const authorSelect = { id: true, firstName: true, lastName: true, avatarUrl: true } satisfies Prisma.UserSelect;
 
@@ -25,7 +30,10 @@ const threadDetailInclude = {
 
 @Injectable()
 export class ForumThreadsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activityLog: AdminActivityLogService,
+  ) {}
 
   categories() {
     return this.prisma.category.findMany({ orderBy: { position: "asc" } });
@@ -78,14 +86,26 @@ export class ForumThreadsService {
     const thread = await this.prisma.forumThread.findUnique({ where: { id } });
     if (!thread) throw new NotFoundException("Thread not found");
     this.assertModeratorOrOwner(thread.authorId, userId, roles);
-    return this.prisma.forumThread.update({ where: { id }, data: { isLocked: locked } });
+    const updated = await this.prisma.forumThread.update({ where: { id }, data: { isLocked: locked } });
+    if (isModeratorRole(roles)) {
+      await this.activityLog.log(userId, locked ? "forum_thread_locked" : "forum_thread_unlocked", "forum_thread", id, {
+        title: thread.title,
+      });
+    }
+    return updated;
   }
 
   async setPinned(id: string, userId: string, roles: string[], pinned: boolean) {
     const thread = await this.prisma.forumThread.findUnique({ where: { id } });
     if (!thread) throw new NotFoundException("Thread not found");
     this.assertModeratorOrOwner(thread.authorId, userId, roles);
-    return this.prisma.forumThread.update({ where: { id }, data: { isPinned: pinned } });
+    const updated = await this.prisma.forumThread.update({ where: { id }, data: { isPinned: pinned } });
+    if (isModeratorRole(roles)) {
+      await this.activityLog.log(userId, pinned ? "forum_thread_pinned" : "forum_thread_unpinned", "forum_thread", id, {
+        title: thread.title,
+      });
+    }
+    return updated;
   }
 
   async update(id: string, userId: string, roles: string[], dto: UpdateForumThreadDto) {
@@ -104,6 +124,9 @@ export class ForumThreadsService {
     if (!thread) throw new NotFoundException("Thread not found");
     this.assertModeratorOrOwner(thread.authorId, userId, roles);
     await this.prisma.forumThread.delete({ where: { id } });
+    if (isModeratorRole(roles) && thread.authorId !== userId) {
+      await this.activityLog.log(userId, "forum_thread_deleted", "forum_thread", id, { title: thread.title });
+    }
     return { success: true };
   }
 
