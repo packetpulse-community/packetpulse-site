@@ -11,4 +11,7 @@ export const authApi = {
   verifyOtp: (dto: VerifyOtpDto) => apiFetchClient<{ tempToken: string }>("/auth/verifyotp", { method: "POST", body: JSON.stringify(dto) }),
   resetPassword: (dto: ResetPasswordDto) =>
     apiFetchClient<{ success: boolean }>("/auth/resetpassword", { method: "POST", body: JSON.stringify(dto) }),
+  verifyEmail: (token: string) =>
+    apiFetchClient<{ success: boolean }>("/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) }),
+  resendVerification: () => apiFetchClient<{ success: boolean }>("/auth/resend-verification", { method: "POST" }),
 };

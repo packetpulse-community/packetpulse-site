@@ -2,7 +2,7 @@
 // goal here is real delivery of the six touchpoints the old app never had (plan §4),
 // not visual polish.
 export type EmailTemplate =
-  | { name: "verification"; token: string }
+  | { name: "verification"; link: string }
   | { name: "welcome"; firstName: string }
   | { name: "password-reset-otp"; otp: string }
   | { name: "approval"; approved: boolean }
@@ -15,7 +15,7 @@ export function renderEmail(template: EmailTemplate): { subject: string; text: s
     case "verification":
       return {
         subject: "Verify your PacketPulse email",
-        text: `Verify your email using this token: ${template.token} (expires in 24h).`,
+        text: `Verify your email by clicking this link: ${template.link} (expires in 24h).`,
       };
     case "welcome":
       return {

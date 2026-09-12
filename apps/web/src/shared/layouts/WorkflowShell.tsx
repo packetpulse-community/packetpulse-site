@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Toaster } from "sonner";
 import { CommandPalette } from "@/shared/components/CommandPalette";
 import { Breadcrumbs } from "@/shared/components/Breadcrumbs";
+import { ResendVerificationBanner } from "@/features/auth/components/ResendVerificationBanner";
 import { AppSidebar } from "./AppSidebar";
 import { AppTopbar } from "./AppTopbar";
 
@@ -23,7 +24,10 @@ export function WorkflowShell({ children }: { children: React.ReactNode }) {
         <div className="border-b border-glass-border px-4 py-2 lg:px-8">
           <Breadcrumbs />
         </div>
-        <main className="mx-auto max-w-5xl px-4 py-8 lg:px-8">{children}</main>
+        <main className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 lg:px-8">
+          <ResendVerificationBanner />
+          {children}
+        </main>
       </div>
     </div>
   );

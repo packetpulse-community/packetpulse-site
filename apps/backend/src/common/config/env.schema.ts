@@ -21,6 +21,9 @@ const BaseEnvSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
   ADMIN_SECURE_CODE: z.string().min(16),
   CORS_ORIGINS: z.string().min(1), // comma-separated allowlist, never "*" (see plan §11)
+  // Base URL of the deployed frontend — used to build the clickable link sent in
+  // the verification email (EmailQueueService), not just the raw token.
+  FRONTEND_URL: z.string().url().default("http://localhost:3000"),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().optional(),
   SMTP_USER: z.string().optional(),

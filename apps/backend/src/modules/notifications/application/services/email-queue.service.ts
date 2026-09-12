@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bullmq";
+import { ConfigService } from "@nestjs/config";
 import { Queue } from "bullmq";
 import { EmailTemplate } from "../../infrastructure/email/templates";
 
@@ -13,10 +14,14 @@ export interface EmailJobData {
 // blocks the request thread (plan §5).
 @Injectable()
 export class EmailQueueService {
-  constructor(@InjectQueue("email") private readonly emailQueue: Queue<EmailJobData>) {}
+  constructor(
+    @InjectQueue("email") private readonly emailQueue: Queue<EmailJobData>,
+    private readonly config: ConfigService,
+  ) {}
 
   sendVerificationEmail(to: string, token: string) {
-    return this.enqueue(to, { name: "verification", token });
+    const link = `${this.config.get<string>("FRONTEND_URL")}/verify-email?token=${token}`;
+    return this.enqueue(to, { name: "verification", link });
   }
 
   sendWelcomeEmail(to: string, firstName: string) {
