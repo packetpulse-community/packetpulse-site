@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma, ResourceCategory, ResourceType } from "@prisma/client";
+import { Prisma, ResourceType } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { CreateResourceDto, UpdateResourceDto, ResourceListQueryDto } from "../dto/resources.dto";
@@ -7,6 +7,7 @@ import { SUPER_ADMIN_ROLE } from "../../../identity";
 
 const summaryInclude = {
   user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+  category: { select: { id: true, name: true, slug: true } },
   tags: true,
   _count: { select: { likes: true } },
 } satisfies Prisma.ResourceInclude;
@@ -21,7 +22,7 @@ export class ResourcesService {
     // queue visibility is an admin-only concern (plan §2/§4, built in Phase 4).
     const where: Prisma.ResourceWhereInput = {
       isApproved: isAdmin ? undefined : true,
-      category: query.category as ResourceCategory | undefined,
+      categoryId: query.categoryId,
       resourceType: query.resourceType as ResourceType | undefined,
       tags: query.tag ? { some: { tag: query.tag } } : undefined,
       OR: query.search
@@ -59,7 +60,7 @@ export class ResourcesService {
         title: dto.title,
         description: dto.description,
         resourceType: dto.resourceType as ResourceType,
-        category: dto.category as ResourceCategory,
+        categoryId: dto.categoryId,
         fileUrl: dto.fileUrl,
         externalLink: dto.externalLink,
         thumbnailUrl: dto.thumbnailUrl,
@@ -90,7 +91,7 @@ export class ResourcesService {
         title: dto.title,
         description: dto.description,
         resourceType: dto.resourceType as ResourceType | undefined,
-        category: dto.category as ResourceCategory | undefined,
+        categoryId: dto.categoryId,
         fileUrl: dto.fileUrl,
         externalLink: dto.externalLink,
         thumbnailUrl: dto.thumbnailUrl,

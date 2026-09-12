@@ -21,6 +21,7 @@ const PERMISSIONS = [
   "admin:clean-data",
   "admin:view-analytics",
   "admin:manage-settings",
+  "categories:manage",
 ] as const;
 
 const MEMBER_PERMISSIONS = ["blogs:create", "resources:create", "recordings:create", "forums:create", "quizzes:attempt"] as const;
@@ -45,6 +46,7 @@ const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
     "admin:clean-data",
     "admin:view-analytics",
     "admin:manage-settings",
+    "categories:manage",
   ],
   // super_admin bypasses permission checks entirely in RolesGuard (plan §4) — no
   // role_permissions rows needed for it.
@@ -69,20 +71,25 @@ async function main() {
     }
   }
 
-  // Default forum categories — no admin UI to create these yet (Phase 4), so a
-  // small fixed set is seeded to start.
-  const FORUM_CATEGORIES = [
-    { name: "General Discussion", slug: "general", position: 0 },
-    { name: "CCNA", slug: "ccna", position: 1 },
-    { name: "CCNP", slug: "ccnp", position: 2 },
-    { name: "Network Automation", slug: "network-automation", position: 3 },
-    { name: "Security", slug: "security", position: 4 },
+  // Shared category list used by blog/resource/recording/quiz/forum content —
+  // admin-editable via /admin/categories, this is just the starting set. Fixed
+  // ids match the ones inserted by the shared_categories migration, so this
+  // upsert is a no-op on databases that already ran it (and a from-scratch seed
+  // for fresh databases that skip straight to `prisma db seed`).
+  const CATEGORIES = [
+    { id: "00000000-0000-0000-0000-000000000001", name: "General Discussion", slug: "general", position: 0 },
+    { id: "00000000-0000-0000-0000-000000000002", name: "CCNA", slug: "ccna", position: 1 },
+    { id: "00000000-0000-0000-0000-000000000003", name: "CCNP", slug: "ccnp", position: 2 },
+    { id: "00000000-0000-0000-0000-000000000004", name: "Network Automation", slug: "network-automation", position: 3 },
+    { id: "00000000-0000-0000-0000-000000000005", name: "Security", slug: "security", position: 4 },
+    { id: "00000000-0000-0000-0000-000000000006", name: "SDN", slug: "sdn", position: 5 },
+    { id: "00000000-0000-0000-0000-000000000007", name: "IPv6", slug: "ipv6", position: 6 },
   ];
-  for (const category of FORUM_CATEGORIES) {
-    await prisma.forumCategory.upsert({ where: { slug: category.slug }, update: {}, create: category });
+  for (const category of CATEGORIES) {
+    await prisma.category.upsert({ where: { slug: category.slug }, update: {}, create: category });
   }
 
-  console.log("Seeded roles, permissions, and forum categories.");
+  console.log("Seeded roles, permissions, and categories.");
 }
 
 main()

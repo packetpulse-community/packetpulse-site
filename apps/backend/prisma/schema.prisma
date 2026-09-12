@@ -210,14 +210,26 @@ model UserRole {
 // — no embedded arrays, replacing Mongoose's embedded-document pattern (plan §2).
 // ---------------------------------------------------------------------------
 
-enum BlogCategory {
-  ccna
-  ccnp
-  network_automation
-  security
-  sdn
-  ipv6
-  general
+// Shared across blog/resource/recording/forum content — one editable list rather
+// than per-domain enums, so admins can add/rename/reorder categories without a
+// schema change (replaces the old BlogCategory/ResourceCategory/RecordingCategory
+// enums and the ForumCategory table).
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  blogPosts  BlogPost[]
+  resources  Resource[]
+  recordings Recording[]
+  quizzes    Quiz[]
+  threads    ForumThread[]
+
+  @@map("categories")
 }
 
 model BlogPost {
@@ -228,7 +240,8 @@ model BlogPost {
   authorId   String   @map("author_id")
   author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   coverImageUrl String? @map("cover_image_url")
-  category   BlogCategory @default(general)
+  categoryId String   @map("category_id")
+  category   Category @relation(fields: [categoryId], references: [id])
   viewCount  Int      @default(0) @map("view_count")
   isPublished Boolean @default(true) @map("is_published")
   // Moderation gate, added alongside Resource/Recording's existing isApproved (same
@@ -245,7 +258,7 @@ model BlogPost {
   comments BlogComment[]
   likes    BlogLike[]
 
-  @@index([category])
+  @@index([categoryId])
   @@index([isPublished, postedAt])
   @@index([isApproved])
   @@map("blog_posts")
@@ -309,22 +322,13 @@ enum ResourceType {
   external_link
 }
 
-enum ResourceCategory {
-  ccna
-  ccnp
-  network_automation
-  security
-  sdn
-  ipv6
-  general
-}
-
 model Resource {
   id             String   @id @default(uuid())
   title          String
   description    String
   resourceType   ResourceType @map("resource_type")
-  category       ResourceCategory
+  categoryId     String   @map("category_id")
+  category       Category @relation(fields: [categoryId], references: [id])
   fileUrl        String?  @map("file_url")
   externalLink   String?  @map("external_link")
   thumbnailUrl   String?  @map("thumbnail_url")
@@ -342,7 +346,7 @@ model Resource {
   tags  ResourceTag[]
   likes ResourceLike[]
 
-  @@index([category])
+  @@index([categoryId])
   @@index([resourceType])
   @@index([isApproved, premium])
   @@map("resources")
@@ -370,16 +374,6 @@ model ResourceLike {
   @@map("resource_likes")
 }
 
-enum RecordingCategory {
-  ccna
-  ccnp
-  network_automation
-  security
-  sdn
-  ipv6
-  general
-}
-
 model Recording {
   id             String   @id @default(uuid())
   title          String
@@ -387,7 +381,8 @@ model Recording {
   recordingUrl   String   @map("recording_url")
   thumbnailUrl   String?  @map("thumbnail_url")
   durationSeconds Int     @default(0) @map("duration_seconds")
-  category       RecordingCategory
+  categoryId     String   @map("category_id")
+  category       Category @relation(fields: [categoryId], references: [id])
   instructorId   String   @map("instructor_id")
   instructor     User     @relation(fields: [instructorId], references: [id], onDelete: Cascade)
   premium        Boolean  @default(false)
@@ -402,7 +397,7 @@ model Recording {
   participants RecordingParticipant[]
   likes        RecordingLike[]
 
-  @@index([category])
+  @@index([categoryId])
   @@index([isApproved, premium])
   @@map("recordings")
 }
@@ -446,22 +441,10 @@ model RecordingLike {
 // designed from scratch (plan §2/§3).
 // ---------------------------------------------------------------------------
 
-model ForumCategory {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  description String?
-  position    Int      @default(0)
-
-  threads ForumThread[]
-
-  @@map("forum_categories")
-}
-
 model ForumThread {
   id          String   @id @default(uuid())
   categoryId  String   @map("category_id")
-  category    ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id])
   authorId    String   @map("author_id")
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   title       String
@@ -536,7 +519,8 @@ model Quiz {
   id                String   @id @default(uuid())
   title             String
   description       String
-  category          BlogCategory @default(general)
+  categoryId        String   @map("category_id")
+  category          Category @relation(fields: [categoryId], references: [id])
   passingScorePct   Int      @default(70) @map("passing_score_pct")
   timeLimitSeconds  Int?     @map("time_limit_seconds")
   isPublished       Boolean  @default(false) @map("is_published")
@@ -549,7 +533,7 @@ model Quiz {
   attempts     QuizAttempt[]
   certificates Certificate[]
 
-  @@index([isPublished, category])
+  @@index([isPublished, categoryId])
   @@map("quizzes")
 }
 

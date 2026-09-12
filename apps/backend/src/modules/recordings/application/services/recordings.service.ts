@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma, RecordingCategory } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { CreateRecordingDto, UpdateRecordingDto, RecordingListQueryDto } from "../dto/recordings.dto";
@@ -7,6 +7,7 @@ import { SUPER_ADMIN_ROLE } from "../../../identity";
 
 const summaryInclude = {
   instructor: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+  category: { select: { id: true, name: true, slug: true } },
   tags: true,
   _count: { select: { likes: true, participants: true } },
 } satisfies Prisma.RecordingInclude;
@@ -19,7 +20,7 @@ export class RecordingsService {
     const skip = prismaSkip(query.page, query.limit);
     const where: Prisma.RecordingWhereInput = {
       isApproved: isAdmin ? undefined : true,
-      category: query.category as RecordingCategory | undefined,
+      categoryId: query.categoryId,
       tags: query.tag ? { some: { tag: query.tag } } : undefined,
       OR: query.search
         ? [
@@ -58,7 +59,7 @@ export class RecordingsService {
         recordingUrl: dto.recordingUrl,
         thumbnailUrl: dto.thumbnailUrl,
         durationSeconds: dto.durationSeconds,
-        category: dto.category as RecordingCategory,
+        categoryId: dto.categoryId,
         premium: dto.premium,
         instructorId,
         isApproved: isAdmin,
@@ -85,7 +86,7 @@ export class RecordingsService {
         recordingUrl: dto.recordingUrl,
         thumbnailUrl: dto.thumbnailUrl,
         durationSeconds: dto.durationSeconds,
-        category: dto.category as RecordingCategory | undefined,
+        categoryId: dto.categoryId,
         premium: dto.premium,
         tags: dto.tags ? { create: dto.tags.map((tag) => ({ tag })) } : undefined,
       },

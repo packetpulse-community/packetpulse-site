@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { PaginationQuerySchema } from "./common";
-import { BlogCategorySchema } from "./content";
 
 export const QuizQuestionOptionInputSchema = z.object({
   optionText: z.string().min(1).max(500),
@@ -17,7 +16,7 @@ export const QuizQuestionInputSchema = z.object({
 export const CreateQuizSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
-  category: BlogCategorySchema.default("general"),
+  categoryId: z.string().uuid(),
   passingScorePct: z.coerce.number().int().min(1).max(100).default(70),
   timeLimitSeconds: z.coerce.number().int().min(1).optional(),
   isPublished: z.boolean().default(false),
@@ -26,7 +25,7 @@ export const CreateQuizSchema = z.object({
 export type CreateQuizDto = z.infer<typeof CreateQuizSchema>;
 
 export const QuizListQuerySchema = PaginationQuerySchema.extend({
-  category: BlogCategorySchema.optional(),
+  categoryId: z.string().uuid().optional(),
 });
 export type QuizListQuery = z.infer<typeof QuizListQuerySchema>;
 

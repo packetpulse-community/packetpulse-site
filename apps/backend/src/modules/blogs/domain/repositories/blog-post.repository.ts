@@ -1,8 +1,8 @@
-import { BlogCategory, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { BlogPostDetail, BlogPostSummary } from "../entities/blog-post.entity";
 
 export interface BlogPostFilter {
-  category?: BlogCategory;
+  categoryId?: string;
   tag?: string;
   search?: string;
   isAdmin?: boolean;

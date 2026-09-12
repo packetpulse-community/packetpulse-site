@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 export const blogPostDetailInclude = Prisma.validator<Prisma.BlogPostInclude>()({
   author: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+  category: { select: { id: true, name: true, slug: true } },
   tags: true,
   images: true,
   comments: {
@@ -15,6 +16,7 @@ export type BlogPostDetail = Prisma.BlogPostGetPayload<{ include: typeof blogPos
 
 export const blogPostSummaryInclude = Prisma.validator<Prisma.BlogPostInclude>()({
   author: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+  category: { select: { id: true, name: true, slug: true } },
   tags: true,
   _count: { select: { likes: true, comments: true } },
 });

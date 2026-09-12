@@ -16,7 +16,7 @@ export class BlogPostsService {
   async list(query: BlogListQueryDto, isAdmin = false) {
     const skip = prismaSkip(query.page, query.limit);
     const [data, total] = await this.posts.findMany(
-      { category: query.category, tag: query.tag, search: query.search, isAdmin },
+      { categoryId: query.categoryId, tag: query.tag, search: query.search, isAdmin },
       skip,
       query.limit,
     );
@@ -49,7 +49,7 @@ export class BlogPostsService {
       {
         title: dto.title,
         content: dto.content,
-        category: dto.category,
+        category: { connect: { id: dto.categoryId } },
         coverImageUrl: dto.coverImageUrl,
         slug,
         author: { connect: { id: authorId } },
@@ -68,7 +68,7 @@ export class BlogPostsService {
       {
         title: dto.title,
         content: dto.content,
-        category: dto.category,
+        category: dto.categoryId ? { connect: { id: dto.categoryId } } : undefined,
         coverImageUrl: dto.coverImageUrl,
         slug: dto.title ? await this.uniqueSlug(dto.title, id) : undefined,
       },

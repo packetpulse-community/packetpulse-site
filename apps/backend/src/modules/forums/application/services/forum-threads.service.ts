@@ -28,7 +28,7 @@ export class ForumThreadsService {
   constructor(private readonly prisma: PrismaService) {}
 
   categories() {
-    return this.prisma.forumCategory.findMany({ orderBy: { position: "asc" } });
+    return this.prisma.category.findMany({ orderBy: { position: "asc" } });
   }
 
   async list(query: ForumThreadListQueryDto) {
@@ -64,7 +64,7 @@ export class ForumThreadsService {
   }
 
   async create(authorId: string, dto: CreateForumThreadDto) {
-    const category = await this.prisma.forumCategory.findUnique({ where: { id: dto.categoryId } });
+    const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
     if (!category) throw new NotFoundException("Forum category not found");
 
     const slug = await this.uniqueSlug(dto.categoryId, dto.title);

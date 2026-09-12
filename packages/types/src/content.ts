@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { PaginationQuerySchema } from "./common";
 
-// Enum values mirror the Prisma schema's enums exactly (apps/backend/prisma/schema.prisma) —
-// keep both in sync when a category/type is added or renamed.
-export const BlogCategorySchema = z.enum(["ccna", "ccnp", "network_automation", "security", "sdn", "ipv6", "general"]);
 export const ResourceTypeSchema = z.enum([
   "pdf",
   "video",
@@ -14,13 +11,11 @@ export const ResourceTypeSchema = z.enum([
   "tool",
   "external_link",
 ]);
-export const ResourceCategorySchema = BlogCategorySchema;
-export const RecordingCategorySchema = BlogCategorySchema;
 
 export const CreateBlogPostSchema = z.object({
   title: z.string().min(1).max(200),
   content: z.string().min(1),
-  category: BlogCategorySchema.default("general"),
+  categoryId: z.string().uuid(),
   coverImageUrl: z.string().url().optional(),
   tags: z.array(z.string().min(1).max(50)).max(20).default([]),
 });
@@ -35,7 +30,7 @@ export const CreateCommentSchema = z.object({
 export type CreateCommentDto = z.infer<typeof CreateCommentSchema>;
 
 export const BlogListQuerySchema = PaginationQuerySchema.extend({
-  category: BlogCategorySchema.optional(),
+  categoryId: z.string().uuid().optional(),
   tag: z.string().optional(),
   search: z.string().optional(),
 });
@@ -46,7 +41,7 @@ export const CreateResourceSchema = z
     title: z.string().min(1).max(200),
     description: z.string().min(1).max(5000),
     resourceType: ResourceTypeSchema,
-    category: ResourceCategorySchema.default("general"),
+    categoryId: z.string().uuid(),
     fileUrl: z.string().url().optional(),
     externalLink: z.string().url().optional(),
     thumbnailUrl: z.string().url().optional(),
@@ -64,7 +59,7 @@ export const UpdateResourceSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().min(1).max(5000).optional(),
   resourceType: ResourceTypeSchema.optional(),
-  category: ResourceCategorySchema.optional(),
+  categoryId: z.string().uuid().optional(),
   fileUrl: z.string().url().optional(),
   externalLink: z.string().url().optional(),
   thumbnailUrl: z.string().url().optional(),
@@ -75,7 +70,7 @@ export const UpdateResourceSchema = z.object({
 export type UpdateResourceDto = z.infer<typeof UpdateResourceSchema>;
 
 export const ResourceListQuerySchema = PaginationQuerySchema.extend({
-  category: ResourceCategorySchema.optional(),
+  categoryId: z.string().uuid().optional(),
   resourceType: ResourceTypeSchema.optional(),
   tag: z.string().optional(),
   search: z.string().optional(),
@@ -88,7 +83,7 @@ export const CreateRecordingSchema = z.object({
   recordingUrl: z.string().url(),
   thumbnailUrl: z.string().url().optional(),
   durationSeconds: z.coerce.number().int().min(0).default(0),
-  category: RecordingCategorySchema.default("general"),
+  categoryId: z.string().uuid(),
   premium: z.boolean().default(false),
   tags: z.array(z.string().min(1).max(50)).max(20).default([]),
 });
@@ -100,7 +95,7 @@ export const UpdateRecordingSchema = CreateRecordingSchema.partial().omit({ reco
 export type UpdateRecordingDto = z.infer<typeof UpdateRecordingSchema>;
 
 export const RecordingListQuerySchema = PaginationQuerySchema.extend({
-  category: RecordingCategorySchema.optional(),
+  categoryId: z.string().uuid().optional(),
   tag: z.string().optional(),
   search: z.string().optional(),
 });

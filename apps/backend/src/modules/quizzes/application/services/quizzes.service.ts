@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma, BlogCategory } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { CreateQuizDto, QuizListQueryDto, UpdateQuizDto } from "../dto/quizzes.dto";
@@ -9,7 +9,7 @@ const summarySelect = {
   id: true,
   title: true,
   description: true,
-  category: true,
+  category: { select: { id: true, name: true, slug: true } },
   passingScorePct: true,
   timeLimitSeconds: true,
   isPublished: true,
@@ -25,7 +25,7 @@ export class QuizzesService {
   async list(query: QuizListQueryDto, userId?: string, isAdmin = false) {
     const skip = prismaSkip(query.page, query.limit);
     const where: Prisma.QuizWhereInput = {
-      category: query.category as BlogCategory | undefined,
+      categoryId: query.categoryId,
       // Non-owners/non-admins only ever see published quizzes.
       OR: isAdmin ? undefined : [{ isPublished: true }, { createdById: userId }],
     };
@@ -69,7 +69,7 @@ export class QuizzesService {
       data: {
         title: dto.title,
         description: dto.description,
-        category: dto.category as BlogCategory,
+        categoryId: dto.categoryId,
         passingScorePct: dto.passingScorePct,
         timeLimitSeconds: dto.timeLimitSeconds,
         isPublished: dto.isPublished,
@@ -103,7 +103,7 @@ export class QuizzesService {
       data: {
         title: dto.title,
         description: dto.description,
-        category: dto.category as BlogCategory | undefined,
+        categoryId: dto.categoryId,
         passingScorePct: dto.passingScorePct,
         timeLimitSeconds: dto.timeLimitSeconds,
         isPublished: dto.isPublished,

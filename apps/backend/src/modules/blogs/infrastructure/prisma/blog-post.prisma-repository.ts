@@ -18,7 +18,7 @@ export class BlogPostPrismaRepository extends BlogPostRepository {
       // admins had no way to see (and moderate) unapproved posts via this
       // endpoint at all.
       isApproved: filter.isAdmin ? undefined : true,
-      category: filter.category,
+      categoryId: filter.categoryId,
       tags: filter.tag ? { some: { tag: filter.tag } } : undefined,
       OR: filter.search
         ? [
