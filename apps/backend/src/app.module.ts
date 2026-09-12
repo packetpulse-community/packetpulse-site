@@ -13,6 +13,7 @@ import { RolesGuard } from "./modules/identity/presentation/guards/roles.guard";
 import { ApprovedGuard } from "./modules/identity/presentation/guards/approved.guard";
 import { UsersModule } from "./modules/users";
 import { BlogsModule } from "./modules/blogs";
+import { CategoriesModule } from "./modules/categories";
 import { ResourcesModule } from "./modules/resources";
 import { RecordingsModule } from "./modules/recordings";
 import { ForumsModule } from "./modules/forums";
@@ -44,6 +45,7 @@ import { LogsModule } from "./modules/logs";
     IdentityModule,
     UsersModule,
     BlogsModule,
+    CategoriesModule,
     ResourcesModule,
     RecordingsModule,
     ForumsModule,
