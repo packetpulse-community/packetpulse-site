@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PasswordSchema } from "./auth";
 
 export const UpdateProfileSchema = z.object({
   firstName: z.string().min(1).max(100).optional(),
@@ -10,7 +11,7 @@ export type UpdateProfileDto = z.infer<typeof UpdateProfileSchema>;
 
 export const ChangePasswordSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(8).regex(/\d/, "must contain a number").regex(/[^A-Za-z0-9]/, "must contain a special character"),
+  newPassword: PasswordSchema,
 });
 export type ChangePasswordDto = z.infer<typeof ChangePasswordSchema>;
 

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock } from "lucide-react";
 import { RegisterSchema } from "@packetpulse/types";
+import { PasswordRequirements } from "@/shared/components/PasswordRequirements";
 import { authApi } from "../api/auth.api";
 import { ApiError } from "@/shared/api/http-client";
 import { cn } from "@/shared/utils/cn";
@@ -40,6 +41,7 @@ export function RegisterForm() {
     register,
     handleSubmit,
     setError,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({ resolver: zodResolver(RegisterFormSchema) });
 
@@ -153,7 +155,6 @@ export function RegisterForm() {
             className="rounded-md border border-input bg-background px-3 py-2.5"
             {...register("password")}
           />
-          <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
           {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
         </div>
 
@@ -170,6 +171,8 @@ export function RegisterForm() {
           />
           {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
         </div>
+
+        <PasswordRequirements password={watch("password") ?? ""} confirm={watch("confirmPassword") ?? ""} />
 
         <label className="flex items-start gap-2 text-sm text-muted-foreground">
           <input type="checkbox" className="mt-0.5 rounded border-input" {...register("termsAccepted")} />

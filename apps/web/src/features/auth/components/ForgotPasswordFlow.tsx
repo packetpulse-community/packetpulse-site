@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
@@ -19,6 +20,7 @@ import { authApi } from "../api/auth.api";
 import { ApiError } from "@/shared/api/http-client";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
+import { PasswordRequirements } from "@/shared/components/PasswordRequirements";
 
 function errorMessage(err: unknown, fallback: string) {
   return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
@@ -93,17 +95,26 @@ function VerifyOtpStep({ email, onVerified }: { email: string; onVerified: (temp
   );
 }
 
+// confirmPassword is client-only — stripped before the request, which still sends
+// exactly the ResetPasswordDto shape the backend validates.
+const ResetPasswordFormSchema = ResetPasswordSchema.extend({ confirmPassword: z.string() }).refine(
+  (data) => data.password === data.confirmPassword,
+  { message: "Passwords do not match", path: ["confirmPassword"] },
+);
+type ResetPasswordFormValues = z.infer<typeof ResetPasswordFormSchema>;
+
 function ResetPasswordStep({ tempToken }: { tempToken: string }) {
   const router = useRouter();
   const {
     register,
     handleSubmit,
     setError,
+    watch,
     formState: { errors, isSubmitting },
-  } = useForm<ResetPasswordDto>({ resolver: zodResolver(ResetPasswordSchema), defaultValues: { tempToken } });
+  } = useForm<ResetPasswordFormValues>({ resolver: zodResolver(ResetPasswordFormSchema), defaultValues: { tempToken } });
 
   const mutation = useMutation({
-    mutationFn: authApi.resetPassword,
+    mutationFn: ({ tempToken, password }: ResetPasswordDto) => authApi.resetPassword({ tempToken, password }),
     onSuccess: () => router.push("/login?reset=true"),
     onError: (err) => setError("root", { message: errorMessage(err, "Could not reset your password") }),
   });
@@ -113,10 +124,26 @@ function ResetPasswordStep({ tempToken }: { tempToken: string }) {
       <p className="text-center text-sm text-muted-foreground">Choose a new password.</p>
       <input type="hidden" {...register("tempToken")} />
       <div className="flex flex-col gap-1">
-        <input type="password" placeholder="New password" className={inputClass} {...register("password")} />
-        <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
+        <input
+          type="password"
+          placeholder="New password"
+          autoComplete="new-password"
+          className={inputClass}
+          {...register("password")}
+        />
         {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
       </div>
+      <div className="flex flex-col gap-1">
+        <input
+          type="password"
+          placeholder="Confirm new password"
+          autoComplete="new-password"
+          className={inputClass}
+          {...register("confirmPassword")}
+        />
+        {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
+      </div>
+      <PasswordRequirements password={watch("password") ?? ""} confirm={watch("confirmPassword") ?? ""} />
       {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
       <button type="submit" disabled={isSubmitting || mutation.isPending} className={buttonClass}>
         <Lock className="h-4 w-4" />
