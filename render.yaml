@@ -36,6 +36,10 @@ services:
         sync: false
       - key: SUPABASE_SECRET_KEY
         sync: false
+      # Resend HTTPS API key (re_...). Used instead of SMTP when set — Render's free
+      # plan blocks outbound SMTP ports, so SMTP_* alone times out here.
+      - key: RESEND_API_KEY
+        sync: false
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

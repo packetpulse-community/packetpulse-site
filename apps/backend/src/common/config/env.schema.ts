@@ -24,6 +24,9 @@ const BaseEnvSchema = z.object({
   // Base URL of the deployed frontend — used to build the clickable link sent in
   // the verification email (EmailQueueService), not just the raw token.
   FRONTEND_URL: z.string().url().default("http://localhost:3000"),
+  // Preferred email transport (HTTPS, port 443). When set it is used instead of
+  // SMTP — required on hosts that block outbound SMTP ports (e.g. Render free tier).
+  RESEND_API_KEY: z.string().optional(),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().optional(),
   SMTP_USER: z.string().optional(),
