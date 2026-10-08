@@ -39,10 +39,32 @@ export interface ClientLogListQuery {
   limit?: number;
 }
 
+export type ServiceState = "operational" | "degraded" | "down" | "not_configured";
+
+export interface ServiceCheck {
+  key: string;
+  name: string;
+  provider: string;
+  status: ServiceState;
+  latencyMs: number | null;
+  detail?: string;
+}
+
+export interface EndpointCheck {
+  method: "GET";
+  path: string;
+  auth: "public" | "member";
+  status: "operational" | "degraded" | "down";
+  httpStatus: number | null;
+  latencyMs: number | null;
+}
+
 export interface SystemStatus {
   server: { status: "operational"; uptimeSeconds: number; nodeEnv: string; nodeVersion: string };
   memory: { rssMb: number; heapUsedMb: number; heapTotalMb: number };
   database: { status: "operational" | "down"; latencyMs: number };
+  services: ServiceCheck[];
+  endpoints: EndpointCheck[];
   timestamp: string;
 }
 

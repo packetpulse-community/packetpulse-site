@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Put, Query, Req } from "@nestjs/common";
+import type { Request } from "express";
 import { Throttle } from "@nestjs/throttler";
 import { AdminUsersService } from "../../application/services/admin-users.service";
 import { AdminCleanDataService } from "../../application/services/admin-clean-data.service";
@@ -37,8 +38,10 @@ export class AdminController {
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.ADMIN_VIEW_ANALYTICS)
   @Get("status")
-  getSystemStatus() {
-    return this.systemStatus.status();
+  getSystemStatus(@Req() req: Request) {
+    // The admin's own cookie is forwarded so the member-only endpoint checks run
+    // through the real auth guards.
+    return this.systemStatus.status(req.headers.cookie);
   }
 
   @Throttle(ADMIN_TIER)
