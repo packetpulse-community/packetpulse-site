@@ -2,11 +2,13 @@ import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException 
 import { Throttle } from "@nestjs/throttler";
 import { Request, Response } from "express";
 import { AuthService } from "../../application/services/auth.service";
+import { EmailVerificationService } from "../../application/services/email-verification.service";
 import { AuthCookieService } from "../../application/services/auth-cookie.service";
 import { UserRepository } from "../../domain/repositories/user.repository";
 import { toPublicUser } from "../../domain/entities/user.entity";
 import { Public } from "../decorators/public.decorator";
 import { CurrentUser } from "../decorators/current-user.decorator";
+import { SkipEmailVerification } from "../decorators/skip-email-verification.decorator";
 import {
   RegisterDto,
   RegisterAdminDto,
@@ -27,6 +29,7 @@ const AUTH_REFRESH = { default: { limit: 20, ttl: 900_000 } };
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
+    private readonly emailVerification: EmailVerificationService,
     private readonly cookies: AuthCookieService,
     private readonly users: UserRepository,
   ) {}
@@ -129,13 +132,16 @@ export class AuthController {
     return { success: true };
   }
 
+  @SkipEmailVerification()
   @Throttle(AUTH_STRICT)
   @Post("resend-verification")
   @HttpCode(200)
   async resendVerification(@CurrentUser() current: AccessTokenPayload) {
     const user = await this.users.findById(current.sub);
-    if (user && !user.emailVerified) {
-      await this.auth.sendVerificationEmail(user.id, user.email);
+    // Approved users only — a pending account's first verification link is sent
+    // by the admin approval itself, never on request.
+    if (user && user.isApproved && !user.emailVerified) {
+      await this.emailVerification.send(user.id, user.email, "reminder");
     }
     return { success: true };
   }

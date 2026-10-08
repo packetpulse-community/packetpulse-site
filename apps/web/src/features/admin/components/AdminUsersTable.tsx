@@ -34,9 +34,9 @@ export function AdminUsersTable({ initialApproved }: AdminUsersTableProps) {
   });
 
   const approveMutation = useMutation({
-    mutationFn: (id: string) => adminClientApi.approveUser(id),
-    onSuccess: () => {
-      toast.success("User approved");
+    mutationFn: (user: AdminUser) => adminClientApi.approveUser(user.id),
+    onSuccess: (_, user) => {
+      toast.success(user.emailVerified ? "User approved" : "User approved — verification email sent");
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to approve user"),
@@ -77,6 +77,12 @@ export function AdminUsersTable({ initialApproved }: AdminUsersTableProps) {
       render: (value) => (value ? <Badge variant="success">Approved</Badge> : <Badge variant="warning">Pending</Badge>),
     },
     {
+      field: "emailVerified",
+      header: "Email",
+      render: (value) =>
+        value ? <Badge variant="success">Verified</Badge> : <Badge variant="secondary">Unverified</Badge>,
+    },
+    {
       field: "roles",
       header: "Roles",
       sortable: false,
@@ -113,7 +119,7 @@ export function AdminUsersTable({ initialApproved }: AdminUsersTableProps) {
                 size="icon"
                 title="Approve"
                 disabled={approveMutation.isPending}
-                onClick={() => approveMutation.mutate(row.id)}
+                onClick={() => approveMutation.mutate(row)}
               >
                 <UserCheck className="h-4 w-4" />
               </Button>

@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@
 import { Reflector } from "@nestjs/core";
 import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
 import { SKIP_APPROVAL_KEY } from "../decorators/skip-approval.decorator";
+import { SKIP_EMAIL_VERIFICATION_KEY } from "../decorators/skip-email-verification.decorator";
 import { SUPER_ADMIN_ROLE } from "../../domain/constants/permissions.constants";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { AccessTokenPayload } from "../../application/services/token.service";
@@ -9,6 +10,8 @@ import { AccessTokenPayload } from "../../application/services/token.service";
 // Approval is orthogonal to role — an unapproved user has no access regardless of
 // what role they'd eventually get (plan §4). Re-checks the DB rather than trusting
 // the JWT's stale snapshot, since approval can change between token refreshes.
+// An approved member also needs a verified email before the account is active —
+// the verification link is sent by the approval itself (AdminUsersService).
 @Injectable()
 export class ApprovedGuard implements CanActivate {
   constructor(
@@ -33,9 +36,20 @@ export class ApprovedGuard implements CanActivate {
     if (!user) return false;
     if (user.roles.includes(SUPER_ADMIN_ROLE) || user.roles.includes("admin")) return true;
 
-    const record = await this.prisma.user.findUnique({ where: { id: user.sub }, select: { isApproved: true } });
+    const record = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: { isApproved: true, emailVerified: true },
+    });
     if (!record?.isApproved) {
       throw new ForbiddenException("Your account is pending admin approval");
+    }
+
+    const skipVerification = this.reflector.getAllAndOverride<boolean>(SKIP_EMAIL_VERIFICATION_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (!skipVerification && !record.emailVerified) {
+      throw new ForbiddenException("Please verify your email to activate your account");
     }
     return true;
   }

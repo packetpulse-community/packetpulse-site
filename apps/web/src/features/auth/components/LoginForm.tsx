@@ -13,7 +13,7 @@ import { SocialLoginRow } from "./SocialLoginRow";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 
-export function LoginForm() {
+export function LoginForm({ justRegistered = false }: { justRegistered?: boolean }) {
   const router = useRouter();
   const {
     register,
@@ -45,6 +45,13 @@ export function LoginForm() {
           </Link>
         </p>
       </div>
+
+      {justRegistered && (
+        <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm">
+          Account created. An admin will review it — once it&apos;s approved you&apos;ll get an email with a link to
+          verify your address, and then you can sign in.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit((dto) => mutation.mutate(dto))} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">

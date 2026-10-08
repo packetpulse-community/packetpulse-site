@@ -6,6 +6,7 @@ import { AuthController } from "./presentation/controllers/auth.controller";
 import { AuthService } from "./application/services/auth.service";
 import { AuthCookieService } from "./application/services/auth-cookie.service";
 import { TokenService } from "./application/services/token.service";
+import { EmailVerificationService } from "./application/services/email-verification.service";
 import { NotificationsModule } from "../notifications";
 import { UserRepository } from "./domain/repositories/user.repository";
 import { UserPrismaRepository } from "./infrastructure/prisma/user.prisma-repository";
@@ -37,6 +38,7 @@ import { EmailVerifiedGuard } from "./presentation/guards/email-verified.guard";
     AuthService,
     AuthCookieService,
     TokenService,
+    EmailVerificationService,
     { provide: UserRepository, useClass: UserPrismaRepository },
     {
       provide: CredentialProvider,
@@ -56,6 +58,7 @@ import { EmailVerifiedGuard } from "./presentation/guards/email-verified.guard";
   ],
   exports: [
     UserRepository,
+    EmailVerificationService,
     CredentialProvider,
     AuthCookieService,
     JwtAuthGuard,

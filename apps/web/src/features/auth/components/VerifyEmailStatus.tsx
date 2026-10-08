@@ -43,9 +43,9 @@ export function VerifyEmailStatus({ token }: { token: string | null }) {
       <div className="flex flex-col items-center gap-4 text-center">
         <CheckCircle2 className="h-10 w-10 text-emerald-500" />
         <h1 className="text-xl font-semibold">Email verified</h1>
-        <p className="text-muted-foreground">Your email is now verified.</p>
-        <Link href="/dashboard" className={cn(buttonVariants({ variant: "gradient" }), "w-full")}>
-          Go to dashboard
+        <p className="text-muted-foreground">Your email is verified and your account is now active.</p>
+        <Link href="/login" className={cn(buttonVariants({ variant: "gradient" }), "w-full")}>
+          Sign in
         </Link>
       </div>
     );
@@ -56,8 +56,9 @@ export function VerifyEmailStatus({ token }: { token: string | null }) {
       <XCircle className="h-10 w-10 text-destructive" />
       <h1 className="text-xl font-semibold">Verification failed</h1>
       <p className="text-muted-foreground">{message}</p>
-      <Link href="/dashboard" className={cn(buttonVariants({ variant: "gradient" }), "w-full")}>
-        Go to dashboard
+      <p className="text-sm text-muted-foreground">Sign in and we&apos;ll email you a fresh verification link.</p>
+      <Link href="/login" className={cn(buttonVariants({ variant: "gradient" }), "w-full")}>
+        Sign in
       </Link>
     </div>
   );

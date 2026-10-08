@@ -20,12 +20,17 @@ export class EmailQueueService {
   ) {}
 
   sendVerificationEmail(to: string, token: string) {
-    const link = `${this.config.get<string>("FRONTEND_URL")}/verify-email?token=${token}`;
-    return this.enqueue(to, { name: "verification", link });
+    return this.enqueue(to, { name: "verification", link: this.verificationLink(token) });
+  }
+
+  // Sent once, when an admin approves a new member — approval notice and the
+  // email-verification link in a single message.
+  sendApprovedVerificationEmail(to: string, token: string) {
+    return this.enqueue(to, { name: "approved-verify", link: this.verificationLink(token) });
   }
 
   sendWelcomeEmail(to: string, firstName: string) {
-    return this.enqueue(to, { name: "welcome", firstName });
+    return this.enqueue(to, { name: "welcome", firstName, loginLink: `${this.config.get<string>("FRONTEND_URL")}/login` });
   }
 
   sendPasswordResetOtp(to: string, otp: string) {
@@ -46,6 +51,10 @@ export class EmailQueueService {
 
   sendSuspiciousRefreshReuseAlert(to: string) {
     return this.enqueue(to, { name: "suspicious-refresh-reuse" });
+  }
+
+  private verificationLink(token: string) {
+    return `${this.config.get<string>("FRONTEND_URL")}/verify-email?token=${token}`;
   }
 
   private enqueue(to: string, template: EmailTemplate) {

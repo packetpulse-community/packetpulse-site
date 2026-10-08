@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { NotificationsModule } from "../notifications";
+import { IdentityModule } from "../identity";
 import { AdminController } from "./presentation/controllers/admin.controller";
 import { AdminUsersService } from "./application/services/admin-users.service";
 import { AdminCleanDataService } from "./application/services/admin-clean-data.service";
@@ -10,7 +11,7 @@ import { AdminSettingsService } from "./application/services/admin-settings.serv
 import { AdminSystemStatusService } from "./application/services/admin-system-status.service";
 
 @Module({
-  imports: [NotificationsModule],
+  imports: [NotificationsModule, IdentityModule],
   controllers: [AdminController],
   providers: [
     AdminUsersService,

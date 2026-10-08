@@ -1,15 +1,16 @@
-import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { UserRepository } from "../../domain/repositories/user.repository";
 import { CredentialProvider } from "../../domain/providers/credential-provider";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { TokenService } from "./token.service";
+import { EmailVerificationService } from "./email-verification.service";
 import { EmailQueueService } from "../../../notifications";
 import { toPublicUser, PublicUser } from "../../domain/entities/user.entity";
+import { SUPER_ADMIN_ROLE } from "../../domain/constants/permissions.constants";
 import { RegisterDto, RegisterAdminDto, LoginDto } from "../dto/auth.dto";
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
-const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -19,6 +20,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly tokens: TokenService,
     private readonly emailQueue: EmailQueueService,
+    private readonly emailVerification: EmailVerificationService,
     private readonly config: ConfigService,
   ) {}
 
@@ -35,9 +37,11 @@ export class AuthService {
     // app doesn't use.
     const credential = await this.credentials.createCredential(dto.email, dto.password, { autoConfirm: true });
 
-    // New registrants start unapproved + unverified. Admin auto-approval/verification
-    // is an explicit branch here, not an implicit model-lifecycle side effect like the
-    // old app's Mongoose pre-save hook (plan §4).
+    // New registrants start unapproved + unverified. No email is sent here — the
+    // verification link goes out only once an admin approves the account
+    // (AdminUsersService.setApproval), so unreviewed signups never get one. Admin
+    // auto-approval/verification is an explicit branch, not an implicit
+    // model-lifecycle side effect like the old app's Mongoose pre-save hook (plan §4).
     const user = await this.users.create({
       id: credential.id,
       firstName: dto.firstName,
@@ -50,8 +54,6 @@ export class AuthService {
       isApproved: false,
       emailVerified: false,
     });
-
-    await this.sendVerificationEmail(user.id, user.email);
 
     return toPublicUser(user);
   }
@@ -92,8 +94,27 @@ export class AuthService {
 
     await this.credentials.verifyCredential(dto.email, dto.password, user.passwordHash);
 
+    // Checked only after the password is verified, so these messages can't be used
+    // to probe which emails are registered. Admins are always approved + verified.
+    const publicUser = toPublicUser(user);
+    const isAdmin = publicUser.roles.includes(SUPER_ADMIN_ROLE) || publicUser.roles.includes("admin");
+    if (!isAdmin && !user.isApproved) {
+      throw new ForbiddenException(
+        "Your account is pending admin approval. You'll receive an email to verify your address once it's approved.",
+      );
+    }
+    if (!isAdmin && !user.emailVerified) {
+      // Approved but never clicked (or let expire) the link from the approval
+      // email — re-send rather than leave them stuck. The login route's strict
+      // throttle bounds how often this can fire.
+      await this.emailVerification.send(user.id, user.email, "reminder");
+      throw new ForbiddenException(
+        "Please verify your email before signing in. We've sent a new verification link to your inbox.",
+      );
+    }
+
     await this.users.markLastLogin(user.id);
-    return toPublicUser(user);
+    return publicUser;
   }
 
   async issueSession(userId: string, meta: { userAgent?: string; ipAddress?: string }) {
@@ -171,14 +192,6 @@ export class AuthService {
     });
 
     await this.emailQueue.sendPasswordChangedNotice(user.email);
-  }
-
-  async sendVerificationEmail(userId: string, email: string) {
-    const { plain, hash } = this.tokens.generateVerificationToken();
-    await this.prisma.emailVerification.create({
-      data: { userId, tokenHash: hash, expiresAt: new Date(Date.now() + VERIFICATION_EXPIRY_MS) },
-    });
-    await this.emailQueue.sendVerificationEmail(email, plain);
   }
 
   async verifyEmail(token: string) {

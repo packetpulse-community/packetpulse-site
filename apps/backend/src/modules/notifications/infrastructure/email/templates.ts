@@ -3,7 +3,8 @@
 // not visual polish.
 export type EmailTemplate =
   | { name: "verification"; link: string }
-  | { name: "welcome"; firstName: string }
+  | { name: "approved-verify"; link: string }
+  | { name: "welcome"; firstName: string; loginLink: string }
   | { name: "password-reset-otp"; otp: string }
   | { name: "approval"; approved: boolean }
   | { name: "role-change"; roleNames: string[] }
@@ -17,10 +18,15 @@ export function renderEmail(template: EmailTemplate): { subject: string; text: s
         subject: "Verify your PacketPulse email",
         text: `Verify your email by clicking this link: ${template.link} (expires in 24h).`,
       };
+    case "approved-verify":
+      return {
+        subject: "Your PacketPulse account is approved — verify your email",
+        text: `Good news — an admin has approved your PacketPulse account.\n\nTo activate it, verify your email address by opening this link:\n${template.link}\n\nThe link expires in 24 hours. If it expires, just sign in and we'll send you a fresh one.`,
+      };
     case "welcome":
       return {
         subject: "Welcome to PacketPulse",
-        text: `Hi ${template.firstName}, your email is verified. Once an admin approves your account you'll have full access.`,
+        text: `Hi ${template.firstName}, your email is verified and your account is now active.\n\nSign in here: ${template.loginLink}`,
       };
     case "password-reset-otp":
       return {

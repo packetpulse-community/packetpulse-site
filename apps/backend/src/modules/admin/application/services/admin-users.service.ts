@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { AdminUserListQueryDto, AssignRolesDto } from "../dto/admin.dto";
-import { userWithRolesInclude, toPublicUser } from "../../../identity";
+import { userWithRolesInclude, toPublicUser, EmailVerificationService } from "../../../identity";
 import type { UserWithRoles } from "../../../identity";
 import { EmailQueueService, NotificationsService } from "../../../notifications";
 import { AdminActivityLogService } from "./admin-activity-log.service";
@@ -21,6 +21,7 @@ export class AdminUsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailQueue: EmailQueueService,
+    private readonly emailVerification: EmailVerificationService,
     private readonly notifications: NotificationsService,
     private readonly activityLog: AdminActivityLogService,
   ) {}
@@ -53,7 +54,7 @@ export class AdminUsersService {
 
   pendingApproval() {
     return this.prisma.user.findMany({
-      where: { isApproved: false, emailVerified: true },
+      where: { isApproved: false },
       include: userWithRolesInclude,
       orderBy: { createdAt: "asc" },
     }).then((users) => users.map(toAdminUser));
@@ -68,12 +69,6 @@ export class AdminUsersService {
   async setApproval(id: string, approvedById: string, approved: boolean) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException("User not found");
-    if (approved && !user.emailVerified) {
-      // Codifies "verified email" as a precondition of "approved member" —
-      // the old app never enforced this (plan §4).
-      throw new BadRequestException("Cannot approve a user who has not verified their email");
-    }
-
     await this.prisma.user.update({
       where: { id },
       data: {
@@ -83,8 +78,16 @@ export class AdminUsersService {
       },
     });
 
+    // Approving a not-yet-verified member is what sends their first verification
+    // link (approval notice + link in one email); verification then activates the
+    // account. Already-verified users (and revocations) get the plain notice.
+    const approvalEmail =
+      approved && !user.emailVerified
+        ? this.emailVerification.send(id, user.email, "approval")
+        : this.emailQueue.sendApprovalNotice(user.email, approved);
+
     await Promise.all([
-      this.emailQueue.sendApprovalNotice(user.email, approved),
+      approvalEmail,
       this.notifications.notify(id, "approval", { approved }),
       this.activityLog.log(approvedById, approved ? "user_approved" : "user_unapproved", "user", id, {
         email: user.email,

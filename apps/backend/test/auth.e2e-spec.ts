@@ -38,6 +38,10 @@ describe("Auth e2e (identity module regressions)", () => {
     expect(res.body.isApproved).toBe(false);
     expect(res.body.emailVerified).toBe(false);
     expect(res.body.roles).toEqual(["member"]);
+
+    // No verification email at signup — the first link is sent on admin approval.
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: testEmail } });
+    expect(await prisma.emailVerification.count({ where: { userId: user.id } })).toBe(0);
   });
 
   it("does not rehash the password on an unrelated profile update (old bug regression)", async () => {
@@ -70,7 +74,7 @@ describe("Auth e2e (identity module regressions)", () => {
       .expect(401);
   });
 
-  it("blocks an unapproved user from a guarded route via ApprovedGuard", async () => {
+  it("blocks a session whose account loses approval via ApprovedGuard", async () => {
     const unapprovedEmail = "e2e-unapproved@example.com";
     await prisma.user.deleteMany({ where: { email: unapprovedEmail } });
 
@@ -78,9 +82,15 @@ describe("Auth e2e (identity module regressions)", () => {
       .post("/api/auth/register")
       .send({ firstName: "Un", lastName: "Approved", email: unapprovedEmail, password: "Passw0rd!23" })
       .expect(201);
+    await prisma.user.update({ where: { email: unapprovedEmail }, data: { isApproved: true, emailVerified: true } });
 
     const agent = request.agent(app.getHttpServer());
     await agent.post("/api/auth/login").send({ email: unapprovedEmail, password: "Passw0rd!23" }).expect(200);
+    await agent.get("/api/users/profile").expect(200);
+
+    // Login now rejects pending accounts outright, so an existing session revoked
+    // mid-flight is the case ApprovedGuard still has to catch.
+    await prisma.user.update({ where: { email: unapprovedEmail }, data: { isApproved: false } });
     await agent.get("/api/users/profile").expect(403);
 
     await prisma.user.deleteMany({ where: { email: unapprovedEmail } });
@@ -120,5 +130,63 @@ describe("Auth e2e (identity module regressions)", () => {
       .post("/api/auth/refresh")
       .set("Cookie", rotatedRefreshCookie!)
       .expect(401);
+  });
+});
+
+// Separate app instance (and so a fresh in-memory throttler) — the suite above
+// already spends most of the login route's 5-per-15-min auth-strict budget.
+describe("Auth e2e (approval-gated email verification)", () => {
+  let app: INestApplication;
+  let prisma: PrismaService;
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    app = moduleRef.createNestApplication();
+    app.use(cookieParser());
+    app.setGlobalPrefix("api");
+    await app.init();
+    prisma = app.get(PrismaService);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it("rejects login for a pending account without sending a verification email", async () => {
+    const pendingEmail = "e2e-pending@example.com";
+    await prisma.user.deleteMany({ where: { email: pendingEmail } });
+    await request(app.getHttpServer())
+      .post("/api/auth/register")
+      .send({ firstName: "Pend", lastName: "Ing", email: pendingEmail, password: "Passw0rd!23" })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .post("/api/auth/login")
+      .send({ email: pendingEmail, password: "Passw0rd!23" })
+      .expect(403);
+    expect(res.body.message).toMatch(/pending admin approval/);
+
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: pendingEmail } });
+    expect(await prisma.emailVerification.count({ where: { userId: user.id } })).toBe(0);
+    await prisma.user.deleteMany({ where: { email: pendingEmail } });
+  });
+
+  it("rejects login for an approved-but-unverified account and re-sends the link", async () => {
+    const unverifiedEmail = "e2e-unverified@example.com";
+    await prisma.user.deleteMany({ where: { email: unverifiedEmail } });
+    await request(app.getHttpServer())
+      .post("/api/auth/register")
+      .send({ firstName: "Un", lastName: "Verified", email: unverifiedEmail, password: "Passw0rd!23" })
+      .expect(201);
+    const user = await prisma.user.update({ where: { email: unverifiedEmail }, data: { isApproved: true } });
+
+    const res = await request(app.getHttpServer())
+      .post("/api/auth/login")
+      .send({ email: unverifiedEmail, password: "Passw0rd!23" })
+      .expect(403);
+    expect(res.body.message).toMatch(/verify your email/);
+    expect(await prisma.emailVerification.count({ where: { userId: user.id } })).toBe(1);
+
+    await prisma.user.deleteMany({ where: { email: unverifiedEmail } });
   });
 });

@@ -2,6 +2,7 @@
 export { IdentityModule } from "./identity.module";
 export { UserRepository } from "./domain/repositories/user.repository";
 export { CredentialProvider } from "./domain/providers/credential-provider";
+export { EmailVerificationService } from "./application/services/email-verification.service";
 export { toPublicUser, userWithRolesInclude, type PublicUser, type UserWithRoles } from "./domain/entities/user.entity";
 export { PERMISSIONS, SUPER_ADMIN_ROLE, type PermissionKey } from "./domain/constants/permissions.constants";
 export { Public } from "./presentation/decorators/public.decorator";
