@@ -6,6 +6,10 @@
    now actually reachable (the old app hardcoded dark-only via ThemeContext), see plan §6. */
 @layer base {
   :root {
+    /* next/font/google's Inter requires fetching fonts.gstatic.com at build/dev time,
+       which fails in network-restricted environments; fall back to the system stack. */
+    --font-inter: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
