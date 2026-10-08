@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from
 import { Throttle } from "@nestjs/throttler";
 import { ResourcesService } from "../../application/services/resources.service";
 import { CreateResourceDto, UpdateResourceDto, ResourceListQueryDto } from "../../application/dto/resources.dto";
-import { Public, CurrentUser, RequirePermission, PERMISSIONS, SUPER_ADMIN_ROLE } from "../../../identity";
+import { CurrentUser, RequirePermission, PERMISSIONS, SUPER_ADMIN_ROLE } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
 
 const WRITE_STANDARD = { default: { limit: 100, ttl: 900_000 } };
@@ -15,16 +15,17 @@ function isAdminRoles(roles: string[]) {
 export class ResourcesController {
   constructor(private readonly resources: ResourcesService) {}
 
-  @Public()
+  // Not @Public — resources are members-only: the global guard chain requires a
+  // signed-in, admin-approved, email-verified account (ApprovedGuard). Blogs stay
+  // public; this is the deliberate difference between the two.
   @Get()
-  list(@Query() query: ResourceListQueryDto, @CurrentUser() user?: AccessTokenPayload) {
-    return this.resources.list(query, !!user && isAdminRoles(user.roles));
+  list(@Query() query: ResourceListQueryDto, @CurrentUser() user: AccessTokenPayload) {
+    return this.resources.list(query, isAdminRoles(user.roles));
   }
 
-  @Public()
   @Get(":id")
-  getById(@Param("id") id: string, @CurrentUser() user?: AccessTokenPayload) {
-    return this.resources.getById(id, !!user && isAdminRoles(user.roles));
+  getById(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
+    return this.resources.getById(id, isAdminRoles(user.roles));
   }
 
   @Throttle(WRITE_STANDARD)
