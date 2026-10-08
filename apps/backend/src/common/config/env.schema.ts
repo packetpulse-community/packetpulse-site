@@ -23,7 +23,9 @@ const BaseEnvSchema = z.object({
   CORS_ORIGINS: z.string().min(1), // comma-separated allowlist, never "*" (see plan §11)
   // Base URL of the deployed frontend — used to build the clickable link sent in
   // the verification email (EmailQueueService), not just the raw token.
-  FRONTEND_URL: z.string().url().default("http://localhost:3000"),
+  // No localhost default — unset falls back to the first CORS origin
+  // (common/config/frontend-url.ts) so production emails never link to localhost.
+  FRONTEND_URL: z.string().url().optional(),
   // Preferred email transport (HTTPS, port 443). When set it is used instead of
   // SMTP — required on hosts that block outbound SMTP ports (e.g. Render free tier).
   RESEND_API_KEY: z.string().optional(),

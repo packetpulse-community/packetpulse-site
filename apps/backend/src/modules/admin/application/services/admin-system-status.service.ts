@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import Redis from "ioredis";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { REDIS_CLIENT } from "../../../../common/redis/redis.constants";
+import { frontendUrl } from "../../../../common/config/frontend-url";
 
 type ServiceState = "operational" | "degraded" | "down" | "not_configured";
 
@@ -152,9 +153,8 @@ export class AdminSystemStatusService {
   }
 
   private async checkFrontend(): Promise<ServiceCheck> {
-    const url = this.config.get<string>("FRONTEND_URL");
+    const url = frontendUrl(this.config);
     const base = { key: "frontend", name: "Frontend (Next.js)", provider: "Vercel" };
-    if (!url) return { ...base, status: "not_configured", latencyMs: null };
 
     let httpStatus = 0;
     const r = await this.timed(async () => {

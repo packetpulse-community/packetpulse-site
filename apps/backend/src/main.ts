@@ -30,6 +30,12 @@ async function bootstrap() {
 
   app.setGlobalPrefix("api");
 
+  if (process.env.NODE_ENV === "production" && !process.env.FRONTEND_URL) {
+    app
+      .get(Logger)
+      .warn(`FRONTEND_URL is not set — email links will use the first CORS origin (${origins[0] ?? "none"})`);
+  }
+
   const port = process.env.PORT ?? 4000;
   await app.listen(port);
 }

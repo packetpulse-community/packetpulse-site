@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { EmailQueueService } from "./email-queue.service";
+import { frontendUrl } from "../../../../common/config/frontend-url";
 
 export interface AnnouncedContent {
   kind: "blog" | "resource";
@@ -36,7 +37,7 @@ export class ContentAnnouncementService {
       });
       if (recipients.length === 0) return;
 
-      const link = `${this.config.get<string>("FRONTEND_URL")}${content.path}`;
+      const link = `${frontendUrl(this.config)}${content.path}`;
       await this.emailQueue.sendNewContentEmails(
         recipients.map((r) => r.email),
         { kind: content.kind, title: content.title, link },

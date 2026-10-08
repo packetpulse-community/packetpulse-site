@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bullmq";
 import { ConfigService } from "@nestjs/config";
 import { Queue } from "bullmq";
+import { frontendUrl } from "../../../../common/config/frontend-url";
 import { EmailTemplate } from "../../infrastructure/email/templates";
 
 const EMAIL_JOB_OPTS = { attempts: 3, backoff: { type: "exponential", delay: 5000 }, removeOnComplete: 1000 };
@@ -32,7 +33,7 @@ export class EmailQueueService {
   }
 
   sendWelcomeEmail(to: string, firstName: string) {
-    return this.enqueue(to, { name: "welcome", firstName, loginLink: `${this.config.get<string>("FRONTEND_URL")}/login` });
+    return this.enqueue(to, { name: "welcome", firstName, loginLink: `${frontendUrl(this.config)}/login` });
   }
 
   sendPasswordResetOtp(to: string, otp: string) {
@@ -68,7 +69,7 @@ export class EmailQueueService {
   }
 
   private verificationLink(token: string) {
-    return `${this.config.get<string>("FRONTEND_URL")}/verify-email?token=${token}`;
+    return `${frontendUrl(this.config)}/verify-email?token=${token}`;
   }
 
   private enqueue(to: string, template: EmailTemplate) {
