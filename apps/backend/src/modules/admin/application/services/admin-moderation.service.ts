@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { AdminActivityLogService } from "./admin-activity-log.service";
+import { ContentAnnouncementService } from "../../../notifications";
 
 @Injectable()
 export class AdminModerationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly activityLog: AdminActivityLogService,
+    private readonly announcements: ContentAnnouncementService,
   ) {}
 
   pendingResources() {
@@ -22,6 +24,16 @@ export class AdminModerationService {
     if (!resource) throw new NotFoundException("Resource not found");
     const updated = await this.prisma.resource.update({ where: { id }, data: { isApproved: true } });
     await this.activityLog.log(actorId, "resource_approved", "resource", id, { title: resource.title });
+    // Only on the pending → published transition, so re-clicking approve never re-mails everyone.
+    if (!resource.isApproved) {
+      await this.announcements.announce({
+        kind: "resource",
+        id,
+        title: resource.title,
+        path: `/resources/${id}`,
+        authorId: resource.userId,
+      });
+    }
     return updated;
   }
 
@@ -70,6 +82,15 @@ export class AdminModerationService {
     if (!post) throw new NotFoundException("Blog post not found");
     const updated = await this.prisma.blogPost.update({ where: { id }, data: { isApproved: true } });
     await this.activityLog.log(actorId, "blog_approved", "blog_post", id, { title: post.title });
+    if (!post.isApproved) {
+      await this.announcements.announce({
+        kind: "blog",
+        id,
+        title: post.title,
+        path: `/blogs/${post.slug}`,
+        authorId: post.authorId,
+      });
+    }
     return updated;
   }
 

@@ -5,12 +5,14 @@ import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { slugify } from "../../../../common/utils/slugify";
 import { CreateBlogPostDto, UpdateBlogPostDto, BlogListQueryDto } from "../dto/blogs.dto";
 import { SUPER_ADMIN_ROLE } from "../../../identity";
+import { ContentAnnouncementService } from "../../../notifications";
 
 @Injectable()
 export class BlogPostsService {
   constructor(
     private readonly posts: BlogPostRepository,
     private readonly prisma: PrismaService,
+    private readonly announcements: ContentAnnouncementService,
   ) {}
 
   async list(query: BlogListQueryDto, isAdmin = false) {
@@ -42,9 +44,9 @@ export class BlogPostsService {
     return post;
   }
 
-  async create(authorId: string, dto: CreateBlogPostDto) {
+  async create(authorId: string, roles: string[], dto: CreateBlogPostDto) {
     const slug = await this.uniqueSlug(dto.title);
-    return this.posts.create(
+    const post = await this.posts.create(
       authorId,
       {
         title: dto.title,
@@ -56,6 +58,16 @@ export class BlogPostsService {
       },
       dto.tags,
     );
+    if (roles.includes("admin") || roles.includes(SUPER_ADMIN_ROLE)) {
+      await this.announcements.announce({
+        kind: "blog",
+        id: post.id,
+        title: post.title,
+        path: `/blogs/${post.slug}`,
+        authorId,
+      });
+    }
+    return post;
   }
 
   async update(id: string, userId: string, roles: string[], dto: UpdateBlogPostDto) {

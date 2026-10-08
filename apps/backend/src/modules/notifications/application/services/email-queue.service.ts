@@ -4,6 +4,8 @@ import { ConfigService } from "@nestjs/config";
 import { Queue } from "bullmq";
 import { EmailTemplate } from "../../infrastructure/email/templates";
 
+const EMAIL_JOB_OPTS = { attempts: 3, backoff: { type: "exponential", delay: 5000 }, removeOnComplete: 1000 };
+
 export interface EmailJobData {
   to: string;
   template: EmailTemplate;
@@ -53,11 +55,23 @@ export class EmailQueueService {
     return this.enqueue(to, { name: "suspicious-refresh-reuse" });
   }
 
+  // Bulk-enqueued in one Redis round-trip; the email worker's rate limiter (not
+  // this method) is what keeps delivery under the SMTP provider's send rate.
+  sendNewContentEmails(recipients: string[], content: { kind: "blog" | "resource"; title: string; link: string }) {
+    return this.emailQueue.addBulk(
+      recipients.map((to) => ({
+        name: "send",
+        data: { to, template: { name: "new-content" as const, ...content } },
+        opts: EMAIL_JOB_OPTS,
+      })),
+    );
+  }
+
   private verificationLink(token: string) {
     return `${this.config.get<string>("FRONTEND_URL")}/verify-email?token=${token}`;
   }
 
   private enqueue(to: string, template: EmailTemplate) {
-    return this.emailQueue.add("send", { to, template }, { attempts: 3, backoff: { type: "exponential", delay: 5000 } });
+    return this.emailQueue.add("send", { to, template }, EMAIL_JOB_OPTS);
   }
 }

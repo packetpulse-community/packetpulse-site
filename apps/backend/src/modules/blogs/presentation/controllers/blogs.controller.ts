@@ -44,7 +44,7 @@ export class BlogsController {
   @RequirePermission(PERMISSIONS.BLOGS_CREATE)
   @Post()
   create(@CurrentUser() user: AccessTokenPayload, @Body() dto: CreateBlogPostDto) {
-    return this.posts.create(user.sub, dto);
+    return this.posts.create(user.sub, user.roles, dto);
   }
 
   @Throttle(WRITE_STANDARD)

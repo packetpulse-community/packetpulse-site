@@ -9,6 +9,7 @@ export type EmailTemplate =
   | { name: "approval"; approved: boolean }
   | { name: "role-change"; roleNames: string[] }
   | { name: "password-changed" }
+  | { name: "new-content"; kind: "blog" | "resource"; title: string; link: string }
   | { name: "suspicious-refresh-reuse" };
 
 export function renderEmail(template: EmailTemplate): { subject: string; text: string } {
@@ -45,10 +46,17 @@ export function renderEmail(template: EmailTemplate): { subject: string; text: s
         subject: "Your PacketPulse roles changed",
         text: `Your account roles are now: ${template.roleNames.join(", ")}.`,
       };
+    case "new-content": {
+      const noun = template.kind === "blog" ? "blog post" : "resource";
+      return {
+        subject: `New on PacketPulse: ${template.title}`,
+        text: `A new ${noun} was just published on PacketPulse:\n\n${template.title}\n${template.link}\n\nYou're receiving this because you're a member of PacketPulse.`,
+      };
+    }
     case "password-changed":
       return {
         subject: "Your PacketPulse password was changed",
-        text: "Your password was just changed. If this wasn't you, reset your password immediately and contact support.",
+        text: "Your PacketPulse password was changed successfully, and all other signed-in sessions were signed out.\n\nIf this wasn't you, reset your password immediately and contact an admin.",
       };
     case "suspicious-refresh-reuse":
       return {

@@ -4,6 +4,7 @@ import { PrismaService } from "../../../../prisma/prisma.service";
 import { paginate, prismaSkip } from "../../../../common/dto/pagination.util";
 import { CreateResourceDto, UpdateResourceDto, ResourceListQueryDto } from "../dto/resources.dto";
 import { SUPER_ADMIN_ROLE } from "../../../identity";
+import { ContentAnnouncementService } from "../../../notifications";
 
 const summaryInclude = {
   user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
@@ -14,7 +15,10 @@ const summaryInclude = {
 
 @Injectable()
 export class ResourcesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly announcements: ContentAnnouncementService,
+  ) {}
 
   async list(query: ResourceListQueryDto, isAdmin: boolean) {
     const skip = prismaSkip(query.page, query.limit);
@@ -55,7 +59,7 @@ export class ResourcesService {
 
   async create(userId: string, roles: string[], dto: CreateResourceDto) {
     const isAdmin = roles.includes("admin") || roles.includes(SUPER_ADMIN_ROLE);
-    return this.prisma.resource.create({
+    const resource = await this.prisma.resource.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -74,6 +78,18 @@ export class ResourcesService {
       },
       include: summaryInclude,
     });
+    // Admin-created = published immediately, so members hear about it now; member
+    // submissions are announced later, when an admin approves them.
+    if (isAdmin) {
+      await this.announcements.announce({
+        kind: "resource",
+        id: resource.id,
+        title: resource.title,
+        path: `/resources/${resource.id}`,
+        authorId: userId,
+      });
+    }
+    return resource;
   }
 
   async update(id: string, userId: string, roles: string[], dto: UpdateResourceDto) {

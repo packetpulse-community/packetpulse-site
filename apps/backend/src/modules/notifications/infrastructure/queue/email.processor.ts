@@ -4,7 +4,9 @@ import { MailerService } from "../email/mailer.service";
 import { renderEmail } from "../email/templates";
 import { EmailJobData } from "../../application/services/email-queue.service";
 
-@Processor("email")
+// Resend's default limit is 2 requests/second — the limiter paces bulk sends
+// (e.g. new-content announcements) instead of letting them fail with 429s.
+@Processor("email", { limiter: { max: 2, duration: 1000 } })
 export class EmailProcessor extends WorkerHost {
   constructor(private readonly mailer: MailerService) {
     super();
