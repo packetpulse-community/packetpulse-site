@@ -37,6 +37,24 @@ async function handle<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+// Server-side calls leave from Vercel's servers, so without this the backend's
+// per-IP rate limits saw every visitor as the same few Vercel IPs and one busy
+// minute returned 429 to everyone. Forwards the visitor's own address instead
+// (the backend trusts X-Forwarded-For — see apps/backend/src/main.ts).
+// next/headers is loaded lazily: this module is also bundled for the browser.
+async function visitorIpHeader(): Promise<Record<string, string>> {
+  if (typeof window !== "undefined") return {};
+  try {
+    const { headers } = await import("next/headers");
+    const incoming = await headers();
+    const ip = incoming.get("x-forwarded-for") ?? incoming.get("x-real-ip");
+    return ip ? { "X-Forwarded-For": ip } : {};
+  } catch {
+    // Outside a request scope (e.g. build-time rendering) — nothing to forward.
+    return {};
+  }
+}
+
 // Used by Server Components/layouts — pass the incoming request's Cookie header
 // explicitly (see shared/auth/session.ts), since Node's fetch has no browser
 // cookie jar to draw from.
@@ -49,6 +67,7 @@ export async function apiFetch<T>(
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...(await visitorIpHeader()),
       ...(cookieHeader ? { Cookie: cookieHeader } : {}),
       ...init.headers,
     },
@@ -62,10 +81,32 @@ export async function apiFetch<T>(
 // cookies to this app's own origin (see next.config.mjs comment) rather than the
 // backend's cross-origin one.
 export async function apiFetchClient<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`/api${path}`, {
-    ...options,
-    credentials: "include",
-    headers: { "Content-Type": "application/json", ...options.headers },
-  });
+  const send = () =>
+    fetch(`/api${path}`, {
+      ...options,
+      credentials: "include",
+      headers: { "Content-Type": "application/json", ...options.headers },
+    });
+  let res = await send();
+  // The access token lives 15 minutes; renew it from the refresh cookie once and
+  // retry, instead of surfacing a 401 that sends the user back to the login form.
+  if (res.status === 401 && !path.startsWith("/auth/") && (await refreshSession())) {
+    res = await send();
+  }
   return handle<T>(res);
+}
+
+// Single in-flight refresh shared by every caller — a page firing several requests
+// at once must not burn the refresh endpoint's rate limit (or race token rotation,
+// which the backend treats as reuse and revokes the whole session).
+let refreshInFlight: Promise<boolean> | null = null;
+
+export function refreshSession(): Promise<boolean> {
+  refreshInFlight ??= fetch("/api/auth/refresh", { method: "POST", credentials: "include" })
+    .then((res) => res.ok)
+    .catch(() => false)
+    .finally(() => {
+      refreshInFlight = null;
+    });
+  return refreshInFlight;
 }

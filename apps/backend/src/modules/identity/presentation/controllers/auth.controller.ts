@@ -71,10 +71,19 @@ export class AuthController {
   @HttpCode(200)
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const raw = req.cookies?.refreshToken;
-    const session = await this.auth.refreshSession(raw, {
-      userAgent: req.headers["user-agent"],
-      ipAddress: req.ip,
-    });
+    let session: Awaited<ReturnType<AuthService["refreshSession"]>>;
+    try {
+      session = await this.auth.refreshSession(raw, {
+        userAgent: req.headers["user-agent"],
+        ipAddress: req.ip,
+      });
+    } catch (err) {
+      // A dead refresh token can't recover — clear the cookies (incl. the
+      // session_active flag the frontend proxy keys on) so the browser stops
+      // retrying the refresh on every navigation and simply shows the login page.
+      this.cookies.clearAuthCookies(res);
+      throw err;
+    }
     this.cookies.setAuthCookies(res, session.accessToken, session.refreshToken);
     return { user: session.user };
   }
