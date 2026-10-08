@@ -13,9 +13,12 @@ export class MailerService {
   constructor(private readonly config: ConfigService) {
     const host = this.config.get<string>("SMTP_HOST");
     if (host) {
+      const port = this.config.get<number>("SMTP_PORT") ?? 587;
       this.transporter = nodemailer.createTransport({
         host,
-        port: this.config.get<number>("SMTP_PORT") ?? 587,
+        port,
+        // 465 is implicit TLS (handshake first); 587 starts plain and upgrades via STARTTLS.
+        secure: port === 465,
         auth: {
           user: this.config.get<string>("SMTP_USER"),
           pass: this.config.get<string>("SMTP_PASSWORD"),
@@ -31,6 +34,6 @@ export class MailerService {
       this.logger.log(`[dev email] to=${to} subject="${subject}"\n${text}`);
       return;
     }
-    await this.transporter.sendMail({ from: "PacketPulse <no-reply@packetpulse.dev>", to, subject, text });
+    await this.transporter.sendMail({ from: "PacketPulse <no-reply@packetpulse.in>", to, subject, text });
   }
 }
