@@ -29,8 +29,13 @@ export class MailerService {
 
   async send(to: string, subject: string, text: string) {
     if (!this.transporter) {
-      // No SMTP configured (e.g. local dev without a mail catcher) — log instead of
-      // failing the job, since email delivery must never crash the queue worker.
+      // Production without SMTP is a misconfiguration, not a dev convenience:
+      // fail the job (EmailProcessor logs the reason) and never write the body —
+      // it can hold a password-reset code or a verification link.
+      if (this.config.get<string>("NODE_ENV") === "production") {
+        throw new Error("SMTP is not configured (SMTP_HOST is unset) — email not sent");
+      }
+      // Local dev without a mail catcher — print the email instead.
       this.logger.log(`[dev email] to=${to} subject="${subject}"\n${text}`);
       return;
     }
