@@ -11,6 +11,8 @@ import { IdentityModule } from "./modules/identity";
 import { JwtAuthGuard } from "./modules/identity/presentation/guards/jwt-auth.guard";
 import { RolesGuard } from "./modules/identity/presentation/guards/roles.guard";
 import { ApprovedGuard } from "./modules/identity/presentation/guards/approved.guard";
+import { MaintenanceGuard } from "./modules/identity/presentation/guards/maintenance.guard";
+import { SiteStatusModule } from "./common/site-status/site-status.module";
 import { UsersModule } from "./modules/users";
 import { BlogsModule } from "./modules/blogs";
 import { CategoriesModule } from "./modules/categories";
@@ -28,7 +30,7 @@ import { DashboardModule } from "./modules/dashboard";
 import { LogsModule } from "./modules/logs";
 
 // Feature modules land here as they're built (migration plan phases). Global guard
-// chain — JwtAuthGuard → RolesGuard → ApprovedGuard, with @Public() opting a route
+// chain — JwtAuthGuard → MaintenanceGuard → RolesGuard → ApprovedGuard, with @Public() opting a route
 // out entirely (plan §4) — plus a global ThrottlerGuard so no route is accidentally
 // unlimited (plan §4 rate-limit tiers, overridden per-route via @Throttle).
 @Module({
@@ -36,6 +38,7 @@ import { LogsModule } from "./modules/logs";
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]), // global read-standard default
     PrismaModule,
+    SiteStatusModule,
     SupabaseModule,
     RedisModule,
     ObservabilityLoggerModule,
@@ -59,6 +62,8 @@ import { LogsModule } from "./modules/logs";
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    // Before Roles/Approved so a maintenance 503 wins over a role/approval 403.
+    { provide: APP_GUARD, useClass: MaintenanceGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: ApprovedGuard },
   ],

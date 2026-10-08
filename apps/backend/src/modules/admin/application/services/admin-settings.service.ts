@@ -1,12 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../../prisma/prisma.service";
+import { SiteStatusService } from "../../../../common/site-status/site-status.service";
 import type { UpdateSiteSettingsDto } from "@packetpulse/types";
 
 const SETTINGS_ID = "default";
 
 @Injectable()
 export class AdminSettingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly siteStatus: SiteStatusService,
+  ) {}
 
   // Singleton row, upserted into existence on first read — avoids a separate
   // seed/migration-time insert just to guarantee the row exists.
@@ -19,10 +23,13 @@ export class AdminSettingsService {
   }
 
   async update(dto: UpdateSiteSettingsDto) {
-    return this.prisma.siteSettings.upsert({
+    const settings = await this.prisma.siteSettings.upsert({
       where: { id: SETTINGS_ID },
       update: dto,
       create: { id: SETTINGS_ID, ...dto },
     });
+    // Maintenance on/off takes effect on this replica's very next request.
+    this.siteStatus.invalidate();
+    return settings;
   }
 }

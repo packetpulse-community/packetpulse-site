@@ -9,6 +9,7 @@ import { toPublicUser } from "../../domain/entities/user.entity";
 import { Public } from "../decorators/public.decorator";
 import { CurrentUser } from "../decorators/current-user.decorator";
 import { SkipEmailVerification } from "../decorators/skip-email-verification.decorator";
+import { AllowDuringMaintenance } from "../decorators/allow-during-maintenance.decorator";
 import {
   RegisterDto,
   RegisterAdminDto,
@@ -50,6 +51,7 @@ export class AuthController {
 
   @Public()
   @Throttle(AUTH_STRICT)
+  @AllowDuringMaintenance()
   @Post("login")
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -64,6 +66,7 @@ export class AuthController {
 
   @Public()
   @Throttle(AUTH_REFRESH)
+  @AllowDuringMaintenance()
   @Post("refresh")
   @HttpCode(200)
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -76,6 +79,7 @@ export class AuthController {
     return { user: session.user };
   }
 
+  @AllowDuringMaintenance()
   @Post("logout")
   @HttpCode(200)
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {

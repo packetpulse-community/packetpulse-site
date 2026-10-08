@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 // Server-only: SSR/Server Component calls go straight to the backend (Node-to-Node,
 // no browser cookie jar involved — the caller must forward cookies explicitly).
 // API_INTERNAL_URL is the bare backend origin (same value next.config.mjs's rewrite
@@ -13,9 +15,22 @@ export class ApiError extends Error {
   }
 }
 
+export const MAINTENANCE_PATH = "/maintenance";
+
+// The backend tags maintenance 503s with `maintenance: true` (MaintenanceGuard) —
+// any API call that hits one sends the visitor to the maintenance page, from a
+// Server Component (redirect) or the browser (full navigation) alike.
+function isMaintenance(status: number, body: unknown) {
+  return status === 503 && (body as { maintenance?: boolean } | null)?.maintenance === true;
+}
+
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => null);
+    if (isMaintenance(res.status, body)) {
+      if (typeof window === "undefined") redirect(MAINTENANCE_PATH);
+      if (window.location.pathname !== MAINTENANCE_PATH) window.location.assign(MAINTENANCE_PATH);
+    }
     throw new ApiError(res.status, body);
   }
   if (res.status === 204) return undefined as T;

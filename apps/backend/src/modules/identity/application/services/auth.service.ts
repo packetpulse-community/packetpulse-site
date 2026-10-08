@@ -8,6 +8,8 @@ import { EmailVerificationService } from "./email-verification.service";
 import { EmailQueueService } from "../../../notifications";
 import { toPublicUser, PublicUser } from "../../domain/entities/user.entity";
 import { SUPER_ADMIN_ROLE } from "../../domain/constants/permissions.constants";
+import { SiteStatusService } from "../../../../common/site-status/site-status.service";
+import { maintenanceException } from "../../../../common/site-status/maintenance.constants";
 import { RegisterDto, RegisterAdminDto, LoginDto } from "../dto/auth.dto";
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
@@ -21,6 +23,7 @@ export class AuthService {
     private readonly tokens: TokenService,
     private readonly emailQueue: EmailQueueService,
     private readonly emailVerification: EmailVerificationService,
+    private readonly siteStatus: SiteStatusService,
     private readonly config: ConfigService,
   ) {}
 
@@ -98,6 +101,9 @@ export class AuthService {
     // to probe which emails are registered. Admins are always approved + verified.
     const publicUser = toPublicUser(user);
     const isAdmin = publicUser.roles.includes(SUPER_ADMIN_ROLE) || publicUser.roles.includes("admin");
+    // Maintenance mode: only admins may start a session (MaintenanceGuard blocks
+    // everyone else's requests; this stops a non-admin getting a session at all).
+    if (!isAdmin && (await this.siteStatus.isMaintenance())) throw maintenanceException();
     if (!isAdmin && !user.isApproved) {
       throw new ForbiddenException(
         "Your account is pending admin approval. You'll receive an email to verify your address once it's approved.",

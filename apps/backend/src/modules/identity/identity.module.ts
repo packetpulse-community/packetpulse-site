@@ -19,6 +19,7 @@ import { JwtAuthGuard } from "./presentation/guards/jwt-auth.guard";
 import { RolesGuard } from "./presentation/guards/roles.guard";
 import { ApprovedGuard } from "./presentation/guards/approved.guard";
 import { EmailVerifiedGuard } from "./presentation/guards/email-verified.guard";
+import { MaintenanceGuard } from "./presentation/guards/maintenance.guard";
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { EmailVerifiedGuard } from "./presentation/guards/email-verified.guard";
     RolesGuard,
     ApprovedGuard,
     EmailVerifiedGuard,
+    MaintenanceGuard,
   ],
   exports: [
     UserRepository,
@@ -65,6 +67,7 @@ import { EmailVerifiedGuard } from "./presentation/guards/email-verified.guard";
     RolesGuard,
     ApprovedGuard,
     EmailVerifiedGuard,
+    MaintenanceGuard,
   ],
 })
 export class IdentityModule {}

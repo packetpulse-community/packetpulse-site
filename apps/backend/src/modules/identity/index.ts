@@ -6,6 +6,7 @@ export { EmailVerificationService } from "./application/services/email-verificat
 export { toPublicUser, userWithRolesInclude, type PublicUser, type UserWithRoles } from "./domain/entities/user.entity";
 export { PERMISSIONS, SUPER_ADMIN_ROLE, type PermissionKey } from "./domain/constants/permissions.constants";
 export { Public } from "./presentation/decorators/public.decorator";
+export { AllowDuringMaintenance } from "./presentation/decorators/allow-during-maintenance.decorator";
 export { CurrentUser } from "./presentation/decorators/current-user.decorator";
 export { RequirePermission } from "./presentation/decorators/require-permission.decorator";
 export { SkipApproval } from "./presentation/decorators/skip-approval.decorator";

@@ -1,4 +1,6 @@
 import { cookies } from "next/headers";
+import { redirect, unstable_rethrow } from "next/navigation";
+import { apiFetch } from "@/shared/api/http-client";
 import { resourcesServerApi, type ResourceSummary } from "@/features/resources/api/resources.api";
 import { MarketingBackground } from "@/features/landing/components/MarketingBackground";
 import { Navbar } from "@/features/landing/components/Navbar";
@@ -18,15 +20,32 @@ async function getLatestResources(cookieHeader: string): Promise<ResourceSummary
   try {
     const { data } = await resourcesServerApi.list(cookieHeader, "?limit=3");
     return data;
-  } catch {
-    // Public marketing page shouldn't hard-fail if the backend is briefly unreachable.
+  } catch (err) {
+    // Let a maintenance redirect through; otherwise the public marketing page
+    // shouldn't hard-fail if the backend is briefly unreachable.
+    unstable_rethrow(err);
     return [];
+  }
+}
+
+// The landing page makes no other members-only call that would surface
+// maintenance, so it asks explicitly. Admins (canBypass) still see the site.
+async function inMaintenance(cookieHeader: string): Promise<boolean> {
+  try {
+    const status = await apiFetch<{ maintenanceMode: boolean; canBypass: boolean }>("/site-status", { cookieHeader });
+    return status.maintenanceMode && !status.canBypass;
+  } catch {
+    return false;
   }
 }
 
 export default async function LandingPage() {
   const cookieHeader = (await cookies()).toString();
-  const latestResources = await getLatestResources(cookieHeader);
+  const [maintenance, latestResources] = await Promise.all([
+    inMaintenance(cookieHeader),
+    getLatestResources(cookieHeader),
+  ]);
+  if (maintenance) redirect("/maintenance");
 
   return (
     <MarketingBackground>
