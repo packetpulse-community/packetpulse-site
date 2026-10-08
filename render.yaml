@@ -28,6 +28,10 @@ services:
         sync: false
       - key: CORS_ORIGINS
         value: https://test.packetpulse.in
+      # Base URL for links in emails (verify-email, new blog/resource) and the
+      # admin System Status frontend check — defaults to localhost if unset.
+      - key: FRONTEND_URL
+        value: https://test.packetpulse.in
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SECRET_KEY
