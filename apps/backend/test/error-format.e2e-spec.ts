@@ -3,11 +3,14 @@ import { Test } from "@nestjs/testing";
 import { Prisma } from "@prisma/client";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
+import { createHash } from "node:crypto";
+import Redis from "ioredis";
 import request from "supertest";
 import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { SiteStatusService } from "../src/common/site-status/site-status.service";
 import { Public } from "../src/modules/identity";
+import { REDIS_CLIENT } from "../src/common/redis/redis.constants";
 
 const SECRET = "SECRET_INTERNAL_DETAIL postgres://user:pw@db/secret";
 
@@ -91,6 +94,10 @@ describe("Error format e2e (TEST-011 / SEC-07)", () => {
     });
     siteStatus.invalidate();
     await prisma.user.deleteMany({ where: { email: { in: emails } } });
+    // The rate-limit test makes failed logins for this address; remove only that lock key so
+    // it cannot affect another run (never flush keys we did not create).
+    const lockKey = `login:fail:${createHash("sha256").update("nobody@example.com").digest("hex")}`;
+    await app.get<Redis>(REDIS_CLIENT).del(lockKey);
     await app.close();
   });
 
@@ -133,16 +140,6 @@ describe("Error format e2e (TEST-011 / SEC-07)", () => {
       .send({ firstName: "Err", lastName: "Member", email: memberEmail, password })
       .expect(409);
     expectShape(res.body, 409, "CONFLICT");
-  });
-
-  it("repeated bad logins -> RATE_LIMITED", async () => {
-    let last: request.Response | undefined;
-    for (let i = 0; i < 12; i++) {
-      last = await request(app.getHttpServer()).post("/api/auth/login").send({ email: "nobody@example.com", password: "wrong-Pass1" });
-      if (last.status === 429) break;
-    }
-    expect(last?.status).toBe(429);
-    expectShape(last!.body, 429, "RATE_LIMITED");
   });
 
   it("unexpected error -> INTERNAL_ERROR with no stack, path or internal message", async () => {
@@ -193,5 +190,17 @@ describe("Error format e2e (TEST-011 / SEC-07)", () => {
     expect(res.headers["strict-transport-security"]).toBeDefined();
     expect(res.headers["content-security-policy"]).toBeDefined();
     expect(res.headers["x-powered-by"]).toBeUndefined();
+  });
+
+  // Deliberately LAST: it exhausts the per-IP login limit (and locks the unknown email),
+  // so any test that signs in through /api/auth/login after it would get 429 instead of 200.
+  it("repeated bad logins -> RATE_LIMITED", async () => {
+    let last: request.Response | undefined;
+    for (let i = 0; i < 12; i++) {
+      last = await request(app.getHttpServer()).post("/api/auth/login").send({ email: "nobody@example.com", password: "wrong-Pass1" });
+      if (last.status === 429) break;
+    }
+    expect(last?.status).toBe(429);
+    expectShape(last!.body, 429, "RATE_LIMITED");
   });
 });
