@@ -1,6 +1,7 @@
 {
   "rootDir": "..",
   "testEnvironment": "node",
+  "globalSetup": "<rootDir>/test/require-local-db.cjs",
   "testRegex": "test/.*\\.e2e-spec\\.ts$",
   "transform": {
     "^.+\\.ts$": ["ts-jest", { "tsconfig": "<rootDir>/tsconfig.json" }]
