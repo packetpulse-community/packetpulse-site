@@ -13,6 +13,16 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/primitives
 
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
+// Only siteName and maintenanceMode are enforced by the backend today (threat T-12);
+// every other field is stored but changes nothing, so say so next to it.
+function NotActiveNote() {
+  return (
+    <p className="text-xs text-muted-foreground">
+      <span aria-hidden="true">⚠ </span>Saved, but not active yet: this setting has no effect on the site.
+    </p>
+  );
+}
+
 function errorMessage(err: unknown, fallback: string) {
   return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
 }
@@ -63,11 +73,13 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
             <label className="text-sm font-medium">Admin Email</label>
             <input type="email" className={inputClass} {...register("adminEmail")} />
             {errors.adminEmail && <p className="text-sm text-destructive">{errors.adminEmail.message}</p>}
+            <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1 sm:col-span-2">
             <label className="text-sm font-medium">Site Description</label>
             <textarea rows={2} className={inputClass} {...register("siteDescription")} />
             {errors.siteDescription && <p className="text-sm text-destructive">{errors.siteDescription.message}</p>}
+            <NotActiveNote />
           </div>
         </CardContent>
       </Card>
@@ -77,23 +89,31 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
           <CardTitle>User Settings</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" {...register("registrationEnabled")} />
-            Enable user registration
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" {...register("emailVerificationRequired")} />
-            Require email verification
-          </label>
+          <div className="flex flex-col gap-1">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" {...register("registrationEnabled")} />
+              Enable user registration
+            </label>
+            <NotActiveNote />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" {...register("emailVerificationRequired")} />
+              Require email verification
+            </label>
+            <NotActiveNote />
+          </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Session Timeout (minutes)</label>
             <input type="number" className={inputClass} {...register("sessionTimeoutMinutes")} />
             {errors.sessionTimeoutMinutes && <p className="text-sm text-destructive">{errors.sessionTimeoutMinutes.message}</p>}
+            <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Max Resources Per User</label>
             <input type="number" className={inputClass} {...register("maxUserResourcesCount")} />
             {errors.maxUserResourcesCount && <p className="text-sm text-destructive">{errors.maxUserResourcesCount.message}</p>}
+            <NotActiveNote />
           </div>
         </CardContent>
       </Card>
@@ -114,11 +134,13 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
             <label className="text-sm font-medium">Max Upload Size (MB)</label>
             <input type="number" className={inputClass} {...register("maxUploadSizeMb")} />
             {errors.maxUploadSizeMb && <p className="text-sm text-destructive">{errors.maxUploadSizeMb.message}</p>}
+            <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">API Rate Limit (requests/minute)</label>
             <input type="number" className={inputClass} {...register("apiRateLimit")} />
             {errors.apiRateLimit && <p className="text-sm text-destructive">{errors.apiRateLimit.message}</p>}
+            <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Default Theme</label>
@@ -127,6 +149,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
               <option value="dark">Dark</option>
               <option value="system">System Default</option>
             </select>
+            <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Log Level</label>
@@ -136,6 +159,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
               <option value="info">Info, Warning and Error</option>
               <option value="debug">All (Debug)</option>
             </select>
+            <NotActiveNote />
           </div>
         </CardContent>
       </Card>
