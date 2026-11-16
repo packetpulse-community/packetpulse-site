@@ -82,6 +82,13 @@ jobs:
       - name: Seed roles and permissions
         run: pnpm --filter @packetpulse/backend run prisma:seed
 
+      # tshark is the independent check for the network simulator (packages/netsim): its tests
+      # export every scenario as a .pcap and have Wireshark's dissector verify each packet.
+      - name: Install tshark
+        run: |
+          echo "wireshark-common wireshark-common/install-setuid boolean false" | sudo debconf-set-selections
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tshark
+
       - name: Test
         run: pnpm turbo run test
 

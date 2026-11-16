@@ -8,6 +8,8 @@ const INTERNAL_API_URL = process.env.API_INTERNAL_URL ?? "http://localhost:4000"
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // The network simulator is shipped as TypeScript source inside the workspace.
+  transpilePackages: ["@packetpulse/netsim"],
   // Pin the tracing root to this monorepo — a sibling checkout with its own
   // lockfile at /home/hackycoder/mca_labs otherwise confuses Next's auto-detection.
   outputFileTracingRoot: path.join(__dirname, "../../"),

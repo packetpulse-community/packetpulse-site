@@ -12,6 +12,8 @@ export const navCommands: NavCommand[] = [
   { label: "Blogs", href: "/blogs", group: "Go to" },
   { label: "Resources", href: "/resources", group: "Go to" },
   { label: "Recordings", href: "/recordings", group: "Go to" },
+  { label: "Tools", href: "/tools", group: "Go to", keywords: ["utilities", "labs"] },
+  { label: "Packet Lab", href: "/tools/packet-lab", group: "Go to", keywords: ["packets", "osi", "tcp", "wireshark", "simulation", "protocol"] },
   { label: "Forums", href: "/forums", group: "Go to" },
   { label: "Quizzes", href: "/quizzes", group: "Go to" },
   { label: "My certificates", href: "/certificates", group: "Go to" },

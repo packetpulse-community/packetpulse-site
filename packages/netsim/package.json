@@ -1,0 +1,23 @@
+{
+  "name": "@packetpulse/netsim",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Deterministic, byte-accurate network simulator and packet dissector powering Packet Lab.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@packetpulse/eslint-config": "workspace:*",
+    "@packetpulse/tsconfig": "workspace:*",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.8"
+  }
+}
