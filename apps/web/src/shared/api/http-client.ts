@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { ApiErrorBody, ApiErrorCode, ApiErrorField } from "@packetpulse/types";
 
 // Server-only: SSR/Server Component calls go straight to the backend (Node-to-Node,
 // no browser cookie jar involved — the caller must forward cookies explicitly).
@@ -13,6 +14,30 @@ export class ApiError extends Error {
   ) {
     super(`API error ${status}`);
   }
+}
+
+// Typed, defensive readers for the backend's one error shape (ApiErrorBody). They
+// never throw and tolerate bodies from older/unknown sources, so callers can adopt
+// them gradually; existing `err.body.message` reads keep working unchanged.
+export function apiErrorCode(err: unknown): ApiErrorCode | undefined {
+  if (!(err instanceof ApiError)) return undefined;
+  const code = (err.body as Partial<ApiErrorBody> | null)?.code;
+  return typeof code === "string" ? code : undefined;
+}
+
+export function apiErrorFields(err: unknown): ApiErrorField[] {
+  if (!(err instanceof ApiError)) return [];
+  const fields = (err.body as Partial<ApiErrorBody> | null)?.fields;
+  return Array.isArray(fields)
+    ? fields.filter((f) => typeof f?.path === "string" && typeof f?.message === "string")
+    : [];
+}
+
+// Map of field path -> first message, handy for inline form errors.
+export function apiFieldErrors(err: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const f of apiErrorFields(err)) out[f.path] ??= f.message;
+  return out;
 }
 
 export const MAINTENANCE_PATH = "/maintenance";

@@ -16,3 +16,35 @@ export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(item: T) =>
     total: z.number().int(),
     totalPages: z.number().int(),
   });
+
+// One error body for every failed API call (v2 Document 4 §5). `code` is stable and
+// safe to switch on; `message` is always a plain human-readable string; `fields` is
+// present only for VALIDATION_FAILED, one entry per failing input path.
+export const API_ERROR_CODES = [
+  "VALIDATION_FAILED",
+  "UNAUTHENTICATED",
+  "FORBIDDEN",
+  "NOT_FOUND",
+  "CONFLICT",
+  "RATE_LIMITED",
+  "MAINTENANCE",
+  "BAD_REQUEST",
+  "PAYLOAD_TOO_LARGE",
+  "INTERNAL_ERROR",
+] as const;
+export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
+
+export interface ApiErrorField {
+  path: string;
+  message: string;
+}
+
+export interface ApiErrorBody {
+  statusCode: number;
+  code: ApiErrorCode;
+  message: string;
+  fields?: ApiErrorField[];
+  requestId?: string;
+  // Only on the maintenance 503; the web client keys on it to show /maintenance.
+  maintenance?: true;
+}
