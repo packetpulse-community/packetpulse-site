@@ -50,6 +50,9 @@ const BaseEnvSchema = z.object({
   // privileges, works as a drop-in value for supabase-js's server client.
   // No JWT-secret/JWKS var needed: our own JWT_ACCESS_SECRET still signs session
   // tokens in both modes — Supabase only stores/verifies credentials (plan §2).
+  // Private bucket for resumes/certificates/evidence (TASK-014); never public. Must be created
+  // as a private bucket in Supabase. Link lifetime is fixed at 60 s in code.
+  STORAGE_PRIVATE_BUCKET: z.string().min(1).default("private-files"),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SECRET_KEY: z.string().min(1).optional(),
 });

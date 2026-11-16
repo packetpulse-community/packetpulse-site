@@ -2,6 +2,7 @@ import { ConfigService } from "@nestjs/config";
 import { Global, Module } from "@nestjs/common";
 import { SUPABASE_CLIENT, supabaseClientProvider } from "./supabase-client.provider";
 import { StorageProvider } from "../storage/storage-provider";
+import { LocalStorageProvider } from "../storage/local-storage.provider";
 import { SupabaseStorageProvider } from "../storage/supabase-storage.provider";
 
 // Global so any module (identity, realtime, storage) can inject SUPABASE_CLIENT
@@ -14,7 +15,7 @@ import { SupabaseStorageProvider } from "../storage/supabase-storage.provider";
       provide: StorageProvider,
       inject: [ConfigService, SUPABASE_CLIENT],
       useFactory: (config: ConfigService, supabase) =>
-        config.get<string>("PLATFORM_MODE") === "supabase" ? new SupabaseStorageProvider(supabase) : null,
+        config.get<string>("PLATFORM_MODE") === "supabase" ? new SupabaseStorageProvider(supabase) : new LocalStorageProvider(),
     },
   ],
   exports: [SUPABASE_CLIENT, StorageProvider],
