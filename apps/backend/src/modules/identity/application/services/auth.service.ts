@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException, HttpException, HttpStatus, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import * as bcrypt from "bcrypt";
 import Redis from "ioredis";
 import { UserRepository } from "../../domain/repositories/user.repository";
 import { CredentialProvider } from "../../domain/providers/credential-provider";
@@ -21,6 +22,10 @@ const RESET_SESSION_MS = 10 * 60 * 1000;
 // address (not per IP, which a caller can vary) and the code locks after a few mistakes.
 const OTP_MAX_FAILURES = 5;
 const OTP_LOCK_SECONDS = 15 * 60;
+
+// Compared against when the email is unknown, so a missing account costs the same bcrypt work
+// as a wrong password (finding S-13). Only used in docker mode; Supabase has its own timing.
+const DUMMY_BCRYPT_HASH = "$2b$12$HnMGNNWO0Xh2nXTRkHtT4eB/o3U7ylzb0QiE3hDApfvLgNk0K2tNy";
 
 @Injectable()
 export class AuthService {
@@ -100,11 +105,45 @@ export class AuthService {
     return toPublicUser(user);
   }
 
-  async login(dto: LoginDto): Promise<PublicUser> {
-    const user = await this.users.findByEmail(dto.email);
-    if (!user) throw new UnauthorizedException("Invalid credentials");
+  private loginFailureKey(email: string) {
+    return `login:fail:${this.tokens.hashOtp(email.trim().toLowerCase())}`;
+  }
 
-    await this.credentials.verifyCredential(dto.email, dto.password, user.passwordHash);
+  // Per-account lockout (TASK-013): after LOGIN_MAX_FAILURES wrong passwords for an email within
+  // LOGIN_LOCK_MINUTES, every attempt gets 429 for the rest of that window, even with the right
+  // password. Keyed by email hash whether or not the account exists, so the lock reveals nothing.
+  private async assertLoginNotLocked(key: string) {
+    const max = this.config.get<number>("LOGIN_MAX_FAILURES") ?? 5;
+    const failures = Number((await this.redis.get(key)) ?? 0);
+    if (failures >= max) {
+      throw new HttpException("Too many failed sign-in attempts. Please wait and try again later.", HttpStatus.TOO_MANY_REQUESTS);
+    }
+  }
+
+  private async rejectLogin(key: string): Promise<never> {
+    const failures = await this.redis.incr(key);
+    if (failures === 1) await this.redis.expire(key, (this.config.get<number>("LOGIN_LOCK_MINUTES") ?? 15) * 60);
+    throw new UnauthorizedException("Invalid credentials");
+  }
+
+  async login(dto: LoginDto): Promise<PublicUser> {
+    const failureKey = this.loginFailureKey(dto.email);
+    await this.assertLoginNotLocked(failureKey);
+
+    const user = await this.users.findByEmail(dto.email);
+    if (!user) {
+      // Same bcrypt cost as a real check, so response time does not reveal unknown emails.
+      if (this.config.get<string>("PLATFORM_MODE") !== "supabase") await bcrypt.compare(dto.password, DUMMY_BCRYPT_HASH);
+      return this.rejectLogin(failureKey);
+    }
+
+    try {
+      await this.credentials.verifyCredential(dto.email, dto.password, user.passwordHash);
+    } catch (err) {
+      if (err instanceof UnauthorizedException) return this.rejectLogin(failureKey);
+      throw err;
+    }
+    await this.redis.del(failureKey);
 
     // Checked only after the password is verified, so these messages can't be used
     // to probe which emails are registered. Admins are always approved + verified.
