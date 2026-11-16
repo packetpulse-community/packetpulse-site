@@ -670,6 +670,10 @@ enum AdminActivityAction {
   quiz_created
   quiz_updated
   quiz_deleted
+  user_data_cleaned
+  users_data_bulk_cleaned
+  site_settings_changed
+  admin_registered
 }
 
 model AdminActivityLog {
@@ -682,8 +686,13 @@ model AdminActivityLog {
   targetType String   @map("target_type")
   targetId   String?  @map("target_id")
   details    Json?
+  // Why the staff member did it. Required (min 10 chars, enforced in the API) for the
+  // destructive actions; nullable because older rows and routine actions have none.
+  reason     String?
   createdAt  DateTime @default(now()) @map("created_at")
 
+  // Append-only: a database trigger (migration 20261116100000_audit_log_append_only)
+  // rejects UPDATE and DELETE; the only allowed change is actor_id -> NULL (SetNull FK).
   @@index([createdAt])
   @@index([action])
   @@map("admin_activity_logs")
