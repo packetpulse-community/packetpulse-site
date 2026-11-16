@@ -9,7 +9,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | Milestone | Tasks | In progress | Open | Blocked |
 | --- | --- | --- | --- | --- |
 | M0 Audit and baseline | 6 | 5 | 0 | 1 |
-| M1 Foundation | 11 | 9 | 2 | 0 |
+| M1 Foundation | 11 | 10 | 1 | 0 |
 | M2 Design system and shell | 4 | 1 | 3 | 0 |
 | M3 Identity, profile, community | 6 | 2 | 4 | 0 |
 | M4 Learn and practice | 4 | 1 | 3 | 0 |
@@ -18,7 +18,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | M7 Operations | 6 | 2 | 4 | 0 |
 | M8 Release | 6 | 0 | 6 | 0 |
 | M9 Improve | 2 | 0 | 2 | 0 |
-| **Total** | **56** | **21** | **34** | **1** |
+| **Total** | **56** | **22** | **33** | **1** |
 
 **Next in Document 4 order:** close M0 (TASK-001, 002, 006 need your approval or a second reviewer; TASK-003 and 005 are doable now; TASK-004 is blocked on hosting access), then start M1 with TASK-008 (permission engine), which almost everything else depends on.
 
@@ -40,13 +40,13 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | TASK-007 Migrations and background work | In progress | 10 versioned Prisma migrations; BullMQ processors. Remaining: run the migrations in order on a copy; confirm jobs outlive requests and are not duplicated |
 | TASK-008 Permission engine | In progress | Done: route inventory ([Doc 11](11-route-inventory.md)) and a data-driven permission matrix e2e test that discovers routes from Nest metadata (TEST-005, TEST-006). It found and fixed two real gaps: quiz authoring routes with no permission check, and unapproved blog posts readable publicly by id or slug. Remaining: resource and state rules (for example "own company only"), and the admin and identity areas' per-route rules as they grow |
 | TASK-009 Sessions and step-up | In progress | Done (SEC-05, TEST-007): members signed out after 30 days idle; staff after 30 minutes idle and 8 hours absolute; enforced on refresh, no schema change, limits configurable by env. Remaining: step-up (reason plus fresh code), and the unenforced `sessionTimeoutMinutes` admin setting (remove it or make it real) |
-| TASK-010 Validation and error format | In progress | Zod validation on every route. Remaining: confirm one error shape and no stack traces (TEST-011) |
+| TASK-010 Validation and error format | In progress | Done (TEST-011): a global exception filter gives every error one body `{ statusCode, code, message, fields?, requestId? }` with stable codes; validation errors list each failing field; 5xx errors never expose stack, paths, SQL or internal messages; Prisma errors map to CONFLICT or NOT_FOUND without naming models; the maintenance flag still works; shared `ApiErrorBody` type and typed readers in the web client. Remaining: web forms should adopt the `fields` list for inline errors |
 | TASK-011 Web security hardening | In progress | Done: security headers and a report-only CSP on the web app, CSRF assessment (`docs/ops/web-security.md`), secret scanning in CI (no leaks in 73 commits). Remaining: enforce the CSP, and dependency findings: `pnpm audit` reports 36 high and 7 critical (next, tar, proxy-addr, multer, nodemailer, body-parser and others) that need framework upgrades |
 | TASK-012 Field-level protection | Open | No sensitive fields exist yet (date of birth, CTC); needed before they are added |
 | TASK-013 Rate limits and bot protection | In progress | Done: reset-code lock per email; login lockout per account after 5 failures with the same response for unknown emails; timing equalised for unknown emails (TEST-013 part). Remaining: bot protection, `trust proxy` spoofing (S-11, needs the real proxy chain), the `apiRateLimit` setting is unenforced |
-| TASK-014 Private file pipeline | Open | Storage returns public URLs; no scanning, short-lived links or open logging |
-| TASK-015 Append-only audit log | In progress | Done (TEST-008): `reason` column; database trigger blocks UPDATE and DELETE (still allows the foreign-key SET NULL when an actor is deleted); entries now written for clean-data, settings changes and admin creation (the last needs wiring); reason required for clean-data and user deletion. Remaining: web admin screens must send the reason; wire `logAdminRegistered` into the register-admin route; reasons for moderation and verification decisions as those features arrive |
-| TASK-016 Background work, reliable hand-off | In progress | BullMQ email and fan-out processors. Remaining: retry without duplicates, stalled-job alert |
+| TASK-014 Private file pipeline | In progress | Done (TEST-012, backend): signed direct upload, type and size checks, signature scan, 60-second signed download links, an access log that records every open and every denied attempt, one `canOpen` policy (owner, admin, super_admin), non-owners get 404. Remaining: a real antivirus (the default scanner only checks file signatures), the web upload form, recruiter access after forwarding, retention deletion, and a private bucket created in Supabase |
+| TASK-015 Append-only audit log | In progress | Done (TEST-008): `reason` column; database trigger blocks UPDATE and DELETE (still allows the foreign-key SET NULL when an actor is deleted); entries written for clean-data, settings changes and admin creation (the last still needs wiring); reason required for clean-data and user deletion, and the web delete dialog now sends it. Remaining: wire `logAdminRegistered` into the register-admin route; reasons for moderation and verification decisions as those features arrive; clean-data has no web screen yet |
+| TASK-016 Background work, reliable hand-off | In progress | Done (TEST-009): explicit retries with backoff, idempotency keys so the same job is not sent twice, permanent failures do not retry, bounded retention, structured alert log lines for final failures and stalls, graceful shutdown. Remaining: an alert rule that matches the log line (TASK-005), scheduled jobs for expiry and retention (later tasks). Known risk: a stalled email job that is re-queued can send twice if the first worker had already handed it to the provider |
 | TASK-017 Build, test, release pipeline | In progress | Done: secret-scan job (blocking) and dependency-audit job (report-only until the 36 high and 7 critical findings are fixed). Remaining: mark the jobs as required checks in GitHub branch protection (a repository setting), and run the new workflow once to confirm it |
 
 ## M2 Design system and shell
@@ -128,7 +128,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 
 | Item | Why | Task |
 | --- | --- | --- |
-| Web admin screens must send a `reason` for clean-data and user deletion | The backend now returns 400 without a reason (min 10 characters), so these admin actions fail until the web form sends one | TASK-015 |
+| ~~Web admin screens must send a `reason`~~ Done for user deletion; the web app has no clean-data screen | The backend returns 400 without a reason | TASK-015 |
 | Wire `logAdminRegistered` into the shared-code admin signup | The audit helper exists but the identity route does not call it yet | TASK-015, TASK-044 |
 | Remove or enforce the `sessionTimeoutMinutes` setting | Session limits now come from env variables; the admin field still does nothing | TASK-009, TASK-047 |
 | Upgrade vulnerable dependencies (36 high, 7 critical) | Currently report-only in CI; blocking would fail every pull request | TASK-011 |
@@ -136,3 +136,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | Per-account login lockout can lock a real member out for 15 minutes | Accepted trade-off of lockout; window and count are env-tunable (`LOGIN_MAX_FAILURES`, `LOGIN_LOCK_MINUTES`) | TASK-013 |
 | `JWT_REFRESH_EXPIRES_IN` is no longer read | Refresh lifetime is now `SESSION_*` variables; old `.env` files still validate | TASK-009 |
 | Next dev creates `apps/web/AGENTS.md` and `CLAUDE.md` | Untracked generated files; set `agentRules: false` in `next.config.mjs` if unwanted | none |
+| Settings screen marks every unenforced setting "Saved, but not active yet" | Mitigates threat T-12 until each setting is enforced; remove the note per setting as it becomes real | TASK-047, TASK-009 |
+| Real antivirus for uploads, private Supabase bucket, web upload form | The pipeline is built and tested but nothing in the UI uses it yet | TASK-014, TASK-024 |
+| Alert rule for `alert:true` job logs | The jobs now emit alertable log lines; nothing is listening yet | TASK-005 |
+| Test hygiene: run backend e2e suites one session at a time | Several sessions running the suite at once share one database and Redis and cause false failures | none |
