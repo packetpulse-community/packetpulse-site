@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { Menu, X, Home, Info, Book, FileText, Phone, Search, LogIn, UserPlus } from "lucide-react";
+import { Menu, X, Home, Info, Book, FileText, Phone, Search, LogIn, UserPlus, Wrench } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 
@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { href: "/about", label: "About", Icon: Info },
   { href: "/resources", label: "Resources", Icon: Book },
   { href: "/blogs", label: "Blogs", Icon: FileText },
+  { href: "/tools", label: "Tools", Icon: Wrench },
   { href: "/contact", label: "Contact", Icon: Phone },
 ];
 
