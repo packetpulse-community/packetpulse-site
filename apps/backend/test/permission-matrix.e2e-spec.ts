@@ -109,7 +109,7 @@ const AUTHENTICATED_ONLY: Record<string, string> = {
   "DELETE /api/blogs/:id/comments/:commentId": "comment author or admin",
   "PUT /api/blogs/:id/like": "any member",
   "GET /api/resources": "approved resources; admin also sees pending",
-  "GET /api/resources/:id": "approved resource; admin or owner also sees pending",
+  "GET /api/resources/:id": "approved resource; admin also sees pending",
   "PUT /api/resources/:id": "resource owner or admin",
   "DELETE /api/resources/:id": "resource owner or admin",
   "PUT /api/resources/:id/like": "any member",
@@ -192,7 +192,7 @@ describe("Permission matrix (e2e)", () => {
       .replace(/:certificateNumber/g, "no-such-certificate")
       .replace(/:slug/g, "no-such-slug")
       .replace(/:\w+/g, () => randomUUID());
-    let req = (request(app.getHttpServer()) as any)[route.method.toLowerCase()](url) as request.Test;
+    let req = request(app.getHttpServer())[route.method.toLowerCase() as "get" | "post" | "put" | "delete" | "patch"](url);
     if (actor) req = req.set("Cookie", `accessToken=${tokenByActor[actor]}`);
     return route.method === "GET" || route.method === "DELETE" ? req : req.send({});
   }
