@@ -5,12 +5,21 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { PublicUser } from "../../domain/entities/user.entity";
 import { EmailQueueService } from "../../../notifications";
+import { STAFF_ROLES } from "../../domain/constants/permissions.constants";
 
 export interface AccessTokenPayload {
   sub: string;
   email: string;
   roles: string[];
   permissions: string[];
+}
+
+const MINUTE_MS = 60_000;
+
+export interface SessionLimits {
+  idleMs: number;
+  // Only staff have an absolute limit, measured from the first login of the family.
+  absoluteMs: number | null;
 }
 
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -51,7 +60,9 @@ export class TokenService {
     meta: { userAgent?: string; ipAddress?: string },
   ) {
     const rawToken = randomBytes(48).toString("hex");
-    const expiresInMs = this.parseDuration(this.config.get<string>("JWT_REFRESH_EXPIRES_IN") ?? "7d");
+    // The row's expiry is the idle limit from now: each rotation writes a new row, so this
+    // is a sliding window. The absolute staff limit is enforced in rotateRefreshToken.
+    const { idleMs: expiresInMs } = await this.sessionLimitsFor(userId);
 
     const record = await this.prisma.refreshToken.create({
       data: {
@@ -66,6 +77,24 @@ export class TokenService {
 
     // Encode id + secret so lookup doesn't require scanning hashes.
     return { raw: `${record.id}.${rawToken}`, record };
+  }
+
+  async sessionLimitsFor(userId: string): Promise<SessionLimits> {
+    const staffRole = await this.prisma.userRole.findFirst({
+      where: { userId, role: { name: { in: [...STAFF_ROLES] } } },
+      select: { userId: true },
+    });
+    if (staffRole) {
+      return {
+        idleMs: this.minutes("SESSION_STAFF_IDLE_MINUTES", 30) * MINUTE_MS,
+        absoluteMs: this.minutes("SESSION_STAFF_ABSOLUTE_MINUTES", 480) * MINUTE_MS,
+      };
+    }
+    return { idleMs: this.minutes("SESSION_MEMBER_IDLE_MINUTES", 43200) * MINUTE_MS, absoluteMs: null };
+  }
+
+  private minutes(key: string, fallback: number): number {
+    return Number(this.config.get<number>(key) ?? fallback);
   }
 
   // Rotates a presented refresh token. If the token was already rotated/revoked
@@ -95,6 +124,28 @@ export class TokenService {
 
     if (existing.expiresAt < new Date()) {
       throw new UnauthorizedException("Refresh token expired");
+    }
+
+    // Session limits (SEC-05). The presented token is the newest row of its family, so its
+    // createdAt is the last activity and the family's oldest createdAt is the first login.
+    // Roles are read now, so a member promoted to admin gets the staff limits at once.
+    const limits = await this.sessionLimitsFor(existing.userId);
+    const now = Date.now();
+    let overLimit = now - existing.createdAt.getTime() > limits.idleMs;
+    if (!overLimit && limits.absoluteMs !== null) {
+      const first = await this.prisma.refreshToken.aggregate({
+        where: { familyId: existing.familyId },
+        _min: { createdAt: true },
+      });
+      const start = first._min.createdAt ?? existing.createdAt;
+      overLimit = now - start.getTime() > limits.absoluteMs;
+    }
+    if (overLimit) {
+      await this.prisma.refreshToken.updateMany({
+        where: { familyId: existing.familyId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      throw new UnauthorizedException("Session expired — please sign in again");
     }
 
     const next = await this.createRefreshToken(existing.userId, existing.familyId, meta);
@@ -129,13 +180,5 @@ export class TokenService {
   generateVerificationToken(): { plain: string; hash: string } {
     const plain = randomBytes(32).toString("hex");
     return { plain, hash: sha256(plain) };
-  }
-
-  private parseDuration(value: string): number {
-    const match = /^(\d+)([smhd])$/.exec(value);
-    if (!match) return 7 * 24 * 60 * 60 * 1000;
-    const amount = Number(match[1]);
-    const unitMs = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 }[match[2] as "s" | "m" | "h" | "d"];
-    return amount * unitMs;
   }
 }

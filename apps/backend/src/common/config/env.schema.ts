@@ -18,7 +18,17 @@ const BaseEnvSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
+  // Superseded by the SESSION_* limits below (kept so existing .env files still validate).
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
+  // Session limits (SEC-05), enforced when a refresh token is rotated. Members are signed out
+  // after this many minutes without a refresh (sliding window; 43200 = 30 days).
+  SESSION_MEMBER_IDLE_MINUTES: z.coerce.number().int().positive().default(43200),
+  // Staff (see STAFF_ROLES): idle limit, and absolute limit from the first login of the session.
+  SESSION_STAFF_IDLE_MINUTES: z.coerce.number().int().positive().default(30),
+  SESSION_STAFF_ABSOLUTE_MINUTES: z.coerce.number().int().positive().default(480),
+  // Per-account login lockout (TASK-013): failures allowed per email, and the window/lock length.
+  LOGIN_MAX_FAILURES: z.coerce.number().int().positive().default(5),
+  LOGIN_LOCK_MINUTES: z.coerce.number().int().positive().default(15),
   ADMIN_SECURE_CODE: z.string().min(16),
   CORS_ORIGINS: z.string().min(1), // comma-separated allowlist, never "*" (see plan §11)
   // Base URL of the deployed frontend — used to build the clickable link sent in

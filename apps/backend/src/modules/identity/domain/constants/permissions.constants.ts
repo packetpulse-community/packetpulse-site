@@ -23,3 +23,7 @@ export const PERMISSIONS = {
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
 export const SUPER_ADMIN_ROLE = "super_admin";
+
+// Roles whose sessions get the short staff limits (SEC-05). Recruiters join this list when
+// that role exists; this is the only place that decides who counts as staff.
+export const STAFF_ROLES: readonly string[] = [SUPER_ADMIN_ROLE, "admin"];

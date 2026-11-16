@@ -12,6 +12,11 @@ export class AuthCookieService {
     return this.config.get<string>("NODE_ENV") === "production";
   }
 
+  // Cookies live as long as the longest (member) idle window; the server decides the real limit.
+  private get memberIdleMs() {
+    return Number(this.config.get<number>("SESSION_MEMBER_IDLE_MINUTES") ?? 43200) * 60_000;
+  }
+
   setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -24,7 +29,7 @@ export class AuthCookieService {
       secure: this.isProd,
       sameSite: "lax",
       path: "/api/auth/refresh",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: this.memberIdleMs,
     });
     // Non-secret, non-httpOnly presence flag only — never trusted for access
     // control, exists purely so the frontend can cheaply show "logged in" UI
@@ -33,7 +38,7 @@ export class AuthCookieService {
       httpOnly: false,
       secure: this.isProd,
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: this.memberIdleMs,
     });
   }
 
