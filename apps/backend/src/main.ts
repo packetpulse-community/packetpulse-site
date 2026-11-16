@@ -30,6 +30,11 @@ async function bootstrap() {
 
   app.setGlobalPrefix("api");
 
+  // Lets Nest run its shutdown hooks on SIGTERM/SIGINT (Render sends SIGTERM on every deploy):
+  // BullMQ workers and queues finish the current job and close instead of being cut off,
+  // which keeps a deploy from leaving jobs stalled (TASK-016).
+  app.enableShutdownHooks();
+
   if (process.env.NODE_ENV === "production" && !process.env.FRONTEND_URL) {
     app
       .get(Logger)
