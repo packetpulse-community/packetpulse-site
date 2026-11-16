@@ -5,7 +5,7 @@ import { Queue } from "bullmq";
 import { frontendUrl } from "../../../../common/config/frontend-url";
 import { EmailTemplate } from "../../infrastructure/email/templates";
 
-const EMAIL_JOB_OPTS = { attempts: 3, backoff: { type: "exponential", delay: 5000 }, removeOnComplete: 1000 };
+import { EMAIL_QUEUE, emailJobOptions, idempotencyJobId } from "../../infrastructure/queue/queue-config";
 
 export interface EmailJobData {
   to: string;
@@ -18,26 +18,29 @@ export interface EmailJobData {
 @Injectable()
 export class EmailQueueService {
   constructor(
-    @InjectQueue("email") private readonly emailQueue: Queue<EmailJobData>,
+    @InjectQueue(EMAIL_QUEUE) private readonly emailQueue: Queue<EmailJobData>,
     private readonly config: ConfigService,
   ) {}
 
   sendVerificationEmail(to: string, token: string) {
-    return this.enqueue(to, { name: "verification", link: this.verificationLink(token) });
+    return this.enqueue(to, { name: "verification", link: this.verificationLink(token) }, ["verification", token]);
   }
 
   // Sent once, when an admin approves a new member — approval notice and the
   // email-verification link in a single message.
   sendApprovedVerificationEmail(to: string, token: string) {
-    return this.enqueue(to, { name: "approved-verify", link: this.verificationLink(token) });
+    return this.enqueue(to, { name: "approved-verify", link: this.verificationLink(token) }, ["approved-verify", token]);
   }
 
   sendWelcomeEmail(to: string, firstName: string) {
-    return this.enqueue(to, { name: "welcome", firstName, loginLink: `${frontendUrl(this.config)}/login` });
+    return this.enqueue(to, { name: "welcome", firstName, loginLink: `${frontendUrl(this.config)}/login` }, [
+      "welcome",
+      to.toLowerCase(),
+    ]);
   }
 
   sendPasswordResetOtp(to: string, otp: string) {
-    return this.enqueue(to, { name: "password-reset-otp", otp });
+    return this.enqueue(to, { name: "password-reset-otp", otp }, ["password-reset-otp", to.toLowerCase(), otp]);
   }
 
   sendApprovalNotice(to: string, approved: boolean) {
@@ -58,12 +61,13 @@ export class EmailQueueService {
 
   // Bulk-enqueued in one Redis round-trip; the email worker's rate limiter (not
   // this method) is what keeps delivery under the SMTP provider's send rate.
+  // One job per (content link, recipient): announcing the same content twice is ignored.
   sendNewContentEmails(recipients: string[], content: { kind: "blog" | "resource"; title: string; link: string }) {
     return this.emailQueue.addBulk(
       recipients.map((to) => ({
         name: "send",
         data: { to, template: { name: "new-content" as const, ...content } },
-        opts: EMAIL_JOB_OPTS,
+        opts: { ...this.jobOptions(), jobId: idempotencyJobId("new-content", content.kind, content.link, to.toLowerCase()) },
       })),
     );
   }
@@ -72,7 +76,17 @@ export class EmailQueueService {
     return `${frontendUrl(this.config)}/verify-email?token=${token}`;
   }
 
-  private enqueue(to: string, template: EmailTemplate) {
-    return this.emailQueue.add("send", { to, template }, EMAIL_JOB_OPTS);
+  // QUEUE_BACKOFF_MS (optional) overrides the retry base delay — used by tests.
+  private jobOptions() {
+    const base = Number(this.config.get("QUEUE_BACKOFF_MS"));
+    return emailJobOptions(Number.isFinite(base) && base > 0 ? base : undefined);
+  }
+
+  // `idempotencyParts` (when given) become a deterministic job id, so enqueueing the
+  // same logical email twice sends it once. Omit for notices that may legitimately repeat.
+  private enqueue(to: string, template: EmailTemplate, idempotencyParts?: [string, ...string[]]) {
+    const opts = this.jobOptions();
+    if (idempotencyParts) opts.jobId = idempotencyJobId(...idempotencyParts);
+    return this.emailQueue.add("send", { to, template }, opts);
   }
 }

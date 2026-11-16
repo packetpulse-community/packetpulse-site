@@ -6,6 +6,18 @@ const FROM = "PacketPulse <no-reply@packetpulse.in>";
 const RESEND_API_URL = "https://api.resend.com/emails";
 const SEND_TIMEOUT_MS = 15_000;
 
+// `permanent` = retrying cannot help (rejected address, malformed request); the email
+// processor turns it into an UnrecoverableError so the job is not retried.
+export class MailDeliveryError extends Error {
+  constructor(
+    message: string,
+    readonly permanent: boolean,
+  ) {
+    super(message);
+    this.name = "MailDeliveryError";
+  }
+}
+
 // Email transport, consumed only by infrastructure/queue/email.processor.ts — actual
 // sends happen off the request thread via the `email` BullMQ queue (plan §5).
 //
@@ -56,7 +68,13 @@ export class MailerService {
       this.logger.log(`[dev email] to=${to} subject="${subject}"\n${text}`);
       return;
     }
-    await this.transporter.sendMail({ from: FROM, to, subject, text });
+    try {
+      await this.transporter.sendMail({ from: FROM, to, subject, text });
+    } catch (err) {
+      const code = (err as { responseCode?: number }).responseCode;
+      // 5xx SMTP replies (bad mailbox, policy rejection) will not succeed on retry.
+      throw new MailDeliveryError((err as Error).message, typeof code === "number" && code >= 500 && code < 600);
+    }
   }
 
   private async sendViaResendApi(to: string, subject: string, text: string) {
@@ -70,7 +88,12 @@ export class MailerService {
       // Resend's error body is { statusCode, name, message } — surfaced as the job's
       // failure reason so the log says exactly what was rejected.
       const body = (await res.json().catch(() => null)) as { name?: string; message?: string } | null;
-      throw new Error(`Resend API ${res.status}${body?.name ? ` ${body.name}` : ""}: ${body?.message ?? res.statusText}`);
+      // 4xx other than 408/429 means the request itself was rejected — retrying repeats it.
+      const permanent = res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429;
+      throw new MailDeliveryError(
+        `Resend API ${res.status}${body?.name ? ` ${body.name}` : ""}: ${body?.message ?? res.statusText}`,
+        permanent,
+      );
     }
   }
 }
