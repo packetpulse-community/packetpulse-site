@@ -1,13 +1,17 @@
 import { Logger } from "@nestjs/common";
 import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
-import { Job } from "bullmq";
-import { MailerService } from "../email/mailer.service";
+import { Job, UnrecoverableError } from "bullmq";
+import { MailDeliveryError, MailerService } from "../email/mailer.service";
 import { renderEmail } from "../email/templates";
 import { EmailJobData } from "../../application/services/email-queue.service";
+import { EMAIL_QUEUE, STALL_SETTINGS } from "./queue-config";
+import { handleJobFailed, handleJobStalled, handleWorkerError, recipientDomain } from "./queue-alerts";
+
+const ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Resend's default limit is 2 requests/second — the limiter paces bulk sends
 // (e.g. new-content announcements) instead of letting them fail with 429s.
-@Processor("email", { limiter: { max: 2, duration: 1000 } })
+@Processor(EMAIL_QUEUE, { limiter: { max: 2, duration: 1000 }, ...STALL_SETTINGS })
 export class EmailProcessor extends WorkerHost {
   private readonly logger = new Logger(EmailProcessor.name);
 
@@ -17,29 +21,43 @@ export class EmailProcessor extends WorkerHost {
 
   async process(job: Job<EmailJobData>) {
     const { to, template } = job.data;
-    const { subject, text } = renderEmail(template);
-    await this.mailer.send(to, subject, text);
+    // Errors that retrying cannot fix are UnrecoverableError: the job fails at once.
+    if (typeof to !== "string" || !ADDRESS.test(to)) throw new UnrecoverableError("Invalid recipient address");
+    let rendered: { subject: string; text: string };
+    try {
+      rendered = renderEmail(template);
+    } catch (err) {
+      throw new UnrecoverableError(`Template error: ${(err as Error).message}`);
+    }
+    try {
+      await this.mailer.send(to, rendered.subject, rendered.text);
+    } catch (err) {
+      if (err instanceof MailDeliveryError && err.permanent) throw new UnrecoverableError(err.message);
+      throw err;
+    }
   }
 
-  // Without these, BullMQ retries and finally drops a failed email silently —
-  // nothing in the logs said whether a reset code was ever delivered.
+  // Log recipient domain and job id only — never the address, body, code or link.
   @OnWorkerEvent("completed")
   onCompleted(job: Job<EmailJobData>) {
-    this.logger.log(`Email sent: template=${job.data.template.name} to=${job.data.to} job=${job.id}`);
+    this.logger.log(`Email sent: template=${job.data.template?.name} domain=${recipientDomain(job.data.to)} job=${job.id}`);
   }
 
   @OnWorkerEvent("failed")
   onFailed(job: Job<EmailJobData> | undefined, error: Error) {
-    if (!job) {
-      this.logger.error(`Email job failed before it could be read: ${error.message}`);
-      return;
-    }
-    const maxAttempts = job.opts.attempts ?? 1;
-    const final = job.attemptsMade >= maxAttempts;
-    const line =
-      `Email ${final ? "FAILED permanently" : "failed, will retry"}: template=${job.data.template.name} ` +
-      `to=${job.data.to} attempt=${job.attemptsMade}/${maxAttempts} job=${job.id} reason=${error.message}`;
-    if (final) this.logger.error(line);
-    else this.logger.warn(line);
+    handleJobFailed(this.logger, EMAIL_QUEUE, job, error, {
+      template: job?.data.template?.name,
+      domain: recipientDomain(job?.data.to),
+    });
+  }
+
+  @OnWorkerEvent("stalled")
+  onStalled(jobId: string) {
+    handleJobStalled(this.logger, EMAIL_QUEUE, jobId);
+  }
+
+  @OnWorkerEvent("error")
+  onError(error: Error) {
+    handleWorkerError(this.logger, EMAIL_QUEUE, error);
   }
 }
