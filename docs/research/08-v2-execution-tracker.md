@@ -28,9 +28,9 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | --- | --- | --- |
 | TASK-001 Audit repo, data, hosting; DEV-01 to DEV-10 | In progress | Audit and DEV answers in Docs 01, 02 (s6) and 04. Remaining: a stored route inventory (102 endpoints, 43 pages) and a second engineer's review |
 | TASK-002 Gap analysis, doc update, threat model, data map | In progress | Every PRD and SCR classified in Doc 02. Threat model and data map drafted in [Doc 10](10-threat-model-and-data-map.md). Remaining: update Docs 1 to 4 (stack wording in DEC-021 and DEC-032, roles, the approval rule) and approval |
-| TASK-003 Environments and secrets | In progress | `.env.example` for both apps, secrets via `sync: false` on Render, env validated at boot. Gaps: no documented local, preview, staging, production split; a dev `.env` can point at the remote Supabase database, so "staging never reads production data" is not yet true |
+| TASK-003 Environments and secrets | In progress | Done: e2e suite refuses any non-local database (`apps/backend/test/require-local-db.cjs`, verified against the remote host); `docs/ops/environments.md` and README list the four environments and every variable; `.env.example` files updated. Remaining: create real preview and staging environments so "staging never reads production data" is true in practice |
 | TASK-004 Backups and recovery drill | **Blocked** | Needs access to the Supabase and Render projects and a staging copy to restore into. None in the repo. Blocker: owner to provide access and name the plan |
-| TASK-005 Logging, error tracking, uptime, alerts, incident process | In progress | pino logs, `ClientLog` ingestion, `/api/health`, email send logging. Missing: error tracker, uptime check, alert routing to a named owner, written incident process |
+| TASK-005 Logging, error tracking, uptime, alerts, incident process | In progress | Done: `docs/ops/incident-process.md` and `docs/ops/monitoring.md` (owners left as placeholders). Remaining: name the owners, set up an uptime check on `/api/health`, add error tracking and alert routing, then inject a test error (TEST-009) |
 | TASK-006 Authentication review and decision (OPEN-13) | In progress | Decision record drafted: [Doc 09](09-auth-review-decision-record.md). Awaiting the owner's approval |
 
 ## M1 Foundation
@@ -38,16 +38,16 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | Task | Status | Evidence and what remains |
 | --- | --- | --- |
 | TASK-007 Migrations and background work | In progress | 10 versioned Prisma migrations; BullMQ processors. Remaining: run the migrations in order on a copy; confirm jobs outlive requests and are not duplicated |
-| TASK-008 Permission engine | In progress | Default-deny guard chain and permission keys exist. Remaining: route inventory and a role-by-route test matrix (TEST-005, TEST-006); resource and state rules (for example "own company only") |
-| TASK-009 Sessions and step-up | In progress | Rotating refresh tokens with reuse detection (good). Missing: SEC-05 limits (members 30 days idle; staff 30 minutes idle, 8 hours absolute) and step-up. The `sessionTimeoutMinutes` admin setting is stored but never enforced |
+| TASK-008 Permission engine | In progress | Done: route inventory ([Doc 11](11-route-inventory.md)) and a data-driven permission matrix e2e test that discovers routes from Nest metadata (TEST-005, TEST-006). It found and fixed two real gaps: quiz authoring routes with no permission check, and unapproved blog posts readable publicly by id or slug. Remaining: resource and state rules (for example "own company only"), and the admin and identity areas' per-route rules as they grow |
+| TASK-009 Sessions and step-up | In progress | Done (SEC-05, TEST-007): members signed out after 30 days idle; staff after 30 minutes idle and 8 hours absolute; enforced on refresh, no schema change, limits configurable by env. Remaining: step-up (reason plus fresh code), and the unenforced `sessionTimeoutMinutes` admin setting (remove it or make it real) |
 | TASK-010 Validation and error format | In progress | Zod validation on every route. Remaining: confirm one error shape and no stack traces (TEST-011) |
-| TASK-011 Web security hardening | In progress | `helmet`, strict CORS allowlist, httpOnly cookies. Missing: request-forgery assessment, dependency and secret scanning |
+| TASK-011 Web security hardening | In progress | Done: security headers and a report-only CSP on the web app, CSRF assessment (`docs/ops/web-security.md`), secret scanning in CI (no leaks in 73 commits). Remaining: enforce the CSP, and dependency findings: `pnpm audit` reports 36 high and 7 critical (next, tar, proxy-addr, multer, nodemailer, body-parser and others) that need framework upgrades |
 | TASK-012 Field-level protection | Open | No sensitive fields exist yet (date of birth, CTC); needed before they are added |
-| TASK-013 Rate limits and bot protection | In progress | Global and per-route throttling. On this branch: reset-code guesses now lock per email (TEST-013 part). Missing: bot protection; `apiRateLimit` setting unenforced; `trust proxy` spoofing (S-11) |
+| TASK-013 Rate limits and bot protection | In progress | Done: reset-code lock per email; login lockout per account after 5 failures with the same response for unknown emails; timing equalised for unknown emails (TEST-013 part). Remaining: bot protection, `trust proxy` spoofing (S-11, needs the real proxy chain), the `apiRateLimit` setting is unenforced |
 | TASK-014 Private file pipeline | Open | Storage returns public URLs; no scanning, short-lived links or open logging |
-| TASK-015 Append-only audit log | In progress | `AdminActivityLog` with 18 actions. Missing: a reason field, settings and clean-data events, append-only enforcement (TEST-008) |
+| TASK-015 Append-only audit log | In progress | Done (TEST-008): `reason` column; database trigger blocks UPDATE and DELETE (still allows the foreign-key SET NULL when an actor is deleted); entries now written for clean-data, settings changes and admin creation (the last needs wiring); reason required for clean-data and user deletion. Remaining: web admin screens must send the reason; wire `logAdminRegistered` into the register-admin route; reasons for moderation and verification decisions as those features arrive |
 | TASK-016 Background work, reliable hand-off | In progress | BullMQ email and fan-out processors. Remaining: retry without duplicates, stalled-job alert |
-| TASK-017 Build, test, release pipeline | In progress | CI runs lint, typecheck, build, migrate, seed, tests, e2e, image smoke test. Missing: security scanning; a failed scan blocking release |
+| TASK-017 Build, test, release pipeline | In progress | Done: secret-scan job (blocking) and dependency-audit job (report-only until the 36 high and 7 critical findings are fixed). Remaining: mark the jobs as required checks in GitHub branch protection (a repository setting), and run the new workflow once to confirm it |
 
 ## M2 Design system and shell
 
@@ -123,3 +123,16 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | Packet Lab and the Tools section (PR 1, merged) | Not in Document 4 or the module map. It overlaps M-08 Practice and replaces the simulated Network Tools; it needs a DEC to sit in the module inventory (see Doc 01 s5) |
 | Reset-token and reset-code fixes (this branch) | Closes findings S-2 and S-3; counts toward TASK-013 and TASK-009 |
 | `test/security-regressions.e2e-spec.ts` | First of the TASK-008 and TASK-013 tests |
+
+## Follow-ups raised by the parallel sessions (14 commits)
+
+| Item | Why | Task |
+| --- | --- | --- |
+| Web admin screens must send a `reason` for clean-data and user deletion | The backend now returns 400 without a reason (min 10 characters), so these admin actions fail until the web form sends one | TASK-015 |
+| Wire `logAdminRegistered` into the shared-code admin signup | The audit helper exists but the identity route does not call it yet | TASK-015, TASK-044 |
+| Remove or enforce the `sessionTimeoutMinutes` setting | Session limits now come from env variables; the admin field still does nothing | TASK-009, TASK-047 |
+| Upgrade vulnerable dependencies (36 high, 7 critical) | Currently report-only in CI; blocking would fail every pull request | TASK-011 |
+| Mark `secret-scan` and `dependency-audit` as required checks | A failed check only blocks release if branch protection requires it (GitHub setting) | TASK-017 |
+| Per-account login lockout can lock a real member out for 15 minutes | Accepted trade-off of lockout; window and count are env-tunable (`LOGIN_MAX_FAILURES`, `LOGIN_LOCK_MINUTES`) | TASK-013 |
+| `JWT_REFRESH_EXPIRES_IN` is no longer read | Refresh lifetime is now `SESSION_*` variables; old `.env` files still validate | TASK-009 |
+| Next dev creates `apps/web/AGENTS.md` and `CLAUDE.md` | Untracked generated files; set `agentRules: false` in `next.config.mjs` if unwanted | none |

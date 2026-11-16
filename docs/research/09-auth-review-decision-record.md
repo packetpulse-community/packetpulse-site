@@ -47,8 +47,8 @@ Part of the [research pack](00-index.md). Answers **DEV-05** (how sign-in and se
 | Step | Work | Task | Milestone |
 | --- | --- | --- | --- |
 | 1 | Reset-code lock and single-use reset session | Done on this branch | M1 |
-| 2 | Enforce session rules: staff 30 minutes idle and 8 hours absolute; members 30 days idle. Either make the `sessionTimeoutMinutes` setting real or remove it | TASK-009 | M1 |
-| 3 | Per-account login lockout; restrict proxy trust; decide on bot protection | TASK-013 | M1 |
+| 2 | **Done (TASK-009).** Enforce session rules: staff 30 minutes idle and 8 hours absolute; members 30 days idle. Either make the `sessionTimeoutMinutes` setting real or remove it | TASK-009 | M1 |
+| 3 | **Per-account login lockout done (TASK-013); proxy trust and bot protection remain.** Per-account login lockout; restrict proxy trust; decide on bot protection | TASK-013 | M1 |
 | 4 | Remove shared-secret admin signup; invite staff through a SuperAdmin; audit the creation | TASK-044 (start early) | M7, pulled forward |
 | 5 | Staff MFA (authenticator app or passkey), step-up with reason and fresh code, break-glass with a second SuperAdmin. Evaluate Supabase Auth's MFA support first | TASK-009, TASK-044 | M1 and M7 |
 | 6 | Password policy: 12 characters, breached-password check, drop the complexity rules; offer passkeys | TASK-022 | M3 |
