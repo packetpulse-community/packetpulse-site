@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, ForbiddenException, Get, HttpCode, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { QuizzesService } from "../../application/services/quizzes.service";
 import { QuizAttemptsService } from "../../application/services/quiz-attempts.service";
@@ -40,18 +40,14 @@ export class QuizzesController {
     return this.certificates.verify(certificateNumber);
   }
 
-  // Not gated with @RequirePermission — that would 403 an admin who has the
-  // admin/super_admin role but wasn't separately granted quizzes:author (the
-  // "redirects to normal user side" bug: an admin with a stale/incomplete
-  // permission grant lost access to their own quiz-creation UI). Admin role is
-  // an explicit OR here rather than a change to RolesGuard's global bypass
-  // semantics, to keep the blast radius scoped to quizzes.
+  // Authoring is gated by the shared permission check like every other route. Admins
+  // hold quizzes:author in the seeded matrix and super_admin bypasses RolesGuard, so
+  // no admin special case is needed here. Editing and deleting additionally require
+  // owning the quiz (or being an admin) — enforced in QuizzesService.
   @Throttle(WRITE_STANDARD)
+  @RequirePermission(PERMISSIONS.QUIZZES_AUTHOR)
   @Post()
   create(@CurrentUser() user: AccessTokenPayload, @Body() dto: CreateQuizDto) {
-    if (!isAdminRoles(user.roles) && !user.permissions.includes(PERMISSIONS.QUIZZES_AUTHOR)) {
-      throw new ForbiddenException(`Missing required permission: ${PERMISSIONS.QUIZZES_AUTHOR}`);
-    }
     return this.quizzes.create(user.sub, dto);
   }
 
@@ -61,18 +57,21 @@ export class QuizzesController {
     return this.quizzes.getForTaking(id);
   }
 
+  @RequirePermission(PERMISSIONS.QUIZZES_AUTHOR)
   @Get(":id/edit")
   getForAuthoring(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
     return this.quizzes.getForAuthoring(id, user.sub, user.roles);
   }
 
   @Throttle(WRITE_STANDARD)
+  @RequirePermission(PERMISSIONS.QUIZZES_AUTHOR)
   @Put(":id")
   update(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload, @Body() dto: UpdateQuizDto) {
     return this.quizzes.update(id, user.sub, user.roles, dto);
   }
 
   @Throttle(WRITE_STANDARD)
+  @RequirePermission(PERMISSIONS.QUIZZES_AUTHOR)
   @Delete(":id")
   @HttpCode(200)
   delete(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
