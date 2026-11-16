@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Put, Query, Req } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, Put, Query, Req } from "@nestjs/common";
 import type { Request } from "express";
 import { Throttle } from "@nestjs/throttler";
 import { AdminUsersService } from "../../application/services/admin-users.service";
@@ -16,6 +16,8 @@ import {
   AdminDateRangeQueryDto,
   AdminActivityListQueryDto,
   UpdateSiteSettingsDto,
+  ReasonBodyDto,
+  DeleteUserDto,
 } from "../../application/dto/admin.dto";
 import { CurrentUser, RequirePermission, PERMISSIONS } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
@@ -54,8 +56,8 @@ export class AdminController {
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.ADMIN_MANAGE_SETTINGS)
   @Put("settings")
-  updateSettings(@Body() dto: UpdateSiteSettingsDto) {
-    return this.settings.update(dto);
+  updateSettings(@Body() dto: UpdateSiteSettingsDto, @CurrentUser() admin: AccessTokenPayload) {
+    return this.settings.update(dto, admin.sub);
   }
 
   @Throttle(ADMIN_TIER)
@@ -82,15 +84,15 @@ export class AdminController {
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.USERS_APPROVE)
   @Put("users/:id/approve")
-  approve(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
-    return this.users.setApproval(id, admin.sub, true);
+  approve(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload, @Body() body?: ReasonBodyDto) {
+    return this.users.setApproval(id, admin.sub, true, body?.reason);
   }
 
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.USERS_APPROVE)
   @Put("users/:id/unapprove")
-  unapprove(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
-    return this.users.setApproval(id, admin.sub, false);
+  unapprove(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload, @Body() body?: ReasonBodyDto) {
+    return this.users.setApproval(id, admin.sub, false, body?.reason);
   }
 
   @Throttle(ADMIN_TIER)
@@ -104,23 +106,31 @@ export class AdminController {
   @RequirePermission(PERMISSIONS.USERS_APPROVE)
   @Delete("users/:id")
   @HttpCode(200)
-  async deleteUser(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
-    await this.users.delete(id, admin.sub);
+  async deleteUser(
+    @Param("id") id: string,
+    @CurrentUser() admin: AccessTokenPayload,
+    @Body() body?: Partial<DeleteUserDto>,
+    @Query("reason") queryReason?: string,
+  ) {
+    // DELETE clients often cannot send a body, so the reason may also come as ?reason=.
+    const parsed = DeleteUserDto.schema.safeParse({ reason: body?.reason ?? queryReason });
+    if (!parsed.success) throw new BadRequestException("A reason of at least 10 characters is required to delete a user");
+    await this.users.delete(id, admin.sub, parsed.data.reason);
     return { success: true };
   }
 
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.ADMIN_CLEAN_DATA)
   @Put("users/:id/clean-data")
-  cleanUserData(@Param("id") id: string, @Body() dto: CleanDataDto) {
-    return this.cleanData.cleanUser(id, dto.dataType);
+  cleanUserData(@Param("id") id: string, @Body() dto: CleanDataDto, @CurrentUser() admin: AccessTokenPayload) {
+    return this.cleanData.cleanUser(id, dto.dataType, admin.sub, dto.reason);
   }
 
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.ADMIN_CLEAN_DATA)
   @Put("users/bulk-clean-data")
-  bulkCleanData(@Body() dto: BulkCleanDataDto) {
-    return this.cleanData.cleanBulk(dto.userIds, dto.dataType);
+  bulkCleanData(@Body() dto: BulkCleanDataDto, @CurrentUser() admin: AccessTokenPayload) {
+    return this.cleanData.cleanBulk(dto.userIds, dto.dataType, admin.sub, dto.reason);
   }
 
   @Throttle(ADMIN_TIER)
@@ -133,15 +143,15 @@ export class AdminController {
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.RESOURCES_MODERATE)
   @Put("resources/:id/approve")
-  approveResource(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
-    return this.moderation.approveResource(id, admin.sub);
+  approveResource(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload, @Body() body?: ReasonBodyDto) {
+    return this.moderation.approveResource(id, admin.sub, body?.reason);
   }
 
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.RESOURCES_MODERATE)
   @Put("resources/:id/unapprove")
-  unapproveResource(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
-    return this.moderation.unapproveResource(id, admin.sub);
+  unapproveResource(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload, @Body() body?: ReasonBodyDto) {
+    return this.moderation.unapproveResource(id, admin.sub, body?.reason);
   }
 
   @Throttle(ADMIN_TIER)
@@ -154,15 +164,15 @@ export class AdminController {
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.RECORDINGS_MODERATE)
   @Put("recordings/:id/approve")
-  approveRecording(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
-    return this.moderation.approveRecording(id, admin.sub);
+  approveRecording(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload, @Body() body?: ReasonBodyDto) {
+    return this.moderation.approveRecording(id, admin.sub, body?.reason);
   }
 
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.RECORDINGS_MODERATE)
   @Put("recordings/:id/unapprove")
-  unapproveRecording(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
-    return this.moderation.unapproveRecording(id, admin.sub);
+  unapproveRecording(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload, @Body() body?: ReasonBodyDto) {
+    return this.moderation.unapproveRecording(id, admin.sub, body?.reason);
   }
 
   @Throttle(ADMIN_TIER)
@@ -175,15 +185,15 @@ export class AdminController {
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.BLOGS_MODERATE)
   @Put("blogs/:id/approve")
-  approveBlog(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
-    return this.moderation.approveBlog(id, admin.sub);
+  approveBlog(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload, @Body() body?: ReasonBodyDto) {
+    return this.moderation.approveBlog(id, admin.sub, body?.reason);
   }
 
   @Throttle(ADMIN_TIER)
   @RequirePermission(PERMISSIONS.BLOGS_MODERATE)
   @Put("blogs/:id/unapprove")
-  unapproveBlog(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload) {
-    return this.moderation.unapproveBlog(id, admin.sub);
+  unapproveBlog(@Param("id") id: string, @CurrentUser() admin: AccessTokenPayload, @Body() body?: ReasonBodyDto) {
+    return this.moderation.unapproveBlog(id, admin.sub, body?.reason);
   }
 
   @Throttle(ADMIN_TIER)

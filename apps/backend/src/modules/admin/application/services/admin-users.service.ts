@@ -66,7 +66,7 @@ export class AdminUsersService {
     return toAdminUser(user);
   }
 
-  async setApproval(id: string, approvedById: string, approved: boolean) {
+  async setApproval(id: string, approvedById: string, approved: boolean, reason?: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException("User not found");
     await this.prisma.user.update({
@@ -89,9 +89,7 @@ export class AdminUsersService {
     await Promise.all([
       approvalEmail,
       this.notifications.notify(id, "approval", { approved }),
-      this.activityLog.log(approvedById, approved ? "user_approved" : "user_unapproved", "user", id, {
-        email: user.email,
-      }),
+      this.activityLog.log(approvedById, approved ? "user_approved" : "user_unapproved", "user", id, { email: user.email }, reason),
     ]);
 
     return this.getById(id);
@@ -111,13 +109,13 @@ export class AdminUsersService {
 
     await Promise.all([
       this.emailQueue.sendRoleChangeNotice(user.email, dto.roleNames),
-      this.activityLog.log(actorId, "user_roles_changed", "user", id, { email: user.email, roles: dto.roleNames }),
+      this.activityLog.log(actorId, "user_roles_changed", "user", id, { email: user.email, roles: dto.roleNames }, dto.reason),
     ]);
 
     return this.getById(id);
   }
 
-  async delete(id: string, actorId: string) {
+  async delete(id: string, actorId: string, reason: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException("User not found");
     // Logged BEFORE deleting: if id === actorId (an admin deleting their own
@@ -125,7 +123,7 @@ export class AdminUsersService {
     // admin_activity_logs.actor_id FK, since it'd reference an id that no longer
     // exists — onDelete: SetNull only rewrites *existing* rows on a later delete,
     // it doesn't let a *new* insert reference an already-gone id.
-    await this.activityLog.log(actorId, "user_deleted", "user", undefined, { email: user.email });
+    await this.activityLog.log(actorId, "user_deleted", "user", id, { email: user.email }, reason);
     await this.prisma.user.delete({ where: { id } });
   }
 }

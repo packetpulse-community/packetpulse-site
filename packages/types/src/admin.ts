@@ -1,8 +1,21 @@
 import { z } from "zod";
 import { PaginationQuerySchema } from "./common";
 
+// Why a staff member took an action; stored on the append-only audit log (PRD-043 / SEC-08).
+// Optional on routine actions, required (min 10 chars) on destructive ones.
+export const AUDIT_REASON_MIN_LENGTH = 10;
+export const OptionalReasonSchema = z.string().trim().min(1).max(500).optional();
+export const RequiredReasonSchema = z.string().trim().min(AUDIT_REASON_MIN_LENGTH).max(500);
+
+export const ReasonBodySchema = z.object({ reason: OptionalReasonSchema });
+export type ReasonBodyDto = z.infer<typeof ReasonBodySchema>;
+
+export const DeleteUserSchema = z.object({ reason: RequiredReasonSchema });
+export type DeleteUserDto = z.infer<typeof DeleteUserSchema>;
+
 export const AssignRolesSchema = z.object({
   roleNames: z.array(z.string().min(1)).min(1),
+  reason: OptionalReasonSchema,
 });
 export type AssignRolesDto = z.infer<typeof AssignRolesSchema>;
 
@@ -10,12 +23,14 @@ export type AssignRolesDto = z.infer<typeof AssignRolesSchema>;
 // dataType values map to actual deletable content types that exist now.
 export const CleanDataSchema = z.object({
   dataType: z.enum(["quiz_attempts", "certificates", "forum_posts", "all"]),
+  reason: RequiredReasonSchema,
 });
 export type CleanDataDto = z.infer<typeof CleanDataSchema>;
 
 export const BulkCleanDataSchema = z.object({
   userIds: z.array(z.string().uuid()).min(1).max(200),
   dataType: z.enum(["quiz_attempts", "certificates", "forum_posts", "all"]),
+  reason: RequiredReasonSchema,
 });
 export type BulkCleanDataDto = z.infer<typeof BulkCleanDataSchema>;
 
@@ -45,6 +60,18 @@ export const AdminActivityActionSchema = z.enum([
   "recording_unapproved",
   "blog_approved",
   "blog_unapproved",
+  "forum_thread_locked",
+  "forum_thread_unlocked",
+  "forum_thread_pinned",
+  "forum_thread_unpinned",
+  "forum_thread_deleted",
+  "quiz_created",
+  "quiz_updated",
+  "quiz_deleted",
+  "user_data_cleaned",
+  "users_data_bulk_cleaned",
+  "site_settings_changed",
+  "admin_registered",
 ]);
 export type AdminActivityAction = z.infer<typeof AdminActivityActionSchema>;
 
@@ -64,5 +91,6 @@ export const UpdateSiteSettingsSchema = z.object({
   sessionTimeoutMinutes: z.coerce.number().int().min(5).max(1440),
   theme: z.enum(["light", "dark", "system"]),
   logLevel: z.enum(["debug", "info", "warn", "error"]),
+  reason: OptionalReasonSchema,
 });
 export type UpdateSiteSettingsDto = z.infer<typeof UpdateSiteSettingsSchema>;

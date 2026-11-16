@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
+import { AdminActivityLogService } from "./admin-activity-log.service";
 import { CleanDataDto } from "../dto/admin.dto";
 
 type DataType = CleanDataDto["dataType"];
@@ -9,44 +11,67 @@ type DataType = CleanDataDto["dataType"];
 // returned a fake success response without touching anything (plan §3 known bug).
 @Injectable()
 export class AdminCleanDataService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activityLog: AdminActivityLogService,
+  ) {}
 
-  async cleanUser(userId: string, dataType: DataType) {
+  // The deletions and the audit entry commit together: a clean-data run that cannot be
+  // recorded does not happen (finding S-6: it used to delete certificates and posts silently).
+  async cleanUser(userId: string, dataType: DataType, actorId: string, reason: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException("User not found");
-    return this.clean(userId, dataType);
+    return this.prisma.$transaction(async (tx) => {
+      const counts = await this.clean(tx, userId, dataType);
+      await this.activityLog.log(
+        actorId,
+        "user_data_cleaned",
+        "user",
+        userId,
+        { email: user.email, dataType, deleted: counts },
+        reason,
+        tx,
+      );
+      return counts;
+    });
   }
 
-  async cleanBulk(userIds: string[], dataType: DataType) {
-    const results = await Promise.all(userIds.map((id) => this.clean(id, dataType)));
-    return results.reduce(
-      (acc, r) => ({
-        quizAttempts: acc.quizAttempts + r.quizAttempts,
-        certificates: acc.certificates + r.certificates,
-        forumPosts: acc.forumPosts + r.forumPosts,
-      }),
-      { quizAttempts: 0, certificates: 0, forumPosts: 0 },
-    );
+  async cleanBulk(userIds: string[], dataType: DataType, actorId: string, reason: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const total = { quizAttempts: 0, certificates: 0, forumPosts: 0 };
+      for (const id of userIds) {
+        const r = await this.clean(tx, id, dataType);
+        total.quizAttempts += r.quizAttempts;
+        total.certificates += r.certificates;
+        total.forumPosts += r.forumPosts;
+      }
+      await this.activityLog.log(
+        actorId,
+        "users_data_bulk_cleaned",
+        "user",
+        undefined,
+        { userIds, dataType, deleted: total },
+        reason,
+        tx,
+      );
+      return total;
+    });
   }
 
-  private async clean(userId: string, dataType: DataType) {
+  private async clean(tx: Prisma.TransactionClient, userId: string, dataType: DataType) {
     let quizAttempts = 0;
     let certificates = 0;
     let forumPosts = 0;
 
     if (dataType === "quiz_attempts" || dataType === "all") {
-      const r = await this.prisma.quizAttempt.deleteMany({ where: { userId } });
-      quizAttempts = r.count;
+      quizAttempts = (await tx.quizAttempt.deleteMany({ where: { userId } })).count;
     }
     if (dataType === "certificates" || dataType === "all") {
-      const r = await this.prisma.certificate.deleteMany({ where: { userId } });
-      certificates = r.count;
+      certificates = (await tx.certificate.deleteMany({ where: { userId } })).count;
     }
     if (dataType === "forum_posts" || dataType === "all") {
-      const [replies, threads] = await Promise.all([
-        this.prisma.forumReply.deleteMany({ where: { authorId: userId } }),
-        this.prisma.forumThread.deleteMany({ where: { authorId: userId } }),
-      ]);
+      const replies = await tx.forumReply.deleteMany({ where: { authorId: userId } });
+      const threads = await tx.forumThread.deleteMany({ where: { authorId: userId } });
       forumPosts = replies.count + threads.count;
     }
 

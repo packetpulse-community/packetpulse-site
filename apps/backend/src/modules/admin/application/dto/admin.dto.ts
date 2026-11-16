@@ -7,6 +7,8 @@ import {
   AdminDateRangeQuerySchema,
   AdminActivityListQuerySchema,
   UpdateSiteSettingsSchema,
+  ReasonBodySchema,
+  DeleteUserSchema,
 } from "@packetpulse/types";
 
 export class AssignRolesDto extends createZodDto(AssignRolesSchema) {}
@@ -16,3 +18,5 @@ export class AdminUserListQueryDto extends createZodDto(AdminUserListQuerySchema
 export class AdminDateRangeQueryDto extends createZodDto(AdminDateRangeQuerySchema) {}
 export class AdminActivityListQueryDto extends createZodDto(AdminActivityListQuerySchema) {}
 export class UpdateSiteSettingsDto extends createZodDto(UpdateSiteSettingsSchema) {}
+export class ReasonBodyDto extends createZodDto(ReasonBodySchema) {}
+export class DeleteUserDto extends createZodDto(DeleteUserSchema) {}
