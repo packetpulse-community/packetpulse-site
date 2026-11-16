@@ -127,6 +127,10 @@ const AUTHENTICATED_ONLY: Record<string, string> = {
   "POST /api/quizzes/:id/attempts/:attemptId/submit": "own attempt",
   "POST /api/network-tools/run": "any member; simulated output only",
   "GET /api/dashboard/stats": "own stats",
+  "POST /api/files/upload-url": "any member; creates a pending file owned by the caller",
+  "POST /api/files/:id/complete": "file owner only (others get 404)",
+  "GET /api/files/:id/link": "file owner or admin (others get 404, logged as denied)",
+  "DELETE /api/files/:id": "file owner or admin (others get 404, logged as denied)",
 };
 
 function discoverRoutes(app: INestApplication): Route[] {

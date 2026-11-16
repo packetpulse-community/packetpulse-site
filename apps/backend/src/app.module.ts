@@ -28,6 +28,7 @@ import { RealtimeModule } from "./modules/realtime";
 import { NetworkToolsModule } from "./modules/network-tools";
 import { DashboardModule } from "./modules/dashboard";
 import { LogsModule } from "./modules/logs";
+import { FilesModule } from "./modules/files";
 import { AllExceptionsFilter } from "./common/errors";
 
 // Feature modules land here as they're built (migration plan phases). Global guard
@@ -58,6 +59,7 @@ import { AllExceptionsFilter } from "./common/errors";
     NetworkToolsModule,
     DashboardModule,
     LogsModule,
+    FilesModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
