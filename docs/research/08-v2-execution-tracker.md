@@ -1,0 +1,125 @@
+# 08. v2.0 Execution Tracker (Document 4 checklist)
+
+Part of the [research pack](00-index.md). This is Document 4's task register with a status and evidence for every task, in Document 4's own milestone order (M0 to M9). It replaces the earlier re-sliced plan in Docs 06 and 07 as the driver: **work follows Document 4**. Status words are Document 4's: **Open**, **In progress**, **Blocked** (blocker named), **Done** (acceptance criteria met with evidence, tests passing). Nothing is Done yet: no task has had its listed tests and the second-person review.
+
+Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and findings refer to [Doc 02](02-gap-analysis.md) and [Doc 04](04-existing-project-deep-analysis.md).
+
+## Where we are
+
+| Milestone | Tasks | In progress | Open | Blocked |
+| --- | --- | --- | --- | --- |
+| M0 Audit and baseline | 6 | 5 | 0 | 1 |
+| M1 Foundation | 11 | 9 | 2 | 0 |
+| M2 Design system and shell | 4 | 1 | 3 | 0 |
+| M3 Identity, profile, community | 6 | 2 | 4 | 0 |
+| M4 Learn and practice | 4 | 1 | 3 | 0 |
+| M5 Prove and verify | 3 | 1 | 2 | 0 |
+| M6 Careers | 8 | 0 | 8 | 0 |
+| M7 Operations | 6 | 2 | 4 | 0 |
+| M8 Release | 6 | 0 | 6 | 0 |
+| M9 Improve | 2 | 0 | 2 | 0 |
+| **Total** | **56** | **21** | **34** | **1** |
+
+**Next in Document 4 order:** close M0 (TASK-001, 002, 006 need your approval or a second reviewer; TASK-003 and 005 are doable now; TASK-004 is blocked on hosting access), then start M1 with TASK-008 (permission engine), which almost everything else depends on.
+
+## M0 Audit and baseline
+
+| Task | Status | Evidence and what remains |
+| --- | --- | --- |
+| TASK-001 Audit repo, data, hosting; DEV-01 to DEV-10 | In progress | Audit and DEV answers in Docs 01, 02 (s6) and 04. Remaining: a stored route inventory (102 endpoints, 43 pages) and a second engineer's review |
+| TASK-002 Gap analysis, doc update, threat model, data map | In progress | Every PRD and SCR classified in Doc 02. Threat model and data map drafted in [Doc 10](10-threat-model-and-data-map.md). Remaining: update Docs 1 to 4 (stack wording in DEC-021 and DEC-032, roles, the approval rule) and approval |
+| TASK-003 Environments and secrets | In progress | `.env.example` for both apps, secrets via `sync: false` on Render, env validated at boot. Gaps: no documented local, preview, staging, production split; a dev `.env` can point at the remote Supabase database, so "staging never reads production data" is not yet true |
+| TASK-004 Backups and recovery drill | **Blocked** | Needs access to the Supabase and Render projects and a staging copy to restore into. None in the repo. Blocker: owner to provide access and name the plan |
+| TASK-005 Logging, error tracking, uptime, alerts, incident process | In progress | pino logs, `ClientLog` ingestion, `/api/health`, email send logging. Missing: error tracker, uptime check, alert routing to a named owner, written incident process |
+| TASK-006 Authentication review and decision (OPEN-13) | In progress | Decision record drafted: [Doc 09](09-auth-review-decision-record.md). Awaiting the owner's approval |
+
+## M1 Foundation
+
+| Task | Status | Evidence and what remains |
+| --- | --- | --- |
+| TASK-007 Migrations and background work | In progress | 10 versioned Prisma migrations; BullMQ processors. Remaining: run the migrations in order on a copy; confirm jobs outlive requests and are not duplicated |
+| TASK-008 Permission engine | In progress | Default-deny guard chain and permission keys exist. Remaining: route inventory and a role-by-route test matrix (TEST-005, TEST-006); resource and state rules (for example "own company only") |
+| TASK-009 Sessions and step-up | In progress | Rotating refresh tokens with reuse detection (good). Missing: SEC-05 limits (members 30 days idle; staff 30 minutes idle, 8 hours absolute) and step-up. The `sessionTimeoutMinutes` admin setting is stored but never enforced |
+| TASK-010 Validation and error format | In progress | Zod validation on every route. Remaining: confirm one error shape and no stack traces (TEST-011) |
+| TASK-011 Web security hardening | In progress | `helmet`, strict CORS allowlist, httpOnly cookies. Missing: request-forgery assessment, dependency and secret scanning |
+| TASK-012 Field-level protection | Open | No sensitive fields exist yet (date of birth, CTC); needed before they are added |
+| TASK-013 Rate limits and bot protection | In progress | Global and per-route throttling. On this branch: reset-code guesses now lock per email (TEST-013 part). Missing: bot protection; `apiRateLimit` setting unenforced; `trust proxy` spoofing (S-11) |
+| TASK-014 Private file pipeline | Open | Storage returns public URLs; no scanning, short-lived links or open logging |
+| TASK-015 Append-only audit log | In progress | `AdminActivityLog` with 18 actions. Missing: a reason field, settings and clean-data events, append-only enforcement (TEST-008) |
+| TASK-016 Background work, reliable hand-off | In progress | BullMQ email and fan-out processors. Remaining: retry without duplicates, stalled-job alert |
+| TASK-017 Build, test, release pipeline | In progress | CI runs lint, typecheck, build, migrate, seed, tests, e2e, image smoke test. Missing: security scanning; a failed scan blocking release |
+
+## M2 Design system and shell
+
+| Task | Status | Evidence and what remains |
+| --- | --- | --- |
+| TASK-018 Tokens and component library | Open | Colours live in class names, not tokens; dark-only (Doc 03 s2) |
+| TASK-019 App shell, navigation by role | Open | One member list plus Admin; no Mentor, Instructor or Recruiter navigation |
+| TASK-020 States and accessibility baseline | Open | No `loading`, `error`, `not-found` boundaries; the dialog has no focus trap (Doc 03 s3) |
+| TASK-021 Notification service | In progress | In-app bell, BullMQ email, realtime push. Missing: preferences, quiet hours, WhatsApp opt-in, delivery log |
+
+## M3 Identity, profile and community
+
+| Task | Status | Evidence and what remains |
+| --- | --- | --- |
+| TASK-022 Registration and email code | In progress | Email and password register; email **link** (24 h) sent only on admin approval, not a 6-digit code (PRD-001). Missing: PRD-004 (18+), PRD-006 (WhatsApp format) |
+| TASK-023 Onboarding and required details | Open | Only name, email, optional WhatsApp and experience level are collected (PRD-003) |
+| TASK-024 Resume upload and parsing | Open | No resume model |
+| TASK-025 Profile, consent, privacy | Open | The terms tick is client-side only; no consent records |
+| TASK-026 Community Q&A, guidelines, reputation | In progress | Threads, nested replies, reply likes, moderation. Missing: modes, accepted answer, report, guidelines, reputation |
+| TASK-027 Skill taxonomy and suggestions | Open | Categories classify content, not skills |
+
+## M4 Learn and practice
+
+| Task | Status | Evidence and what remains |
+| --- | --- | --- |
+| TASK-028 Content catalog and publishing flow | In progress | Resources and recordings with approval flags; no Draft, In review, Published, Archived states |
+| TASK-029 Enrollment and progress | Open | None |
+| TASK-030 Labs and review | Open | No labs. Packet Lab (merged in PR 1) is hands-on practice but is **not** the PRD-020 lab (root cause, evidence, fix, reviewer scoring); a decision is needed on how it relates to M-08 |
+| TASK-031 Mentoring requests | Open | No mentor role |
+
+## M5 Prove and verify
+
+| Task | Status | Evidence and what remains |
+| --- | --- | --- |
+| TASK-032 Assessment engine | In progress | Quizzes, attempts, scoring, certificates. Missing: attempt and retake limits, time limit enforcement, expiry, version, autosave (PRD-017, TEST-049) |
+| TASK-033 Evidence submission and review | Open | Only self-entered `UserCertification` rows |
+| TASK-034 Badge lifecycle, public verification page | Open | A public certificate verifier exists (precursor); no labels, expiry, revoke flow |
+
+## M6 Careers
+
+| Task | Status | Evidence and what remains |
+| --- | --- | --- |
+| TASK-035 to TASK-042 (company onboarding, positions, applications, screening and forwarding, payments, offers and invoices, recruiter dashboard, interviews) | Open | Nothing exists: no Company, Position, Application, Offer, Interview or Invoice model; no Recruiter role; no payment provider |
+
+## M7 Operations
+
+| Task | Status | Evidence and what remains |
+| --- | --- | --- |
+| TASK-043 Operations queues and moderation | In progress | Moderator actions on threads, activity log. Missing: reports queue, reasons, appeals by a different admin, service levels |
+| TASK-044 Admin security | Open | No MFA, step-up, break-glass or access review; admin created by a shared secret (S-4) |
+| TASK-045 Analytics events and funnel | Open | No analytics provider found; admin analytics page shows counts |
+| TASK-046 Data rights and retention | In progress | Account deletion exists (and leaves the Supabase login, S-5). Missing: export, grace period, retention schedule |
+| TASK-047 Feature switches and policy screens | Open | A `SiteSettings` row exists, but only `maintenanceMode` is enforced; see [Doc 10](10-threat-model-and-data-map.md) T-12 |
+| TASK-048 Integrations (ClickUp, n8n) | Open | Not started; waits for OPEN-12 scope |
+
+## M8 Release and M9 Improve
+
+| Task | Status | Evidence and what remains |
+| --- | --- | --- |
+| TASK-049 Staged rollout of existing members | Open | Needs TASK-004 and TASK-017 first |
+| TASK-050 Accessibility and device pass | Open | No screen-reader pass; no automated scan yet |
+| TASK-051 Localization | Open | `lang="en"`, no i18n |
+| TASK-052 Hide from companies | Open | Depends on M6 |
+| TASK-053 Recruiter reminders and status messages | Open | Depends on M6 |
+| TASK-054 Public trust pages | Open | Privacy page is a 24-line placeholder; Fees and How verification works do not exist |
+| TASK-055 AI drafting behind review gates | Open | None |
+| TASK-056 Post-launch monitoring | Open | Depends on TASK-005, TASK-045 |
+
+## Work done beyond the register (needs your decision)
+
+| Item | Why it matters |
+| --- | --- |
+| Packet Lab and the Tools section (PR 1, merged) | Not in Document 4 or the module map. It overlaps M-08 Practice and replaces the simulated Network Tools; it needs a DEC to sit in the module inventory (see Doc 01 s5) |
+| Reset-token and reset-code fixes (this branch) | Closes findings S-2 and S-3; counts toward TASK-013 and TASK-009 |
+| `test/security-regressions.e2e-spec.ts` | First of the TASK-008 and TASK-013 tests |

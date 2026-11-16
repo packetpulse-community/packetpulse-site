@@ -11,6 +11,9 @@ Prepared 22 Oct 2026 from the v2 document set (17 Oct 2026) and a read-only audi
 | 05 | [Packet Lab analysis and spec](05-packet-lab-analysis-and-spec.md) | Design goals, OSI and TCP/IP live visualisation, byte-accurate packet tracing, a small live network simulation, engine design, verification plan, phased build |
 | 06 | [Completing 2.0: pending work analysis](06-completing-2.0-pending-work-analysis.md) | Task register re-baselined against the repo, effort and calendar by team size, decision gates, three ways to finish, a recommended phased plan, quick wins, member-migration strategy |
 | 07 | [Solo plan and community discussion brief](07-solo-plan-and-community-discussion.md) | A plan sized for one developer with dates, plus a kit for discussing priorities with community members: poll, announcement text, open-call agenda, volunteer roles, FAQ |
+| 08 | [v2.0 execution tracker](08-v2-execution-tracker.md) | Document 4's 56-task checklist with a status and evidence for each, in Document 4's own milestone order; this is now the driver |
+| 09 | [Authentication review and decision record](09-auth-review-decision-record.md) | TASK-006 / DEV-05: today's sign-in and sessions against the OPEN-13 and DEC-020 baseline, a proposed decision and a closing plan |
+| 10 | [Threat model and data map](10-threat-model-and-data-map.md) | SEC-13 / TASK-002: 15 threats with controls and gaps, a data map, processors and locations |
 
 ## How much to trust this pack
 
