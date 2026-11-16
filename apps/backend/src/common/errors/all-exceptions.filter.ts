@@ -54,7 +54,13 @@ function codeForStatus(status: number): ErrorCode {
 }
 
 function fieldsFromIssues(issues: ZodIssue[]) {
-  return issues.map((i) => ({ path: i.path.join("."), message: i.message }));
+  // One entry per failing path: the first message is the most relevant one.
+  const seen = new Map<string, string>();
+  for (const i of issues) {
+    const path = i.path.join(".");
+    if (!seen.has(path)) seen.set(path, i.message);
+  }
+  return [...seen].map(([path, message]) => ({ path, message }));
 }
 
 // The single place every error leaves the API. 4xx keep the message the code
