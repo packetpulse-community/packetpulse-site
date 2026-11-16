@@ -195,7 +195,9 @@ export const adminClientApi = {
     apiFetchClient<PaginatedResponse<AdminUser>>(`/admin/users${toQueryString(query)}`),
   assignRoles: (id: string, dto: AssignRolesDto) =>
     apiFetchClient<AdminUser>(`/admin/users/${id}/roles`, { method: "PUT", body: JSON.stringify(dto) }),
-  deleteUser: (id: string) => apiFetchClient<{ success: boolean }>(`/admin/users/${id}`, { method: "DELETE" }),
+  // The backend requires a reason (min 10 chars) for audit; DELETE carries it in the JSON body.
+  deleteUser: (id: string, reason: string) =>
+    apiFetchClient<{ success: boolean }>(`/admin/users/${id}`, { method: "DELETE", body: JSON.stringify({ reason }) }),
   stats: (query: AdminDateRangeQuery = {}) => apiFetchClient<AdminStats>(`/admin/stats${toQueryString(query)}`),
   analytics: (query: AdminDateRangeQuery = {}) =>
     apiFetchClient<AdminAnalytics>(`/admin/analytics${toQueryString(query)}`),
