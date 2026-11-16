@@ -23,7 +23,7 @@ What this means in plain terms: the engineering foundation is real (permissions,
 | New task | Covers | Size | Overlaps |
 | --- | --- | --- | --- |
 | TASK-057 Regression tests that prove or clear the suspected defects | S-1, S-2, S-3, S-5, S-7 | S | TASK-008 test matrix |
-| TASK-058 Fix the reset flow, the draft-quiz leak and proxy trust | S-1, S-2, S-3, S-11 | S | TASK-013 |
+| TASK-058 Fix the reset flow and proxy trust | S-2, S-3, S-11 (S-1 was refuted by test) | S | TASK-013 |
 | TASK-059 Deletion semantics: delete the Supabase credential, anonymise instead of cascading shared content, block deleting a quiz that has certificates | D-1, D-2, S-5, S-9 | M | TASK-046 |
 | TASK-060 Quiz integrity: attempt cap, retake gap, server deadline, expiry, certificate retention | S-7, D-4 | M | TASK-032 |
 | TASK-061 Staff access: replace shared-secret admin signup with invitations; audit the clean-data action | S-4, S-6 | M | TASK-044, TASK-015 |
@@ -115,7 +115,7 @@ Workstream numbers match section 2.2. Weeks are for one developer and fall by ro
 
 | Order | Work | Exit criteria |
 | --- | --- | --- |
-| 1a Sprint 0 (weeks 1 to 2) | TASK-057 and 058: tests then fixes for S-1, S-2, S-3, S-11. Quick wins (section 6) | Tests fail before and pass after each fix; the draft-quiz leak and reset-token reuse are closed |
+| 1a Sprint 0 (weeks 1 to 2) | TASK-057 and 058: tests then fixes for S-2, S-3 (S-1 was refuted by test), then S-11. Quick wins (section 6) | Tests fail before and pass after each fix; reset-token reuse and code guessing are closed |
 | 1b (weeks 3 to 5) | TASK-059, 060, 061: deletion semantics, quiz integrity, staff invitations | Deleting a quiz with certificates is refused; credentials are removed on account deletion; admins can only be created by invitation |
 | 1c (weeks 5 to 11) | TASK-003, 004 (restore drill), 005 (alerts and incident process), 006 (auth decision using Doc 04 section 3.3), 008 (route-by-role test matrix over all 102 endpoints), 009, 010, 011, 013, 015, 016; close 001, 002 with doc edits | Every route denies the wrong role in an automated test; a restore has been timed; alerts reach a named person; audit entries carry a reason |
 
@@ -167,7 +167,7 @@ Pull **TASK-044 staff MFA and TASK-049 staged rollout** forward into Phase 2 and
 
 | # | Change | Fixes | Source |
 | --- | --- | --- | --- |
-| 1 | Fix `GET /quizzes` so anonymous visitors only see published quizzes | S-1 | Doc 04 |
+| 1 | ~~Fix `GET /quizzes` for anonymous visitors~~ Not needed: tests show drafts never leak (S-1 refuted); the tests stay as a guard | S-1 | Doc 04 |
 | 2 | Add `error.tsx`, `not-found.tsx`, `loading.tsx` and a `global-error` boundary | DES-001 | Doc 03 |
 | 3 | Add a skip link and honour `prefers-reduced-motion` | DES-004 | Doc 03 |
 | 4 | Send a "we got your request" email at registration that explains approval and what happens next | UX-01 | Doc 03 |
