@@ -77,6 +77,7 @@ model User {
   activityLogActions   AdminActivityLog[]
 
   @@map("users")
+  storedFiles StoredFile[]
 }
 
 model UserCertification {
@@ -743,4 +744,61 @@ model ClientLog {
   @@index([createdAt])
   @@index([level])
   @@map("client_logs")
+}
+
+// ---- Private files (TASK-014, SEC-03, PRD-046) ----
+enum StoredFileKind {
+  resume
+  certificate
+  evidence
+}
+
+enum StoredFileStatus {
+  pending
+  available
+  rejected
+  deleted
+}
+
+enum FileAccessAction {
+  upload_url
+  complete
+  open
+  delete
+  denied
+}
+
+// Metadata for an object in the PRIVATE storage bucket. The bytes never touch our server.
+model StoredFile {
+  id           String           @id @default(uuid())
+  ownerId      String           @map("owner_id")
+  owner        User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  kind         StoredFileKind
+  originalName String           @map("original_name")
+  contentType  String           @map("content_type")
+  sizeBytes    Int              @map("size_bytes")
+  bucket       String
+  path         String
+  status       StoredFileStatus @default(pending)
+  scanResult   String?          @map("scan_result")
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  @@index([ownerId])
+  @@index([status, createdAt])
+  @@map("stored_files")
+}
+
+// Append-only (a database trigger refuses UPDATE/DELETE). file_id and actor_id are plain
+// columns, not foreign keys, so the trail survives deleting the file or the account.
+model FileAccessLog {
+  id        String           @id @default(uuid())
+  fileId    String           @map("file_id")
+  actorId   String?          @map("actor_id")
+  action    FileAccessAction
+  ip        String?
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([fileId, createdAt])
+  @@index([actorId])
+  @@map("file_access_logs")
 }
