@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { APP_GUARD, APP_PIPE } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD, APP_PIPE } from "@nestjs/core";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { ZodValidationPipe } from "nestjs-zod";
 import { validateEnv } from "./common/config/env.schema";
@@ -28,6 +28,7 @@ import { RealtimeModule } from "./modules/realtime";
 import { NetworkToolsModule } from "./modules/network-tools";
 import { DashboardModule } from "./modules/dashboard";
 import { LogsModule } from "./modules/logs";
+import { AllExceptionsFilter } from "./common/errors";
 
 // Feature modules land here as they're built (migration plan phases). Global guard
 // chain — JwtAuthGuard → MaintenanceGuard → RolesGuard → ApprovedGuard, with @Public() opting a route
@@ -60,6 +61,7 @@ import { LogsModule } from "./modules/logs";
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     // Before Roles/Approved so a maintenance 503 wins over a role/approval 403.
