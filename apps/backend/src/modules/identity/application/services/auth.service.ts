@@ -1,5 +1,6 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, HttpException, HttpStatus, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import Redis from "ioredis";
 import { UserRepository } from "../../domain/repositories/user.repository";
 import { CredentialProvider } from "../../domain/providers/credential-provider";
 import { PrismaService } from "../../../../prisma/prisma.service";
@@ -11,8 +12,15 @@ import { SUPER_ADMIN_ROLE } from "../../domain/constants/permissions.constants";
 import { SiteStatusService } from "../../../../common/site-status/site-status.service";
 import { maintenanceException } from "../../../../common/site-status/maintenance.constants";
 import { RegisterDto, RegisterAdminDto, LoginDto } from "../dto/auth.dto";
+import { REDIS_CLIENT } from "../../../../common/redis/redis.constants";
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
+// After a correct code the member has this long to choose a new password.
+const RESET_SESSION_MS = 10 * 60 * 1000;
+// A 6-digit code has only a million possibilities, so wrong guesses are counted per email
+// address (not per IP, which a caller can vary) and the code locks after a few mistakes.
+const OTP_MAX_FAILURES = 5;
+const OTP_LOCK_SECONDS = 15 * 60;
 
 @Injectable()
 export class AuthService {
@@ -25,6 +33,7 @@ export class AuthService {
     private readonly emailVerification: EmailVerificationService,
     private readonly siteStatus: SiteStatusService,
     private readonly config: ConfigService,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -158,40 +167,78 @@ export class AuthService {
     await this.emailQueue.sendPasswordResetOtp(user.email, plain);
   }
 
+  private otpFailureKey(email: string) {
+    return `pwreset:fail:${this.tokens.hashOtp(email.trim().toLowerCase())}`;
+  }
+
+  // Keyed by email hash whether or not the account exists, so the lock gives no hint about
+  // which addresses are registered.
+  private async assertOtpNotLocked(key: string) {
+    const failures = Number((await this.redis.get(key)) ?? 0);
+    if (failures >= OTP_MAX_FAILURES) {
+      throw new HttpException("Too many incorrect codes. Please wait 15 minutes and try again.", HttpStatus.TOO_MANY_REQUESTS);
+    }
+  }
+
+  private async rejectOtp(key: string): Promise<never> {
+    const failures = await this.redis.incr(key);
+    if (failures === 1) await this.redis.expire(key, OTP_LOCK_SECONDS);
+    throw new BadRequestException("Invalid or expired code");
+  }
+
   async verifyOtp(email: string, otp: string): Promise<{ tempToken: string }> {
+    const failureKey = this.otpFailureKey(email);
+    await this.assertOtpNotLocked(failureKey);
+
     const user = await this.users.findByEmail(email);
-    if (!user) throw new BadRequestException("Invalid or expired code");
+    if (!user) return this.rejectOtp(failureKey);
 
     const otpHash = this.tokens.hashOtp(otp);
     const record = await this.prisma.passwordReset.findFirst({
       where: { userId: user.id, otpHash, consumedAt: null, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: "desc" },
     });
-    if (!record) throw new BadRequestException("Invalid or expired code");
+    if (!record) return this.rejectOtp(failureKey);
 
-    await this.prisma.passwordReset.update({ where: { id: record.id }, data: { consumedAt: new Date() } });
+    await this.redis.del(failureKey);
 
-    // Short-lived temp token authorizing exactly one password reset, distinct from
-    // the normal access token so it can't be reused for anything else.
-    const tempToken = this.tokens.hashOtp(`${record.id}:${Date.now()}`);
-    await this.prisma.passwordReset.update({ where: { id: record.id }, data: { otpHash: tempToken } });
-    return { tempToken: `${record.id}.${tempToken}` };
+    // The code is spent. In exchange the member gets a random, single-use session secret
+    // that authorises exactly one password reset, and only for a short time. Only its hash
+    // is stored, so it cannot be rebuilt from the database.
+    const session = this.tokens.generateVerificationToken();
+    await this.prisma.passwordReset.update({
+      where: { id: record.id },
+      data: { consumedAt: new Date(), otpHash: session.hash, expiresAt: new Date(Date.now() + RESET_SESSION_MS) },
+    });
+    return { tempToken: `${record.id}.${session.plain}` };
   }
 
   async resetPassword(tempToken: string, newPassword: string) {
-    const [id, hash] = tempToken.split(".");
+    const [id, secret] = tempToken.split(".");
+    const invalid = () => new BadRequestException("Invalid or expired reset session");
     const record = id ? await this.prisma.passwordReset.findUnique({ where: { id } }) : null;
-    if (!record || record.otpHash !== hash || !record.consumedAt) {
-      throw new BadRequestException("Invalid or expired reset session");
-    }
+    if (!record || !secret || !record.consumedAt || record.otpHash !== this.tokens.hashOtp(secret)) throw invalid();
+
+    // Claim the session atomically: only one request can ever turn a valid session into a
+    // reset, so a replay (or a race between two requests) is refused.
+    const claimed = await this.prisma.passwordReset.updateMany({
+      where: { id: record.id, otpHash: record.otpHash, consumedAt: { not: null }, expiresAt: { gt: new Date() } },
+      data: { expiresAt: new Date(0) },
+    });
+    if (claimed.count !== 1) throw invalid();
 
     const user = await this.users.findById(record.userId);
-    if (!user) throw new BadRequestException("Invalid or expired reset session");
+    if (!user) throw invalid();
 
     const result = await this.credentials.updateCredential(user.id, user.email, newPassword);
     if (result.passwordHash) await this.users.updatePasswordHash(user.id, result.passwordHash);
 
-    // Password changed via reset — revoke all existing sessions for safety.
+    // Password changed via reset: close any other pending reset codes and revoke all
+    // existing sessions for safety.
+    await this.prisma.passwordReset.updateMany({
+      where: { userId: record.userId, consumedAt: null },
+      data: { consumedAt: new Date() },
+    });
     await this.prisma.refreshToken.updateMany({
       where: { userId: record.userId, revokedAt: null },
       data: { revokedAt: new Date() },
