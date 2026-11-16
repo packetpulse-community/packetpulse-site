@@ -30,16 +30,27 @@ export class BlogPostsService {
     return data;
   }
 
-  async getBySlug(slug: string) {
+  // A post that is unpublished or not yet approved is visible only to its author and to
+  // admins, matching the list endpoint. Everyone else gets the same 404 as for a missing
+  // post, so the response does not reveal that the post exists.
+  private assertVisible(post: { isPublished: boolean; isApproved: boolean; authorId: string }, viewer?: { userId: string; isAdmin: boolean }) {
+    const reviewed = post.isPublished && post.isApproved;
+    if (reviewed || viewer?.isAdmin || viewer?.userId === post.authorId) return;
+    throw new NotFoundException("Blog post not found");
+  }
+
+  async getBySlug(slug: string, viewer?: { userId: string; isAdmin: boolean }) {
     const post = await this.posts.findBySlug(slug);
     if (!post) throw new NotFoundException("Blog post not found");
+    this.assertVisible(post, viewer);
     await this.posts.incrementViewCount(post.id);
     return post;
   }
 
-  async getById(id: string) {
+  async getById(id: string, viewer?: { userId: string; isAdmin: boolean }) {
     const post = await this.posts.findById(id);
     if (!post) throw new NotFoundException("Blog post not found");
+    this.assertVisible(post, viewer);
     await this.posts.incrementViewCount(id);
     return post;
   }

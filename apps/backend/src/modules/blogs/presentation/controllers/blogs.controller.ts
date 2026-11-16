@@ -10,6 +10,10 @@ import type { AccessTokenPayload } from "../../../identity";
 // write-standard tier (plan §4): 100 requests/15min for authenticated writes.
 const WRITE_STANDARD = { default: { limit: 100, ttl: 900_000 } };
 
+function viewerOf(user?: AccessTokenPayload) {
+  return user ? { userId: user.sub, isAdmin: isAdminRoles(user.roles) } : undefined;
+}
+
 function isAdminRoles(roles: string[]) {
   return roles.includes("admin") || roles.includes(SUPER_ADMIN_ROLE);
 }
@@ -36,8 +40,8 @@ export class BlogsController {
 
   @Public()
   @Get("slug/:slug")
-  getBySlug(@Param("slug") slug: string) {
-    return this.posts.getBySlug(slug);
+  getBySlug(@Param("slug") slug: string, @CurrentUser() user?: AccessTokenPayload) {
+    return this.posts.getBySlug(slug, viewerOf(user));
   }
 
   @Throttle(WRITE_STANDARD)
@@ -92,7 +96,7 @@ export class BlogsController {
   // Kept last so it doesn't shadow the more specific routes above (featured, slug/:slug).
   @Public()
   @Get(":id")
-  getById(@Param("id") id: string) {
-    return this.posts.getById(id);
+  getById(@Param("id") id: string, @CurrentUser() user?: AccessTokenPayload) {
+    return this.posts.getById(id, viewerOf(user));
   }
 }
