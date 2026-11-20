@@ -7,7 +7,7 @@ const KEYWORDS = new Set(["loopback", "linklocal", "uniquelocal"]);
 function isAddressOrCidr(entry: string): boolean {
   if (KEYWORDS.has(entry)) return true;
   const [addr, prefix, ...rest] = entry.split("/");
-  const version = isIP(addr);
+  const version = isIP(addr ?? "");
   if (rest.length > 0 || version === 0) return false;
   if (prefix === undefined) return true;
   if (!/^\d+$/.test(prefix)) return false;
