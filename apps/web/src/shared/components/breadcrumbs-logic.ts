@@ -46,6 +46,7 @@ export const ROUTE_TITLES: Readonly<Record<string, RouteTitle>> = {
   "/admin/quizzes/*": { label: "Quiz" },
   "/admin/quizzes/*/edit": { label: "Edit" },
   "/admin/categories": { label: "Categories" },
+  "/admin/taxonomy": { label: "Skill taxonomy" },
   "/admin/analytics": { label: "Analytics" },
   "/admin/status": { label: "System status" },
   "/admin/logs": { label: "Logs" },

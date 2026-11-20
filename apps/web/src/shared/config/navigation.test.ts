@@ -8,7 +8,7 @@ const INSTRUCTOR = ["recordings:create", "quizzes:author"];
 const ADMIN = [
   ...MEMBER, "blogs:publish", "blogs:moderate", "resources:moderate", "recordings:moderate", "forums:moderate",
   "quizzes:author", "users:approve", "users:manage-roles", "admin:clean-data", "admin:view-analytics",
-  "admin:manage-settings", "categories:manage",
+  "admin:manage-settings", "categories:manage", "skills:manage",
 ];
 
 function user(roles: string[], permissions: string[], over: Partial<NavUser> = {}): NavUser {
@@ -92,7 +92,7 @@ describe("navigationFor", () => {
     expect(adminHrefs).toEqual(
       expect.arrayContaining([
         "/admin", "/admin/users", "/admin/resources", "/admin/recordings", "/admin/blogs", "/admin/forums",
-        "/admin/quizzes", "/admin/categories", "/admin/analytics", "/admin/status", "/admin/logs",
+        "/admin/quizzes", "/admin/categories", "/admin/taxonomy", "/admin/analytics", "/admin/status", "/admin/logs",
         "/admin/api-docs", "/admin/settings",
       ]),
     );
