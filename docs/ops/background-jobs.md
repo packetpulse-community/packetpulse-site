@@ -84,3 +84,52 @@ Fix the cause first (provider key, bad address). Do not retry permanent failures
   `app.enableShutdownHooks()` in `main.ts`.
 - Scheduled jobs (expiry checks, retention purges, invoices, parsing) are later tasks and will
   reuse these options.
+
+## Notifications (TASK-021, PRD-041)
+
+One service decides, per notification and channel, whether to send now, defer or skip, and
+writes a `notification_deliveries` row for every decision. Code:
+`apps/backend/src/modules/notifications/application/services/notification-dispatcher.service.ts`.
+The event catalogue and the policy defaults are in `packages/types/src/notifications.ts`.
+
+| Channel | Rule |
+|---|---|
+| In-app | Always on, every event. Row `delivered`. |
+| Email | Member preference, else the catalogue default. Critical events ignore the preference, quiet hours and the cap. |
+| WhatsApp | Explicit opt-in AND a confirmed number, else `skipped:opt_out`. Then the member's choice, then `skipped:no_provider` (no provider is integrated, OPEN-18). |
+
+Decisions on the delivery row (`status` / `reason_code`):
+`delivered` (in-app), `queued` (email job exists), `queued:quiet_hours` (delayed job, `scheduled_for` =
+when the window ends), `sent` / `failed` (set by the email worker; `attempts`, `error_summary` without
+addresses or numbers), `skipped:preference_off | frequency_cap | no_provider | opt_out | no_address`.
+
+**Quiet hours** (default 21:00 to 08:00 Asia/Kolkata, per member): a non-critical email becomes a BullMQ
+job with `delay` = time until the window ends, on the same `email` queue, with job id
+`notify-email-<sha256(delivery id)>` (so it is enqueued once). Nothing sleeps. Delayed jobs sit in Redis
+until due; they are covered by the same retention, attempts, backoff and alert lines as every email.
+**Daily cap** (default 3): non-critical email plus WhatsApp per member per local day, counted from queued,
+sent and delivered rows under a per-member advisory lock. In-app is not counted.
+
+**Which emails go through it.** Event emails from `notify()` (forum reply, blog comment, certificate) use
+the generic `event-notice` template: fixed subject per event, body says that something happened, never what.
+The approval, role-change and security-alert emails still come from the same `EmailQueueService` methods
+(signatures unchanged) but resolve the member by address and go through the dispatcher; if the address is
+not an account they are enqueued as before. **Verification, approved-verify, welcome, password-reset OTP and
+password-changed emails never go through the dispatcher** (security-critical): same job ids, options, no
+delay, no delivery row.
+
+Policy configuration (all optional env, defaults from Document 1 section 10.3, owner approval pending):
+`NOTIFY_DAILY_CAP`, `NOTIFY_QUIET_START`, `NOTIFY_QUIET_END`, `NOTIFY_TIMEZONE`.
+
+Failure behaviour: a dispatch failure after the in-app row is saved is logged (`Dispatch failed`) and not
+retried (a retry would insert a second in-app row). Updating the delivery row after a send never fails the
+email job. `notify(..., { critical: true })` marks one message critical (interview within 24 h, offer expiring
+within 48 h) for the later v2 senders.
+
+Retention: purge `notification_deliveries` by `created_at` (indexed). No purge job exists yet.
+
+Known gaps (follow-ups): digests are stored (`digest_frequency`) but not sent, so members who choose a digest
+still get individual emails when they switch an event's email on; a deferred email is not re-checked against
+preferences when it comes due; new-content announcements (`ContentAnnouncementService`) are unchanged and
+ignore preferences, the cap and `marketing_opt_in`; the 24 h / 1 h interview reminders and badge-expiry
+reminders need the scheduled-jobs work.
