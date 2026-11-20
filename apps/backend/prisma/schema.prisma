@@ -3,6 +3,10 @@
 // New features (Phase 3) — forums, quizzes/certificates (plan §2).
 generator client {
   provider      = "prisma-client-js"
+  // relationJoins lets a query load nested relations with one SQL statement (JOINs) instead of
+  // one round trip per relation level; used for the user + roles + permissions lookup on
+  // every authenticated request (user.prisma-repository.ts).
+  previewFeatures = ["relationJoins"]
   // "native" for local dev; the musl-openssl-3.0.x engine is what Docker's
   // node:24-alpine runtime image needs (Alpine ships OpenSSL 3.x, not 1.1 —
   // the default musl target ships a libssl.so.1.1-linked engine that fails to

@@ -11,11 +11,13 @@ export class UserPrismaRepository extends UserRepository {
   }
 
   findByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email }, include: userWithRolesInclude });
+    // "join": one SQL statement for user + roles + permissions instead of five round trips (this runs
+    // on every sign-in and every /auth/me, i.e. on every protected page load).
+    return this.prisma.user.findUnique({ where: { email }, include: userWithRolesInclude, relationLoadStrategy: "join" });
   }
 
   findById(id: string) {
-    return this.prisma.user.findUnique({ where: { id }, include: userWithRolesInclude });
+    return this.prisma.user.findUnique({ where: { id }, include: userWithRolesInclude, relationLoadStrategy: "join" });
   }
 
   async create(data: {
