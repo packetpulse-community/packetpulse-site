@@ -25,10 +25,11 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: notifications } = useQuery({
+  const { data } = useQuery({
     queryKey: ["notifications"],
-    queryFn: notificationsApi.list,
+    queryFn: () => notificationsApi.list(),
   });
+  const notifications = data?.items;
 
   const { data: unread } = useQuery({
     queryKey: ["notifications", "unread-count"],

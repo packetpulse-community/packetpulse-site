@@ -189,10 +189,12 @@ const TimeOfDay = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use 24-hour tim
 // E.164: + then 8 to 15 digits. The number is the member's own data; it is only ever returned to them.
 export const WhatsappNumberSchema = z.string().trim().regex(/^\+[1-9]\d{7,14}$/, "Use international format, for example +919876543210");
 
-const ChannelFlagsSchema = z.object({
-  email: z.boolean().optional(),
-  whatsapp: z.boolean().optional(),
-});
+const ChannelFlagsSchema = z
+  .object({
+    email: z.boolean().optional(),
+    whatsapp: z.boolean().optional(),
+  })
+  .strict();
 
 // PUT /notifications/preferences. Partial update: send only what changed. `in_app` is not
 // accepted (always on). Critical events cannot be switched off: the API answers 400.
@@ -212,6 +214,13 @@ export type UpdateNotificationPreferencesInput = z.infer<typeof UpdateNotificati
 // POST /notifications/whatsapp/confirm-number. Stub: records the request, sends nothing.
 export const ConfirmWhatsappNumberSchema = z.object({ number: WhatsappNumberSchema }).strict();
 export type ConfirmWhatsappNumberInput = z.infer<typeof ConfirmWhatsappNumberSchema>;
+
+// GET /notifications?page=&pageSize=
+export const NotificationListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+});
+export type NotificationListQuery = z.infer<typeof NotificationListQuerySchema>;
 
 export interface NotificationPreferencesView {
   events: {

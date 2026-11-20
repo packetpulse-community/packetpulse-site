@@ -1,3 +1,4 @@
+import type { NotificationListResponse } from "@packetpulse/types";
 import { apiFetchClient } from "@/shared/api/http-client";
 
 export interface Notification {
@@ -9,7 +10,9 @@ export interface Notification {
 }
 
 export const notificationsApi = {
-  list: () => apiFetchClient<Notification[]>("/notifications"),
+  // Paginated (API-038). The bell asks for the newest 20.
+  list: (page = 1, pageSize = 20) =>
+    apiFetchClient<NotificationListResponse>(`/notifications?page=${page}&pageSize=${pageSize}`),
   unreadCount: () => apiFetchClient<{ count: number }>("/notifications/unread-count"),
   markRead: (id: string) => apiFetchClient<{ success: boolean }>(`/notifications/${id}/read`, { method: "PUT" }),
 };

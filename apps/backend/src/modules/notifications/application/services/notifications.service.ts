@@ -41,12 +41,24 @@ export class NotificationsService {
     return this.fanoutQueue.add("fanout", { userId, type, payload, ...(options?.critical ? { critical: true } : {}) }, opts);
   }
 
-  async listMine(userId: string) {
-    return this.prisma.notification.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    });
+  // Paginated inbox (API-038): newest first, with the unread total so the bell and the list agree.
+  async listMine(userId: string, page = 1, pageSize = 20) {
+    const [items, total, unreadCount] = await Promise.all([
+      this.prisma.notification.findMany({
+        where: { userId },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.notification.count({ where: { userId } }),
+      this.unreadCount(userId),
+    ]);
+    return { items, unreadCount, page, pageSize, total };
+  }
+
+  async markAllRead(userId: string) {
+    const res = await this.prisma.notification.updateMany({ where: { userId, readAt: null }, data: { readAt: new Date() } });
+    return { updated: res.count };
   }
 
   async markRead(id: string, userId: string) {
