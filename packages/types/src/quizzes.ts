@@ -19,6 +19,10 @@ export const CreateQuizSchema = z.object({
   categoryId: z.string().uuid(),
   passingScorePct: z.coerce.number().int().min(1).max(100).default(70),
   timeLimitSeconds: z.coerce.number().int().min(1).optional(),
+  // Assessment integrity (TASK-032). null = unlimited attempts.
+  maxAttempts: z.coerce.number().int().min(1).max(100).nullable().default(3),
+  retakeGapSeconds: z.coerce.number().int().min(0).max(31_536_000).default(0),
+  expiresAt: z.coerce.date().nullable().optional(),
   isPublished: z.boolean().default(false),
   questions: z.array(QuizQuestionInputSchema).min(1).max(100),
 });
@@ -41,3 +45,19 @@ export const SubmitQuizAttemptSchema = z.object({
   answers: z.array(SubmitQuizAnswerSchema).min(1),
 });
 export type SubmitQuizAttemptDto = z.infer<typeof SubmitQuizAttemptSchema>;
+
+// What the attempt screen (SCR-034) needs, all computed by the server so the browser
+// never decides on its own whether a start is allowed or how long is left.
+export type QuizAttemptBlockReason = "limit_reached" | "retake_gap" | "quiz_expired" | "quiz_archived";
+
+export interface QuizAttemptStatus {
+  serverNow: string;
+  maxAttempts: number | null;
+  attemptsUsed: number;
+  attemptsRemaining: number | null;
+  canStart: boolean;
+  blockedReason: QuizAttemptBlockReason | null;
+  nextAttemptAt: string | null;
+  quizExpiresAt: string | null;
+  inProgress: { id: string; startedAt: string; deadlineAt: string | null } | null;
+}

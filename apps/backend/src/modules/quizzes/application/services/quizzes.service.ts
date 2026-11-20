@@ -13,6 +13,10 @@ const summarySelect = {
   category: { select: { id: true, name: true, slug: true } },
   passingScorePct: true,
   timeLimitSeconds: true,
+  maxAttempts: true,
+  retakeGapSeconds: true,
+  expiresAt: true,
+  archivedAt: true,
   isPublished: true,
   createdById: true,
   createdAt: true,
@@ -30,6 +34,8 @@ export class QuizzesService {
     const skip = prismaSkip(query.page, query.limit);
     const where: Prisma.QuizWhereInput = {
       categoryId: query.categoryId,
+      // Archived quizzes (retired after issuing certificates) are only listed for admins.
+      archivedAt: isAdmin ? undefined : null,
       // Non-owners/non-admins only ever see published quizzes.
       OR: isAdmin ? undefined : [{ isPublished: true }, { createdById: userId }],
     };
@@ -54,7 +60,7 @@ export class QuizzesService {
         },
       },
     });
-    if (!quiz || !quiz.isPublished) throw new NotFoundException("Quiz not found");
+    if (!quiz || !quiz.isPublished || quiz.archivedAt) throw new NotFoundException("Quiz not found");
     return quiz;
   }
 
@@ -80,6 +86,9 @@ export class QuizzesService {
         categoryId: dto.categoryId,
         passingScorePct: dto.passingScorePct,
         timeLimitSeconds: dto.timeLimitSeconds,
+        maxAttempts: dto.maxAttempts,
+        retakeGapSeconds: dto.retakeGapSeconds,
+        expiresAt: dto.expiresAt,
         isPublished: dto.isPublished,
         createdById,
         questions: {
@@ -116,6 +125,9 @@ export class QuizzesService {
         categoryId: dto.categoryId,
         passingScorePct: dto.passingScorePct,
         timeLimitSeconds: dto.timeLimitSeconds,
+        maxAttempts: dto.maxAttempts,
+        retakeGapSeconds: dto.retakeGapSeconds,
+        expiresAt: dto.expiresAt,
         isPublished: dto.isPublished,
       },
       select: summarySelect,
@@ -128,9 +140,19 @@ export class QuizzesService {
     const quiz = await this.prisma.quiz.findUnique({ where: { id } });
     if (!quiz) throw new NotFoundException("Quiz not found");
     this.assertOwnerOrAdmin(quiz.createdById, userId, roles);
+    // Certificate retention (S-9/D-1): a quiz that has issued certificates is never
+    // deleted, because the public verifier and the holders' shared links depend on it.
+    // It is archived instead (unpublished, closed to new attempts, hidden from lists);
+    // the database also refuses the delete (certificates use NO ACTION).
+    const certificates = await this.prisma.certificate.count({ where: { quizId: id } });
+    if (certificates > 0) {
+      await this.prisma.quiz.update({ where: { id }, data: { archivedAt: quiz.archivedAt ?? new Date(), isPublished: false } });
+      await this.activityLog.log(userId, "quiz_updated", "quiz", id, { title: quiz.title, archived: true, certificates });
+      return { success: true, archived: true };
+    }
     await this.prisma.quiz.delete({ where: { id } });
     await this.activityLog.log(userId, "quiz_deleted", "quiz", id, { title: quiz.title });
-    return { success: true };
+    return { success: true, archived: false };
   }
 
   private assertOwnerOrAdmin(ownerId: string, userId: string, roles: string[]) {
