@@ -1,17 +1,24 @@
 # Incident process
 
-Document 4 TASK-005 (OPS-03). This is a **draft for the owner to adopt**. Every `[OWNER: ...]` marker is a placeholder: no person has been named yet and none should be assumed.
+Document 4 TASK-005 (OPS-03). This is a **draft for the owner to adopt**. Every `TO FILL` cell and `[OWNER: ...]` marker is a placeholder: no person has been named yet and none should be assumed. The owner fills in the **contact sheet** below once; the alert routes in [monitoring.md](monitoring.md) send to the same people.
 
-## Roles
+## Contact sheet (owner fills in)
 
-| Role | Who | Does |
+| Role | Primary: name | Primary: phone and email | Backup: name | Backup: phone and email | Does |
+|---|---|---|---|---|---|
+| Incident lead | `TO FILL` | `TO FILL` | `TO FILL` | `TO FILL` | Decides severity, owns the incident until closed, decides when to tell members. |
+| Technical responder | `TO FILL` | `TO FILL` | `TO FILL` | `TO FILL` | Investigates, contains, fixes, restores. |
+| Communications | `TO FILL` (may be the incident lead) | `TO FILL` | `TO FILL` | `TO FILL` | Writes and sends member notices and public status messages. |
+| Legal / privacy counsel | `TO FILL` | `TO FILL` | | | Confirms whether a personal data breach notice is required, its timing and wording. |
+
+| Other contacts | Where to find it | Filled in? |
 |---|---|---|
-| Incident lead | `[OWNER: name, phone, backup]` | Decides severity, owns the incident until closed, decides when to tell members. |
-| Technical responder | `[OWNER: name, backup]` | Investigates, contains, fixes, restores. |
-| Communications | `[OWNER: name]` (may be the incident lead) | Writes and sends member notices and public status messages. |
-| Legal / privacy counsel | `[OWNER: counsel contact]` | Confirms whether a personal data breach notice is required and its timing and wording. |
+| Member support address (used in the notice templates) | `TO FILL` | |
+| Public channel for status updates (status page, social, WhatsApp/Telegram group) | `TO FILL` | |
+| Provider consoles and who holds the logins: Supabase, Render, Vercel, Resend, GitHub | Password manager entry names `TO FILL` | |
+| Backup passphrase (without it backups are unreadable) | Password manager entry `TO FILL` | |
 
-One person may hold several roles while the team is small, but the incident lead must always be named before an incident starts.
+One person may hold several roles while the team is small, but the incident lead must always be named before an incident starts. **An incident process with empty cells is not ready: fill the table before launch.**
 
 ## Severity levels
 
@@ -29,7 +36,7 @@ If unsure, pick the higher level; lower it later.
 2. **Assess.** Incident lead sets the severity. Question to answer first: *could personal data have been exposed, changed or lost?* If yes, SEV1.
 3. **Contain.** Stop the damage before fixing the cause. Typical moves: rotate the affected secret (JWT secrets invalidate all sessions; see `docs/ops/environments.md`), disable the affected account or feature, turn on maintenance mode, revoke a leaked key at the provider (Supabase, Render, Vercel, Resend, GitHub).
 4. **Preserve evidence.** Save logs and database state relevant to the incident before they roll off (Render keeps logs only briefly on the free tier; copy them out).
-5. **Fix and recover.** Fix the cause, restore data from backup if needed (restore drill is TASK-004; until it is done, assume restore is unproven), verify with `/api/health` and a manual login.
+5. **Fix and recover.** Fix the cause, restore data from backup if needed (procedure and drill log in [backups.md](backups.md); the scripts are proven only against the local database until the first drill with a real production dump), verify with `/api/health` and a manual login.
 6. **Notify.** See below.
 7. **Review.** Within 5 working days write a short post-incident review: timeline, root cause, what worked, what did not, actions with owners. Update the threat model (`docs/research/10-threat-model-and-data-map.md`) and the tests if a gap was found.
 
