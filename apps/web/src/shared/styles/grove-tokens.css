@@ -1,0 +1,147 @@
+/*
+ * Signal Grove design tokens (PacketPulse 2.0, Document 2 sections 4, 5, 6).
+ *
+ * OPT-IN: nothing here applies until an element carries data-theme="grove".
+ * The existing :root / .dark values in globals.css are not touched, so the
+ * current look is unchanged. Dark values apply under a .dark ancestor or on the
+ * same element (`<div data-theme="grove" class="dark">`).
+ *
+ * This is the ONLY place raw colour values for the Grove theme may live
+ * (Document 2 section 14). Components use the Tailwind names mapped in
+ * tailwind.config.ts (grove-*, module-*, state-*). Hex values are exactly the
+ * Document 2 values; tests/grove-contrast.test.ts parses this file.
+ */
+
+/* Light values plus every non-colour token. */
+[data-theme="grove"] {
+  /* Surfaces, text, borders (4.1) */
+  --grove-page: #f5f8f6;
+  --grove-surface: #ffffff;
+  --grove-subtle: #e8f4ef;
+  --grove-text: #152025;
+  --grove-text-secondary: #52615b;
+  --grove-border: #dce5df;
+  --grove-control: #738279;
+
+  /* Brand and focus */
+  --grove-brand: #156152;
+  --grove-brand-hover: #0f4d41;
+  --grove-brand-pressed: #0b3d33;
+  --grove-brand-text: #156152; /* brand used as link/text colour */
+  --grove-on-brand: #ffffff;
+  --grove-focus: #156152;
+  --grove-lime: #c7fe53;
+  --grove-lime-hover: #b5ee3f;
+  --grove-lime-pressed: #a8de33;
+  --grove-on-lime: #001d21;
+  --grove-teal: #001d21;
+  --grove-teal-raised: #002631;
+  --grove-destructive: #b42332;
+  --grove-destructive-hover: #9a1c2a;
+  --grove-destructive-pressed: #85161f;
+  --grove-on-destructive: #ffffff;
+
+  /* Module identities (4.2) */
+  --module-community: #156152;
+  --module-community-soft: #e8f4ef;
+  --module-learning: #635bca;
+  --module-learning-soft: #f0efff;
+  --module-recruitment: #1d4f86;
+  --module-recruitment-accent: #2563a6;
+  --module-recruitment-deep: #163b5c;
+  --module-recruitment-soft: #e8f0fa;
+  --module-payments: #6f2a5f;
+  --module-payments-soft: #f7ebf4;
+
+  /* Semantic states (4.3): strong = text/glyph colour, soft = background */
+  --state-success: #176b35;
+  --state-success-soft: #eaf7ee;
+  --state-warning: #94620d;
+  --state-warning-soft: #fff4d6;
+  --state-danger: #b42332;
+  --state-danger-soft: #fee4e2;
+  --state-information: #3d455c;
+  --state-information-soft: #edf0f5;
+
+  /* Shape (6): tag 6, button/input 10, card/dialog 14, feature panel 20, pill */
+  --grove-radius-tag: 6px;
+  --grove-radius-control: 10px;
+  --grove-radius-card: 14px;
+  --grove-radius-panel: 20px;
+  --grove-radius-pill: 9999px;
+
+  /* Spacing rhythm (6): 4px steps; same as Tailwind's 1,2,3,4,5,6,8,10,12,16 */
+  --grove-space-1: 4px;
+  --grove-space-2: 8px;
+  --grove-space-3: 12px;
+  --grove-space-4: 16px;
+  --grove-space-5: 20px;
+  --grove-space-6: 24px;
+  --grove-space-8: 32px;
+  --grove-space-10: 40px;
+  --grove-space-12: 48px;
+  --grove-space-16: 64px;
+
+  /* Elevation (6): borders first; shadow only for real layers */
+  --grove-shadow-overlay: 0 14px 40px rgba(0, 29, 33, 0.18);
+  --grove-scrim: rgba(0, 29, 33, 0.55);
+
+  /* Focus ring geometry (6): 3 px outline, 2 px offset */
+  --grove-focus-width: 3px;
+  --grove-focus-offset: 2px;
+
+  /* Typography stacks (5). Definitions only: no font is downloaded. If the
+     fonts are loaded later (next/font), they only need to set these variables. */
+  --grove-font-sans: Inter, "Noto Sans Devanagari", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --grove-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Dark values: colours only. */
+[data-theme="grove"].dark,
+.dark [data-theme="grove"] {
+  --grove-page: #001d21;
+  --grove-surface: #002631;
+  --grove-subtle: #0c3437;
+  --grove-text: #f5f8f6;
+  --grove-text-secondary: #b7c9c2;
+  --grove-border: #33514f;
+  --grove-control: #7d9a95;
+
+  --grove-brand: #156152;
+  --grove-brand-hover: #0f4d41;
+  --grove-brand-pressed: #0b3d33;
+  --grove-brand-text: #96d294; /* Document 2 4.2: community colour in dark */
+  --grove-on-brand: #ffffff;
+  --grove-focus: #96d294;
+  --grove-lime: #c7fe53;
+  --grove-lime-hover: #b5ee3f;
+  --grove-lime-pressed: #a8de33;
+  --grove-on-lime: #001d21;
+  --grove-teal: #001d21;
+  --grove-teal-raised: #002631;
+  --grove-destructive: #b42332;
+  --grove-destructive-hover: #9a1c2a;
+  --grove-destructive-pressed: #85161f;
+  --grove-on-destructive: #ffffff;
+
+  --module-community: #96d294;
+  --module-community-soft: #0c3437;
+  --module-learning: #b1acfe;
+  --module-learning-soft: #26235a;
+  --module-recruitment: #8db8e8;
+  --module-recruitment-accent: #2563a6;
+  --module-recruitment-deep: #163b5c;
+  --module-recruitment-soft: #12304d;
+  --module-payments: #e4a8d8;
+  --module-payments-soft: #3a1f36;
+
+  --state-success: #7fdc98;
+  --state-success-soft: #0f3a22;
+  --state-warning: #f0c264;
+  --state-warning-soft: #3d3010;
+  --state-danger: #ff8a93;
+  --state-danger-soft: #4a1a20;
+  --state-information: #b4bed6;
+  --state-information-soft: #252b3a;
+}

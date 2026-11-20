@@ -1,0 +1,56 @@
+/* Motion rules (Design System section 10, DES-004, WCAG 2.3.3).
+   Kept out of globals.css on purpose; imported after it in app/layout.tsx so
+   these unlayered rules win over Tailwind's layered utilities. */
+
+@keyframes pp-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Skeleton placeholder: a muted block with a moving highlight. The highlight is
+   the only animated part, so removing it under reduced motion loses nothing:
+   the block itself and the hidden "Loading..." label carry the information. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: hsl(var(--muted));
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.08), transparent);
+  animation: pp-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Shimmer and pulse are removed outright (static under reduced motion). */
+  .skeleton::after {
+    display: none;
+    animation: none;
+  }
+
+  .animate-pulse,
+  .animate-bounce,
+  .animate-spin-slow {
+    animation: none !important;
+  }
+}
