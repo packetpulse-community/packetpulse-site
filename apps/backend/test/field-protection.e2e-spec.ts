@@ -235,8 +235,10 @@ describe("Field-level protection (e2e)", () => {
     it("no GET response contains another account's sensitive values or sensitive keys", async () => {
       const own = ownByActor[actor];
       const problems: string[] = [];
+      let answered = 0;
       for (const route of getRoutes) {
         const res = await call(route.path, actor === "anonymous" ? undefined : actor);
+        if (res.status === 200) answered++;
         const text = JSON.stringify(res.body);
         for (const value of foreignValues) {
           if (text.includes(value)) problems.push(`${route.path} (${res.status}) contains value ${value}`);
@@ -249,6 +251,8 @@ describe("Field-level protection (e2e)", () => {
         });
       }
       expect(problems).toEqual([]);
+      // The sweep must actually reach real data, not just collect 403s and 404s.
+      expect(answered).toBeGreaterThanOrEqual(actor === "anonymous" ? 6 : 12);
     });
   });
 
