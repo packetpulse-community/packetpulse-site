@@ -1,0 +1,21 @@
+{
+  "_comment": "Documented exceptions for scripts/ci/audit-gate.mjs. An entry tolerates ONE advisory (by GHSA id) and stops working after `expires`, which turns the pipeline red again so someone must re-decide. Adding or extending an entry needs the owner's approval; record the reason. Only high severity can be allowed: critical findings can never be allowlisted.",
+  "allow": [
+    {
+      "ghsa": "GHSA-mrhx-c7xc-m3w5",
+      "package": "zod",
+      "severity": "high",
+      "reason": "Memory exhaustion when validating oversized constrained collections. Fix needs zod 3 -> 4, a major upgrade the owner deferred (docs/ops/dependency-remediation.md). Low reachability: request bodies are size-capped.",
+      "approvedBy": "owner (deferral recorded in docs/ops/dependency-remediation.md)",
+      "expires": "2027-02-28"
+    },
+    {
+      "ghsa": "GHSA-45rx-2jwx-cxfr",
+      "package": "@opentelemetry/propagator-jaeger",
+      "severity": "high",
+      "reason": "DoS in JaegerPropagator via crafted trace headers. Fix needs @opentelemetry/sdk-node 0.55 -> 2.x, deferred by the owner. Unreachable by default: only the W3C propagator is enabled and OTEL_PROPAGATORS=jaeger is not set.",
+      "approvedBy": "owner (deferral recorded in docs/ops/dependency-remediation.md)",
+      "expires": "2027-02-28"
+    }
+  ]
+}
