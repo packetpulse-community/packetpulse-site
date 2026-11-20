@@ -10,9 +10,26 @@ const SKIP_PREFIXES = ["/refresh", "/login", "/register", "/forgot-password", "/
 // them through the tiny /refresh page, which renews the session client-side and
 // returns them here — instead of the page rendering logged-out and pushing them
 // back to the (rate-limited) login form every 15 minutes.
+// Static marketing pages are prerendered and never read the session on the server, so
+// bouncing a signed-in visitor through /refresh before showing them only adds a redirect, a
+// page load and an API call (several seconds on a cold backend) for no benefit. The navbar
+// shows the right state from the non-httpOnly presence cookie instead (shared/auth/session-hint).
+// Pages that DO read the session on the server (blogs, resources, the app) still go through
+// /refresh when the 15-minute access cookie has lapsed.
+const STATIC_PUBLIC_PATHS = new Set(["/", "/about", "/contact", "/privacy", "/terms"]);
+const STATIC_PUBLIC_PREFIXES = ["/tools"];
+
+function isStaticPublic(pathname: string) {
+  return (
+    STATIC_PUBLIC_PATHS.has(pathname) ||
+    STATIC_PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  );
+}
+
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   if (SKIP_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return NextResponse.next();
+  if (isStaticPublic(pathname)) return NextResponse.next();
 
   const signedIn = request.cookies.has("session_active");
   const hasAccessToken = request.cookies.has("accessToken");
