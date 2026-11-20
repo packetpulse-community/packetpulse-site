@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Reveal } from "@/shared/components/Reveal";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
+import { SessionAwareLink } from "@/shared/auth/SessionAwareLink";
 
 export function Hero() {
   return (
@@ -55,10 +56,13 @@ export function Hero() {
           </p>
 
           <div className="flex flex-col gap-4 sm:flex-row">
-            <Link href="/register" className={cn(buttonVariants({ variant: "gradient", size: "lg" }))}>
-              Join the Community
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+            <SessionAwareLink
+              signedOut={{ href: "/register", label: "Join the Community" }}
+              signedIn={{ href: "/dashboard", label: "Go to dashboard" }}
+              trailingIcon={<ArrowRight className="ml-2 h-4 w-4" />}
+              className={cn(buttonVariants({ variant: "gradient", size: "lg" }))}
+              placeholderClassName="h-11 w-60"
+            />
             <Link
               href="/resources"
               className="flex items-center justify-center rounded-md border border-foreground/30 bg-foreground/5 px-8 py-3 text-sm font-medium text-foreground transition-colors hover:bg-foreground/10"

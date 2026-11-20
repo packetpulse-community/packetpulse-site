@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { Reveal } from "@/shared/components/Reveal";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
+import { SessionAwareLink } from "@/shared/auth/SessionAwareLink";
 
 export function NetworkCta() {
   return (
@@ -19,9 +19,12 @@ export function NetworkCta() {
           <p className="max-w-xl text-gray-300">
             Real-time network diagnostics and visualization tools, built for members to explore and learn from.
           </p>
-          <Link href="/login" className={cn(buttonVariants({ variant: "gradient", size: "lg" }))}>
-            Sign In to Access Tools
-          </Link>
+          <SessionAwareLink
+            signedOut={{ href: "/login", label: "Sign In to Access Tools" }}
+            signedIn={{ href: "/network-tools", label: "Open Network Tools" }}
+            className={cn(buttonVariants({ variant: "gradient", size: "lg" }))}
+            placeholderClassName="h-11 w-64"
+          />
         </div>
       </Reveal>
     </section>

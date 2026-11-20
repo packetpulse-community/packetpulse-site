@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Send, MessageCircle } from "lucide-react";
+import { SessionAwareLink } from "@/shared/auth/SessionAwareLink";
 
 // lucide-react dropped brand/logo icons (trademark reasons) — small inline SVGs
 // for the two brand marks it no longer ships, rather than pulling in a whole
@@ -25,6 +26,8 @@ function LinkedinIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+const QUICK_LINK_CLASS = "text-sm text-gray-300 transition-colors hover:text-foreground";
+
 const QUICK_LINKS = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
@@ -33,8 +36,6 @@ const QUICK_LINKS = [
   { href: "/blogs", label: "Blogs" },
   { href: "/tools", label: "Tools" },
   { href: "/contact", label: "Contact" },
-  { href: "/login", label: "Sign In" },
-  { href: "/register", label: "Join Us" },
 ];
 
 // Same real accounts the reference community site (packetpulse.vercel.app) links to.
@@ -79,11 +80,25 @@ export function Footer() {
           <ul className="flex flex-col gap-2">
             {QUICK_LINKS.map((link) => (
               <li key={link.href + link.label}>
-                <Link href={link.href} className="text-sm text-gray-300 transition-colors hover:text-foreground">
+                <Link href={link.href} className={QUICK_LINK_CLASS}>
                   {link.label}
                 </Link>
               </li>
             ))}
+            <SessionAwareLink
+              asListItem
+              signedOut={{ href: "/login", label: "Sign In" }}
+              signedIn={{ href: "/dashboard", label: "Dashboard" }}
+              className={QUICK_LINK_CLASS}
+              placeholderClassName="h-5 w-16"
+            />
+            <SessionAwareLink
+              asListItem
+              signedOut={{ href: "/register", label: "Join Us" }}
+              signedIn={null}
+              className={QUICK_LINK_CLASS}
+              placeholderClassName="h-5 w-16"
+            />
           </ul>
         </div>
 
