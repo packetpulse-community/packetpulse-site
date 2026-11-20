@@ -82,6 +82,10 @@ model User {
 
   @@map("users")
   storedFiles StoredFile[]
+  notificationSettings    NotificationSettings?
+  notificationPreferences NotificationPreference[]
+  notificationDeliveries  NotificationDelivery[]
+  notificationPreferenceChanges NotificationPreferenceChange[]
 }
 
 model UserCertification {
@@ -645,9 +649,114 @@ model Notification {
   payload   Json
   readAt    DateTime? @map("read_at")
   createdAt DateTime @default(now()) @map("created_at")
+  deliveries NotificationDelivery[]
 
   @@index([userId, readAt, createdAt])
   @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Notification service (TASK-021, PRD-041, DB-024). Event types are plain strings validated
+// against the catalogue in packages/types (the v2 events have no emitter yet, so they are
+// not in the NotificationType enum above). Personal data: the WhatsApp number is the
+// member's own and is only ever returned to them.
+// ---------------------------------------------------------------------------
+
+enum NotificationChannel {
+  in_app
+  email
+  whatsapp
+}
+
+enum NotificationDeliveryStatus {
+  queued
+  sent
+  delivered
+  failed
+  skipped
+}
+
+enum DigestFrequency {
+  off
+  daily
+  weekly
+}
+
+// One row per member, event type and channel the member has explicitly chosen. No row = the
+// catalogue default applies.
+model NotificationPreference {
+  id        String              @id @default(uuid())
+  userId    String              @map("user_id")
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType String              @map("event_type")
+  channel   NotificationChannel
+  enabled   Boolean
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  @@unique([userId, eventType, channel])
+  @@map("notification_preferences")
+}
+
+// Per-member settings: quiet hours, digest, marketing opt-in, WhatsApp opt-in.
+model NotificationSettings {
+  userId                        String          @id @map("user_id")
+  user                          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quietHoursEnabled             Boolean         @default(true) @map("quiet_hours_enabled")
+  quietHoursStart               String          @default("21:00") @map("quiet_hours_start")
+  quietHoursEnd                 String          @default("08:00") @map("quiet_hours_end")
+  timezone                      String          @default("Asia/Kolkata")
+  digestFrequency               DigestFrequency @default(off) @map("digest_frequency")
+  // Separate from every event preference: marketing is never implied by an account.
+  marketingOptIn                Boolean         @default(false) @map("marketing_opt_in")
+  marketingOptInAt              DateTime?       @map("marketing_opt_in_at")
+  whatsappOptIn                 Boolean         @default(false) @map("whatsapp_opt_in")
+  whatsappOptInAt               DateTime?       @map("whatsapp_opt_in_at")
+  whatsappNumber                String?         @map("whatsapp_number")
+  whatsappNumberRequestedAt     DateTime?       @map("whatsapp_number_requested_at")
+  whatsappNumberConfirmedAt     DateTime?       @map("whatsapp_number_confirmed_at")
+  updatedAt                     DateTime        @updatedAt @map("updated_at")
+
+  @@map("notification_settings")
+}
+
+// Every decision the dispatcher makes, for every channel, including "skipped" (with a reason
+// code). errorSummary never holds an address, body or number. notificationId is null for
+// messages with no in-app row (email-only sends). Retention: purge by createdAt.
+model NotificationDelivery {
+  id             String                     @id @default(uuid())
+  userId         String                     @map("user_id")
+  user           User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notificationId String?                    @map("notification_id")
+  notification   Notification?              @relation(fields: [notificationId], references: [id], onDelete: SetNull)
+  eventType      String                     @map("event_type")
+  channel        NotificationChannel
+  status         NotificationDeliveryStatus
+  reasonCode     String?                    @map("reason_code")
+  critical       Boolean                    @default(false)
+  attempts       Int                        @default(0)
+  errorSummary   String?                    @map("error_summary")
+  scheduledFor   DateTime?                  @map("scheduled_for")
+  sentAt         DateTime?                  @map("sent_at")
+  deliveredAt    DateTime?                  @map("delivered_at")
+  createdAt      DateTime                   @default(now()) @map("created_at")
+  updatedAt      DateTime                   @updatedAt @map("updated_at")
+
+  @@index([createdAt])
+  @@index([userId, channel, createdAt])
+  @@index([notificationId])
+  @@map("notification_deliveries")
+}
+
+// Who changed which preference and when (SCR-037: every change is recorded with a time).
+model NotificationPreferenceChange {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  changes   Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("notification_preference_changes")
 }
 
 // ---------------------------------------------------------------------------
