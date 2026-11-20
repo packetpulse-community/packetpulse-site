@@ -8,8 +8,11 @@ import { CreateClientLogDto, ClientLogListQueryDto } from "../dto/logs.dto";
 export class LogsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Public endpoint: the stored row holds the caller's IP, user agent and user id, so only
+  // the new row's id and timestamp go back (TASK-012). Admins read full rows via list().
   create(dto: CreateClientLogDto, meta: { userId?: string; ip?: string; userAgent?: string }) {
     return this.prisma.clientLog.create({
+      select: { id: true, createdAt: true },
       data: {
         level: dto.level as ClientLogLevel,
         context: dto.context,
