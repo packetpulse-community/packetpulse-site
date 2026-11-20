@@ -27,16 +27,6 @@ const isHex = (v: string | undefined): v is string => !!v && /^#[0-9a-f]{6}$/i.t
 
 export function TokenSections({ wrapperRef, themeKey }: { wrapperRef: RefObject<HTMLElement | null>; themeKey: string }) {
   const vars = useResolvedVars(wrapperRef, themeKey);
-  const grove = themeKey !== "current";
-
-  if (!grove) {
-    return (
-      <p className="rounded-grove-card border border-dashed p-4 text-sm">
-        The Grove tokens are switched off in "Current look". Choose "Grove light" or "Grove dark" above to see them.
-      </p>
-    );
-  }
-
   return (
     <>
       <section aria-labelledby="swatches" className="space-y-6">

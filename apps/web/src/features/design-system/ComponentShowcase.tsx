@@ -101,7 +101,7 @@ export function ComponentShowcase({ grove }: { grove: boolean }) {
           </>
         ) : null}
         <div className="rounded-grove-card border p-4">
-          <h4 className="mb-3 text-sm font-semibold">Existing variants (unchanged)</h4>
+          <h4 className="mb-3 text-sm font-semibold">Pre-Grove variant names (now resolved to the theme tokens)</h4>
           <div className="flex flex-wrap gap-3">
             <Button>Default</Button>
             <Button variant="gradient">Gradient</Button>
@@ -136,7 +136,7 @@ export function ComponentShowcase({ grove }: { grove: boolean }) {
                 <VerificationChip key={k} label={k} />
               ))}
             </div>
-            <h3 className="text-[17px] font-semibold">Existing Badge (unchanged)</h3>
+            <h3 className="text-[17px] font-semibold">Pre-Grove Badge names (now resolved to state tokens)</h3>
             <div className="flex flex-wrap gap-3">
               <Badge>Default</Badge>
               <Badge variant="success">Success</Badge>
