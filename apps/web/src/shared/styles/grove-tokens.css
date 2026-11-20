@@ -4,7 +4,9 @@
  * OPT-IN: nothing here applies until an element carries data-theme="grove".
  * The existing :root / .dark values in globals.css are not touched, so the
  * current look is unchanged. Dark values apply under a .dark ancestor or on the
- * same element (`<div data-theme="grove" class="dark">`).
+ * same element (`<div data-theme="grove" class="dark">`). Add data-mode="light"
+ * to force light values inside a page whose root is already .dark (the app is
+ * dark today), e.g. `<div data-theme="grove" data-mode="light">`.
  *
  * This is the ONLY place raw colour values for the Grove theme may live
  * (Document 2 section 14). Components use the Tailwind names mapped in
@@ -99,7 +101,7 @@
 
 /* Dark values: colours only. */
 [data-theme="grove"].dark,
-.dark [data-theme="grove"] {
+.dark [data-theme="grove"]:not([data-mode="light"]) {
   --grove-page: #001d21;
   --grove-surface: #002631;
   --grove-subtle: #0c3437;
