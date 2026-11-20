@@ -1,8 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bullmq";
 import { ConfigService } from "@nestjs/config";
 import { Queue } from "bullmq";
 import { frontendUrl } from "../../../../common/config/frontend-url";
+import type { NotificationEventType } from "@packetpulse/types";
+import { NotificationDispatcher } from "./notification-dispatcher.service";
 import { EmailTemplate } from "../../infrastructure/email/templates";
 
 import { EMAIL_QUEUE, emailJobOptions, idempotencyJobId } from "../../infrastructure/queue/queue-config";
@@ -10,6 +12,8 @@ import { EMAIL_QUEUE, emailJobOptions, idempotencyJobId } from "../../infrastruc
 export interface EmailJobData {
   to: string;
   template: EmailTemplate;
+  /** NotificationDelivery row to update when the send completes or finally fails (TASK-021). */
+  deliveryId?: string;
 }
 
 // Public API other modules depend on (identity, admin) — enqueues onto the `email`
@@ -20,6 +24,9 @@ export class EmailQueueService {
   constructor(
     @InjectQueue(EMAIL_QUEUE) private readonly emailQueue: Queue<EmailJobData>,
     private readonly config: ConfigService,
+    // Optional so the queue services still work in isolation (and in the queue tests): without
+    // the dispatcher these senders enqueue directly, exactly as before TASK-021.
+    @Optional() private readonly dispatcher?: NotificationDispatcher,
   ) {}
 
   sendVerificationEmail(to: string, token: string) {
@@ -43,12 +50,15 @@ export class EmailQueueService {
     return this.enqueue(to, { name: "password-reset-otp", otp }, ["password-reset-otp", to.toLowerCase(), otp]);
   }
 
+  // The three notices below are notifications, not account transactions, so they go through the
+  // dispatcher (preferences, quiet hours, daily cap, delivery log). Verification, reset,
+  // welcome and password-changed emails never do: they are security-critical and unchanged.
   sendApprovalNotice(to: string, approved: boolean) {
-    return this.enqueue(to, { name: "approval", approved });
+    return this.routed("approval", to, { name: "approval", approved });
   }
 
   sendRoleChangeNotice(to: string, roleNames: string[]) {
-    return this.enqueue(to, { name: "role-change", roleNames });
+    return this.routed("role_change", to, { name: "role-change", roleNames });
   }
 
   sendPasswordChangedNotice(to: string) {
@@ -56,7 +66,7 @@ export class EmailQueueService {
   }
 
   sendSuspiciousRefreshReuseAlert(to: string) {
-    return this.enqueue(to, { name: "suspicious-refresh-reuse" });
+    return this.routed("security_alert", to, { name: "suspicious-refresh-reuse" });
   }
 
   // Bulk-enqueued in one Redis round-trip; the email worker's rate limiter (not
@@ -70,6 +80,15 @@ export class EmailQueueService {
         opts: { ...this.jobOptions(), jobId: idempotencyJobId("new-content", content.kind, content.link, to.toLowerCase()) },
       })),
     );
+  }
+
+  // Resolves the member by address and lets the dispatcher decide. No dispatcher or no matching
+  // member (an address that is not an account) = enqueue directly, as before.
+  private async routed(type: NotificationEventType, to: string, template: EmailTemplate) {
+    const userId = this.dispatcher ? await this.dispatcher.findUserIdByEmail(to) : null;
+    if (!this.dispatcher || !userId) return this.enqueue(to, template);
+    const decision = await this.dispatcher.dispatchEmail({ userId, type, to, template });
+    return decision.job;
   }
 
   private verificationLink(token: string) {

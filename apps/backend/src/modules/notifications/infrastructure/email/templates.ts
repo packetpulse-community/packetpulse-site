@@ -10,7 +10,25 @@ export type EmailTemplate =
   | { name: "role-change"; roleNames: string[] }
   | { name: "password-changed" }
   | { name: "new-content"; kind: "blog" | "resource"; title: string; link: string }
-  | { name: "suspicious-refresh-reuse" };
+  | { name: "suspicious-refresh-reuse" }
+  // Generic event notice (TASK-021): says THAT something happened, never WHAT. No titles, names,
+  // resume, compensation or notes: the details are behind sign-in at `link`.
+  | { name: "event-notice"; eventType: string; link: string; settingsLink: string };
+
+// Subject per event type. Fixed strings on purpose (PRD-041 privacy rule: nothing private in a subject).
+const EVENT_SUBJECTS: Record<string, string> = {
+  forum_reply: "New reply to your PacketPulse thread",
+  blog_comment: "New comment on your PacketPulse post",
+  approval: "An update on your PacketPulse account",
+  role_change: "Your PacketPulse roles changed",
+  certificate_issued: "Your PacketPulse certificate is ready",
+  security_alert: "Security alert on your PacketPulse account",
+  interview: "An update on your interview",
+  offer: "An update on your offer",
+  assessment_result: "Your assessment result is ready",
+  badge_expiry: "A PacketPulse badge is about to expire",
+  billing: "A PacketPulse billing notice",
+};
 
 export function renderEmail(template: EmailTemplate): { subject: string; text: string } {
   switch (template.name) {
@@ -57,6 +75,11 @@ export function renderEmail(template: EmailTemplate): { subject: string; text: s
       return {
         subject: "Your PacketPulse password was changed",
         text: "Your PacketPulse password was changed successfully, and all other signed-in sessions were signed out.\n\nIf this wasn't you, reset your password immediately and contact an admin.",
+      };
+    case "event-notice":
+      return {
+        subject: EVENT_SUBJECTS[template.eventType] ?? "You have a new PacketPulse notification",
+        text: `You have a new notification on PacketPulse. Sign in to read it:\n${template.link}\n\nYou can choose which emails you get, and set quiet hours, here:\n${template.settingsLink}`,
       };
     case "suspicious-refresh-reuse":
       return {

@@ -59,6 +59,12 @@ const BaseEnvSchema = z.object({
   // privileges, works as a drop-in value for supabase-js's server client.
   // No JWT-secret/JWKS var needed: our own JWT_ACCESS_SECRET still signs session
   // tokens in both modes — Supabase only stores/verifies credentials (plan §2).
+  // Notification policy (TASK-021, Document 1 section 10.3, OPEN-04 pending owner approval). Unset =
+  // the recommended defaults in packages/types: cap 3 per member per day, quiet hours 21:00-08:00 IST.
+  NOTIFY_DAILY_CAP: z.coerce.number().int().positive().optional(),
+  NOTIFY_QUIET_START: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
+  NOTIFY_QUIET_END: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
+  NOTIFY_TIMEZONE: z.string().optional(),
   // Private bucket for resumes/certificates/evidence (TASK-014); never public. Must be created
   // as a private bucket in Supabase. Link lifetime is fixed at 60 s in code.
   STORAGE_PRIVATE_BUCKET: z.string().min(1).default("private-files"),

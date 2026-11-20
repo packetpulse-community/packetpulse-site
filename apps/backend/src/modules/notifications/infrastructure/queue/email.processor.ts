@@ -1,8 +1,9 @@
-import { Logger } from "@nestjs/common";
+import { Logger, Optional } from "@nestjs/common";
 import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job, UnrecoverableError } from "bullmq";
 import { MailDeliveryError, MailerService } from "../email/mailer.service";
 import { renderEmail } from "../email/templates";
+import { NotificationDispatcher } from "../../application/services/notification-dispatcher.service";
 import { EmailJobData } from "../../application/services/email-queue.service";
 import { EMAIL_QUEUE, STALL_SETTINGS } from "./queue-config";
 import { handleJobFailed, handleJobStalled, handleWorkerError, recipientDomain } from "./queue-alerts";
@@ -15,7 +16,11 @@ const ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export class EmailProcessor extends WorkerHost {
   private readonly logger = new Logger(EmailProcessor.name);
 
-  constructor(private readonly mailer: MailerService) {
+  constructor(
+    private readonly mailer: MailerService,
+    // Optional: without it jobs run exactly as before and no delivery row is updated.
+    @Optional() private readonly dispatcher?: NotificationDispatcher,
+  ) {
     super();
   }
 
@@ -35,6 +40,8 @@ export class EmailProcessor extends WorkerHost {
       if (err instanceof MailDeliveryError && err.permanent) throw new UnrecoverableError(err.message);
       throw err;
     }
+    // Sent. Updating the log can never fail the job: that would resend an email already delivered.
+    await this.dispatcher?.markSent(job.data.deliveryId, job.attemptsMade + 1);
   }
 
   // Log recipient domain and job id only — never the address, body, code or link.
@@ -45,6 +52,11 @@ export class EmailProcessor extends WorkerHost {
 
   @OnWorkerEvent("failed")
   onFailed(job: Job<EmailJobData> | undefined, error: Error) {
+    if (job?.data.deliveryId) {
+      const final = error instanceof UnrecoverableError || job.attemptsMade >= (job.opts.attempts ?? 1);
+      const log = final ? this.dispatcher?.markFailed : this.dispatcher?.markRetry;
+      void log?.call(this.dispatcher, job.data.deliveryId, job.attemptsMade, error);
+    }
     handleJobFailed(this.logger, EMAIL_QUEUE, job, error, {
       template: job?.data.template?.name,
       domain: recipientDomain(job?.data.to),

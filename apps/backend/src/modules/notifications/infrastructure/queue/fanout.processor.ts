@@ -1,9 +1,10 @@
-import { Logger } from "@nestjs/common";
+import { Logger, Optional } from "@nestjs/common";
 import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job, UnrecoverableError } from "bullmq";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { RealtimeEmitterService } from "../../../../common/realtime/realtime-emitter.service";
+import { NotificationDispatcher } from "../../application/services/notification-dispatcher.service";
 import { FanoutJobData } from "../../application/services/notifications.service";
 import { FANOUT_QUEUE, STALL_SETTINGS } from "./queue-config";
 import { handleJobFailed, handleJobStalled, handleWorkerError } from "./queue-alerts";
@@ -15,6 +16,8 @@ export class FanoutProcessor extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimeEmitterService,
+    // Optional: without it only the in-app row is written, as before TASK-021.
+    @Optional() private readonly dispatcher?: NotificationDispatcher,
   ) {
     super();
   }
@@ -39,6 +42,18 @@ export class FanoutProcessor extends WorkerHost {
       await this.realtime.emit(userId, "notification", notification);
     } catch (err) {
       this.logger.warn(`Realtime push failed (notification saved) job=${job.id}: ${(err as Error).message}`);
+    }
+    // Per-channel decisions (email, WhatsApp) and the delivery log. Failing the job here would
+    // retry and insert a second notification row, so a failure is logged and not retried.
+    try {
+      await this.dispatcher?.dispatch({
+        userId,
+        type,
+        notificationId: notification.id,
+        critical: job.data.critical,
+      });
+    } catch (err) {
+      this.logger.error(`Dispatch failed (notification saved) job=${job.id} type=${type}: ${(err as Error).message}`);
     }
   }
 

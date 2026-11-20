@@ -174,7 +174,6 @@ export const DELIVERY_REASONS = [
   "no_provider", // WhatsApp: no provider configured
   "opt_out", // WhatsApp: no explicit opt-in or number not confirmed
   "no_address", // no verified email address on file
-  "not_allowed", // the channel is not allowed for this event
 ] as const;
 export type DeliveryReason = (typeof DELIVERY_REASONS)[number];
 

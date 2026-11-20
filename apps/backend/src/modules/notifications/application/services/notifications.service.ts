@@ -10,6 +10,8 @@ export interface FanoutJobData {
   userId: string;
   type: NotificationType;
   payload: Record<string, unknown>;
+  /** Marks this one message critical (TASK-021), e.g. an interview within 24 hours. */
+  critical?: boolean;
 }
 
 // Public API other modules depend on (forums, blogs, admin, quizzes) — enqueues onto
@@ -26,11 +28,17 @@ export class NotificationsService {
   // `idempotencyKey` (optional) identifies the event (e.g. a reply id): calling notify
   // twice with the same key for the same user and type creates one notification.
   // Without it every call is a distinct notification.
-  notify(userId: string, type: NotificationType, payload: Record<string, unknown>, idempotencyKey?: string) {
+  notify(
+    userId: string,
+    type: NotificationType,
+    payload: Record<string, unknown>,
+    idempotencyKey?: string,
+    options?: { critical?: boolean },
+  ) {
     const base = Number(this.config.get("QUEUE_BACKOFF_MS"));
     const opts = fanoutJobOptions(Number.isFinite(base) && base > 0 ? base : undefined);
     if (idempotencyKey) opts.jobId = idempotencyJobId("fanout", userId, type, idempotencyKey);
-    return this.fanoutQueue.add("fanout", { userId, type, payload }, opts);
+    return this.fanoutQueue.add("fanout", { userId, type, payload, ...(options?.critical ? { critical: true } : {}) }, opts);
   }
 
   async listMine(userId: string) {

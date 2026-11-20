@@ -4,6 +4,7 @@ import { NotificationsController } from "./presentation/controllers/notification
 import { NotificationsService } from "./application/services/notifications.service";
 import { EmailQueueService } from "./application/services/email-queue.service";
 import { ContentAnnouncementService } from "./application/services/content-announcement.service";
+import { NotificationDispatcher } from "./application/services/notification-dispatcher.service";
 import { MailerService } from "./infrastructure/email/mailer.service";
 import { EmailProcessor } from "./infrastructure/queue/email.processor";
 import { FanoutProcessor } from "./infrastructure/queue/fanout.processor";
@@ -15,10 +16,11 @@ import { FanoutProcessor } from "./infrastructure/queue/fanout.processor";
     NotificationsService,
     EmailQueueService,
     ContentAnnouncementService,
+    NotificationDispatcher,
     MailerService,
     EmailProcessor,
     FanoutProcessor,
   ],
-  exports: [NotificationsService, EmailQueueService, ContentAnnouncementService],
+  exports: [NotificationsService, EmailQueueService, ContentAnnouncementService, NotificationDispatcher],
 })
 export class NotificationsModule {}
