@@ -67,6 +67,15 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm --filter @packetpulse/backend run prisma:generate
 
+      # TASK-007 / TEST-009: rehearse every migration on a throwaway database inside the
+      # job's Postgres (never the packetpulse database itself): empty -> all migrations ->
+      # seed -> drift check against schema.prisma, then fixtures -> remaining migrations
+      # -> assertions. A schema.prisma edit without a migration, or a migration that
+      # fails over existing rows, turns the pipeline red before anything else runs.
+      # Uses DATABASE_URL from the job env; psql is preinstalled on ubuntu-latest.
+      - name: Check migrations (fresh database, drift, and over existing data)
+        run: bash apps/backend/scripts/check-migrations.sh all
+
       - name: Lint
         run: pnpm turbo run lint
 
