@@ -5,9 +5,10 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { Menu, X, Home, Info, Book, FileText, Phone, Search, LogIn, UserPlus, Wrench } from "lucide-react";
+import { Menu, X, Home, Info, Book, FileText, Phone, Search, LogIn, UserPlus, Wrench, LayoutDashboard } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
+import { useSessionHint, type SessionHint } from "@/shared/auth/session-hint";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", Icon: Home },
@@ -46,11 +47,53 @@ function NavLink({
   );
 }
 
+// Signed-in visitors see a Dashboard link instead of Sign In / Sign Up. Until the browser's
+// presence cookie has been read (the first paint of a prerendered page) a same-size placeholder
+// is shown, so the page never briefly claims the wrong state.
+function AuthActions({ hint, mobile, onNavigate }: { hint: SessionHint; mobile?: boolean; onNavigate?: () => void }) {
+  if (hint === "unknown") {
+    return <div aria-hidden="true" className={mobile ? "h-20" : "h-9 w-44"} />;
+  }
+  if (hint === "signed-in") {
+    return (
+      <Link
+        href="/dashboard"
+        onClick={onNavigate}
+        className={cn(buttonVariants({ variant: "gradient", size: mobile ? "default" : "sm" }), mobile ? "w-full" : "h-auto py-2")}
+      >
+        <LayoutDashboard className="mr-1.5 h-4 w-4" />
+        Dashboard
+      </Link>
+    );
+  }
+  return (
+    <>
+      <Link
+        href="/login"
+        onClick={onNavigate}
+        className={cn("flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground", !mobile && "px-3 py-2")}
+      >
+        <LogIn className="mr-1.5 h-4 w-4" />
+        Sign In
+      </Link>
+      <Link
+        href="/register"
+        onClick={onNavigate}
+        className={cn(buttonVariants({ variant: "gradient", size: mobile ? "default" : "sm" }), mobile ? "w-full" : "h-auto py-2")}
+      >
+        <UserPlus className="mr-1.5 h-4 w-4" />
+        Sign Up
+      </Link>
+    </>
+  );
+}
+
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const sessionHint = useSessionHint();
   // The reference site's nav is only transparent-at-top on the home page — every
   // other page (about/contact/etc.) always shows the solid glass background,
   // confirmed against the live bundle's `transparent` prop usage.
@@ -104,14 +147,7 @@ export function Navbar() {
               className="w-40 rounded-md border border-input bg-background py-1.5 pl-9 pr-3 text-sm text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60"
             />
           </div>
-          <Link href="/login" className="flex items-center px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            <LogIn className="mr-1.5 h-4 w-4" />
-            Sign In
-          </Link>
-          <Link href="/register" className={cn(buttonVariants({ variant: "gradient", size: "sm" }), "h-auto py-2")}>
-            <UserPlus className="mr-1.5 h-4 w-4" />
-            Sign Up
-          </Link>
+          <AuthActions hint={sessionHint} />
         </div>
 
         <button
@@ -140,18 +176,7 @@ export function Navbar() {
               />
             ))}
             <div className="flex flex-col gap-3 pt-2">
-              <Link href="/login" className="flex items-center text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
-                <LogIn className="mr-1.5 h-4 w-4" />
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className={cn(buttonVariants({ variant: "gradient" }), "w-full")}
-                onClick={() => setMobileOpen(false)}
-              >
-                <UserPlus className="mr-1.5 h-4 w-4" />
-                Sign Up
-              </Link>
+              <AuthActions hint={sessionHint} mobile onNavigate={() => setMobileOpen(false)} />
             </div>
           </div>
         </div>
