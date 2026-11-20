@@ -104,3 +104,10 @@ The explicit `env` is needed because a `.env` file with a remote database would 
 - Create the staging Supabase project, Render service and Vercel project? Free tiers exist for all three but each Supabase free project is limited in number.
 - Preview deployments: point them at staging, or keep them frontend-only against a fixed staging backend?
 - Who holds the production secrets as the owner of record (and where is the backup copy, e.g. a password manager)?
+
+## Troubleshooting: every request from my machine takes about 5 seconds
+
+Symptom: local dev against the remote database (or any remote host) is slow, `getent ahosts example.com` takes about 5 s, and the same `curl` is fast with `-4`. Cause: the glibc resolver sends IPv4 and IPv6 lookups in parallel, the network drops one reply, and it waits out its 5 s timeout. Prisma, `pg`, `fetch` and Next all resolve through the system resolver, so each new connection pays it.
+
+Fix, per user: add `export RES_OPTIONS=single-request-reopen` to your shell profile and restart your terminals and dev servers. Check with `time getent ahosts example.com` (should be well under a second). This only affects local development; deployed environments resolve names normally. Details and measurements: [docs/research/12-session-and-latency-analysis.md](../research/12-session-and-latency-analysis.md).
+

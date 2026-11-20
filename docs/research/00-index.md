@@ -15,6 +15,7 @@ Prepared 22 Oct 2026 from the v2 document set (17 Oct 2026) and a read-only audi
 | 09 | [Authentication review and decision record](09-auth-review-decision-record.md) | TASK-006 / DEV-05: today's sign-in and sessions against the OPEN-13 and DEC-020 baseline, a proposed decision and a closing plan |
 | 10 | [Threat model and data map](10-threat-model-and-data-map.md) | SEC-13 / TASK-002: 15 threats with controls and gaps, a data map, processors and locations |
 | 11 | [Route inventory](11-route-inventory.md) | Every backend route with its access rule, generated from the live router metadata (TASK-008) |
+| 12 | [Session and latency analysis](12-session-and-latency-analysis.md) | Why the public navbar showed Sign In and why the session loads late: measured causes, the fixes made, and ranked options still open |
 
 ## How much to trust this pack
 
