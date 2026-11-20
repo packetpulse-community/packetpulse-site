@@ -41,11 +41,11 @@ export function SidebarNav({
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
+                  "relative flex items-center gap-3 rounded-grove-control px-3 text-sm font-medium transition-colors",
                   size === "touch" ? "min-h-11 py-2.5" : "py-2.5",
                   active
-                    ? "bg-indigo-600 text-white shadow-md before:absolute before:-left-1 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-indigo-300"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    ? "bg-primary text-primary-foreground before:absolute before:-left-1 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-accent"
+                    : "text-text-secondary hover:bg-surface-subtle hover:text-text",
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />

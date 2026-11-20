@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Send, MessageCircle } from "lucide-react";
+import { BrandLogo } from "@/shared/components/BrandLogo";
 import { SessionAwareLink } from "@/shared/auth/SessionAwareLink";
 
 // lucide-react dropped brand/logo icons (trademark reasons) — small inline SVGs
@@ -26,7 +26,7 @@ function LinkedinIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-const QUICK_LINK_CLASS = "text-sm text-gray-300 transition-colors hover:text-foreground";
+const QUICK_LINK_CLASS = "text-sm text-text-secondary transition-colors hover:text-text";
 
 const QUICK_LINKS = [
   { href: "/", label: "Home" },
@@ -48,15 +48,13 @@ const SOCIAL_LINKS = [
 
 export function Footer() {
   return (
-    // Solid bg (matches reference's bg-slate-900) — deliberately breaks out of the
-    // page's gradient background (see MarketingBackground) rather than continuing it.
-    <footer className="border-t border-white/10 bg-background">
+    <footer className="border-t border-border bg-surface">
       <div className="container grid gap-10 py-14 md:grid-cols-3">
         <div className="flex flex-col gap-4">
           <Link href="/">
-            <Image src="/logo.png" alt="PacketPulse" width={140} height={54} className="h-9 w-auto" />
+            <BrandLogo />
           </Link>
-          <p className="max-w-xs text-sm text-gray-300">
+          <p className="max-w-xs text-sm text-text-secondary">
             A thriving community of networking professionals. Learn, share, and advance your networking career.
           </p>
           <div className="flex gap-3">
@@ -67,7 +65,7 @@ export function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={label}
-                className="text-gray-300 transition-colors hover:text-indigo-400"
+                className="text-text-secondary transition-colors hover:text-primary-text"
               >
                 <Icon className="h-5 w-5" />
               </a>
@@ -104,15 +102,15 @@ export function Footer() {
 
         <div>
           <h3 className="mb-4 text-sm font-semibold">Contact Us</h3>
-          <ul className="flex flex-col gap-2 text-sm text-gray-300">
+          <ul className="flex flex-col gap-2 text-sm text-text-secondary">
             <li>
-              <a href="mailto:packetpulse25@gmail.com" className="hover:text-foreground">
+              <a href="mailto:packetpulse25@gmail.com" className="hover:text-text">
                 packetpulse25@gmail.com
               </a>
             </li>
             <li>Bangalore, India, 560001</li>
             <li>
-              <a href="tel:+918793700336" className="hover:text-foreground">
+              <a href="tel:+918793700336" className="hover:text-text">
                 +91 8793700336
               </a>
             </li>
@@ -120,7 +118,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/10 py-6 text-center text-sm text-gray-300">
+      <div className="border-t border-border py-6 text-center text-sm text-text-secondary">
         © {new Date().getFullYear()} Packet Pulse. All rights reserved.
       </div>
     </footer>

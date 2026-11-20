@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Menu, X, Home, Info, Book, FileText, Phone, Search, LogIn, UserPlus, Wrench, LayoutDashboard } from "lucide-react";
+import { BrandLogo } from "@/shared/components/BrandLogo";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { useSessionHint, type SessionHint } from "@/shared/auth/session-hint";
+import { ThemeSwitch } from "@/shared/theme/ThemeSwitch";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", Icon: Home },
@@ -37,8 +38,8 @@ function NavLink({
       href={href}
       onClick={onClick}
       className={cn(
-        "flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all",
-        active ? "bg-indigo-600 text-white shadow-md" : "text-gray-300 hover:bg-indigo-600/50 hover:text-white",
+        "flex items-center gap-1.5 rounded-grove-control px-3 py-2 text-sm font-medium transition-colors",
+        active ? "bg-primary text-primary-foreground" : "text-text-secondary hover:bg-surface-subtle hover:text-text",
       )}
     >
       <Icon className="h-4 w-4" />
@@ -59,7 +60,7 @@ function AuthActions({ hint, mobile, onNavigate }: { hint: SessionHint; mobile?:
       <Link
         href="/dashboard"
         onClick={onNavigate}
-        className={cn(buttonVariants({ variant: "gradient", size: mobile ? "default" : "sm" }), mobile ? "w-full" : "h-auto py-2")}
+        className={cn(buttonVariants({ variant: "default", size: mobile ? "default" : "sm" }), mobile ? "w-full" : "h-auto py-2")}
       >
         <LayoutDashboard className="mr-1.5 h-4 w-4" />
         Dashboard
@@ -71,7 +72,7 @@ function AuthActions({ hint, mobile, onNavigate }: { hint: SessionHint; mobile?:
       <Link
         href="/login"
         onClick={onNavigate}
-        className={cn("flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground", !mobile && "px-3 py-2")}
+        className={cn("flex items-center text-sm font-medium text-text-secondary transition-colors hover:text-text", !mobile && "px-3 py-2")}
       >
         <LogIn className="mr-1.5 h-4 w-4" />
         Sign In
@@ -79,7 +80,7 @@ function AuthActions({ hint, mobile, onNavigate }: { hint: SessionHint; mobile?:
       <Link
         href="/register"
         onClick={onNavigate}
-        className={cn(buttonVariants({ variant: "gradient", size: mobile ? "default" : "sm" }), mobile ? "w-full" : "h-auto py-2")}
+        className={cn(buttonVariants({ variant: "default", size: mobile ? "default" : "sm" }), mobile ? "w-full" : "h-auto py-2")}
       >
         <UserPlus className="mr-1.5 h-4 w-4" />
         Sign Up
@@ -121,13 +122,12 @@ export function Navbar() {
       className={cn(
         "sticky top-4 z-50 transition-all duration-300",
         scrolled && "floating-nav floating-nav-scrolled",
-        showTransparent ? "bg-transparent" : "glass-panel-strong",
-        scrolled && "shadow-indigo-500/10",
+        showTransparent ? "bg-transparent" : "border border-border bg-surface/95 backdrop-blur",
       )}
     >
       <nav className="container flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <Image src="/logo.png" alt="PacketPulse" width={140} height={54} className="h-10 w-auto" priority />
+          <BrandLogo priority />
         </Link>
 
         <div className="hidden items-center gap-1 lg:flex">
@@ -144,9 +144,10 @@ export function Navbar() {
               placeholder="Search"
               disabled
               title="Search coming soon"
-              className="w-40 rounded-md border border-input bg-background py-1.5 pl-9 pr-3 text-sm text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-40 rounded-grove-control border border-control bg-surface py-1.5 pl-9 pr-3 text-sm text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60"
             />
           </div>
+          <ThemeSwitch compact />
           <AuthActions hint={sessionHint} />
         </div>
 
@@ -156,7 +157,7 @@ export function Navbar() {
             setMobileOpen((open) => !open);
             setHidden(false);
           }}
-          className="lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-grove-control text-text hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring lg:hidden"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
         >
@@ -175,6 +176,7 @@ export function Navbar() {
                 onClick={() => setMobileOpen(false)}
               />
             ))}
+            <ThemeSwitch className="self-start" />
             <div className="flex flex-col gap-3 pt-2">
               <AuthActions hint={sessionHint} mobile onNavigate={() => setMobileOpen(false)} />
             </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import { Toaster } from "sonner";
+import { LegacyScope } from "@/shared/theme/LegacyScope";
+import { useTheme } from "@/shared/theme/useTheme";
 import { CommandPalette } from "@/shared/components/CommandPalette";
 import { Breadcrumbs, BreadcrumbsProvider } from "@/shared/components/Breadcrumbs";
 import { RouteFocus } from "@/shared/components/RouteFocus";
@@ -13,10 +15,11 @@ import { MobileTabBar } from "./MobileTabBar";
 // persistent left rail + top bar is the general end-user experience now, not
 // just an admin-only exception.
 export function WorkflowShell({ children }: { children: React.ReactNode }) {
+  const { resolved } = useTheme();
   return (
     <BreadcrumbsProvider>
       <div className="min-h-screen bg-background text-foreground">
-        <Toaster theme="dark" richColors />
+        <Toaster theme={resolved} richColors />
         <CommandPalette />
         <RouteFocus />
         <AppSidebar />
@@ -25,7 +28,10 @@ export function WorkflowShell({ children }: { children: React.ReactNode }) {
           <Breadcrumbs />
           <main id="main" tabIndex={-1} className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 pb-24 outline-none lg:px-8 lg:pb-8">
             <ResendVerificationBanner />
-            {children}
+            {/* Dark tokens for screens not yet migrated to Grove (see theme/legacy-routes.ts). */}
+            <LegacyScope kind="content" className="rounded-grove-panel p-4 sm:p-6">
+              {children}
+            </LegacyScope>
           </main>
         </div>
         <MobileTabBar />

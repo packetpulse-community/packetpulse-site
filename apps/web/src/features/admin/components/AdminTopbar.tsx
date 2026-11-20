@@ -8,6 +8,7 @@ import { NotificationBell } from "@/features/notifications/components/Notificati
 import { authApi } from "@/features/auth/api/auth.api";
 import type { SessionUser } from "@/shared/auth/session";
 import { cn } from "@/shared/utils/cn";
+import { ThemeSwitch } from "@/shared/theme/ThemeSwitch";
 
 interface AdminTopbarProps {
   user: SessionUser;
@@ -37,21 +38,22 @@ export function AdminTopbar({ user, onMenuClick }: AdminTopbarProps) {
   const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase();
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-card px-4 lg:px-8">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface px-4 lg:px-8">
       <button onClick={onMenuClick} aria-label="Open menu" className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground lg:hidden">
         <Menu className="h-6 w-6" />
       </button>
       <div className="hidden lg:block" />
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
+        <ThemeSwitch compact />
         <NotificationBell />
 
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setMenuOpen((o) => !o)}
-            className="flex items-center gap-2 text-sm text-foreground hover:text-indigo-500"
+            className="flex items-center gap-2 text-sm text-foreground hover:text-primary-text"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
               {initials || "A"}
             </span>
             <span className="hidden md:block">{user.firstName}</span>
@@ -59,25 +61,25 @@ export function AdminTopbar({ user, onMenuClick }: AdminTopbarProps) {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-10 z-20 w-56 rounded-lg border border-border bg-popover py-1 shadow-lg">
+            <div className="absolute right-0 top-10 z-20 w-56 rounded-grove-card border border-border bg-surface py-1 shadow-grove-overlay">
               <Link
                 href="/profile"
                 onClick={() => setMenuOpen(false)}
-                className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+                className="block px-4 py-2 text-sm text-popover-foreground hover:bg-surface-subtle"
               >
                 Profile
               </Link>
               <Link
                 href="/settings/notifications"
                 onClick={() => setMenuOpen(false)}
-                className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+                className="block px-4 py-2 text-sm text-popover-foreground hover:bg-surface-subtle"
               >
                 Notification settings
               </Link>
               <div className="my-1 border-t border-border" />
               <button
                 onClick={handleLogout}
-                className="block w-full px-4 py-2 text-left text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+                className="block w-full px-4 py-2 text-left text-sm text-popover-foreground hover:bg-surface-subtle"
               >
                 Log out
               </button>

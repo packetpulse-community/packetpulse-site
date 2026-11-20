@@ -32,11 +32,11 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
   return (
     <>
       {open && (
-        <div className="fixed inset-0 z-30 bg-background/60 backdrop-blur-sm lg:hidden" onClick={onClose} aria-hidden="true" />
+        <div className="fixed inset-0 z-30 bg-grove-scrim lg:hidden" onClick={onClose} aria-hidden="true" />
       )}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-[232px] flex-col border-r border-border bg-card transition-transform duration-300 ease-in-out lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-[232px] flex-col border-r border-border bg-surface transition-transform duration-300 ease-in-out lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -57,7 +57,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
           <Link
             href="/dashboard"
             onClick={onClose}
-            className="mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            className="mb-2 flex items-center gap-3 rounded-grove-control px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-surface-subtle hover:text-text"
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             Back to PacketPulse
@@ -68,7 +68,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
         <div className="border-t border-border p-4">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            className="flex w-full items-center gap-3 rounded-grove-control px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-surface-subtle hover:text-text"
           >
             <LogOut className="h-5 w-5" />
             Log out

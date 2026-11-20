@@ -9,6 +9,7 @@ import { primaryRoleLabel } from "@/shared/auth/permissions";
 import { activeItemId, navigationFor } from "@/shared/config/navigation";
 import { authApi } from "@/features/auth/api/auth.api";
 import { cn } from "@/shared/utils/cn";
+import { ThemeSwitch } from "@/shared/theme/ThemeSwitch";
 import { SidebarNav } from "./SidebarNav";
 
 // Bottom bar below 1024 px (Document 2 §7): icon above label, 44 px touch targets,
@@ -56,14 +57,14 @@ export function MobileTabBar() {
   const tabClass = (active: boolean) =>
     cn(
       "flex min-h-11 min-w-16 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-1 text-[11px] font-medium transition-colors",
-      active ? "text-indigo-400" : "text-muted-foreground hover:text-foreground",
+      active ? "text-primary-text" : "text-text-secondary hover:text-text",
     );
 
   return (
     <>
       <nav
         aria-label="Primary"
-        className="glass-panel-strong fixed inset-x-0 bottom-0 z-30 rounded-none border-t border-glass-border pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         <ul className="flex overflow-x-auto px-1 pt-1">
           {mobile.tabs.map((tab) => {
@@ -96,16 +97,16 @@ export function MobileTabBar() {
 
       {moreOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" onClick={() => setMoreOpen(false)} aria-hidden="true" />
+          <div className="absolute inset-0 bg-grove-scrim" onClick={() => setMoreOpen(false)} aria-hidden="true" />
           <div
             role="dialog"
             aria-modal="true"
             aria-label="More"
-            className="glass-panel-strong absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-b-none rounded-t-2xl pb-[env(safe-area-inset-bottom)]"
+            className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-grove-panel border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-grove-overlay"
           >
-            <div className="flex items-center justify-between border-b border-glass-border px-4 py-3">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div className="flex flex-col leading-tight">
-                <span className="text-sm font-medium text-foreground">
+                <span className="text-sm font-medium text-text">
                   {auth.firstName} {auth.lastName}
                 </span>
                 <span className="text-xs text-muted-foreground">{primaryRoleLabel(auth)}</span>
@@ -115,17 +116,21 @@ export function MobileTabBar() {
                 type="button"
                 onClick={() => setMoreOpen(false)}
                 aria-label="Close menu"
-                className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground"
+                className="flex h-11 w-11 items-center justify-center rounded-grove-control text-text-secondary hover:text-text"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <nav aria-label="More" className="flex flex-col gap-1 overflow-y-auto p-4">
+              <div className="px-3 pb-2 pt-1">
+                <p className="mb-1.5 text-xs font-medium text-text-secondary">Theme</p>
+                <ThemeSwitch />
+              </div>
               <SidebarNav sections={mobile.more} onNavigate={() => setMoreOpen(false)} size="touch" />
               <button
                 type="button"
                 onClick={handleLogout}
-                className="mt-2 flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                className="mt-2 flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-surface-subtle hover:text-text"
               >
                 <LogOut className="h-5 w-5" />
                 Log out
