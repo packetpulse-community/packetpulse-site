@@ -9,3 +9,4 @@ export * from "./admin";
 export * from "./network-tools";
 export * from "./logs";
 export * from "./files";
+export * from "./field-policy";
