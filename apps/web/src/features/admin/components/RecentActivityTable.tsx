@@ -17,12 +17,26 @@ const ACTION_LABELS: Record<AdminActivityAction, string> = {
   recording_unapproved: "Unapproved recording",
   blog_approved: "Approved blog post",
   blog_unapproved: "Unapproved blog post",
+  forum_thread_locked: "Locked forum thread",
+  forum_thread_unlocked: "Unlocked forum thread",
+  forum_thread_pinned: "Pinned forum thread",
+  forum_thread_unpinned: "Unpinned forum thread",
+  forum_thread_deleted: "Deleted forum thread",
+  quiz_created: "Created quiz",
+  quiz_updated: "Updated quiz",
+  quiz_deleted: "Deleted quiz",
+  user_data_cleaned: "Cleaned user data",
+  users_data_bulk_cleaned: "Bulk-cleaned user data",
+  site_settings_changed: "Changed site settings",
+  admin_registered: "Registered admin",
 };
 
 function describeDetails(entry: AdminActivityLogEntry): string {
   const details = entry.details ?? {};
   if (typeof details.title === "string") return details.title;
   if (typeof details.email === "string") return details.email;
+  if (Array.isArray(details.changedKeys)) return `Changed: ${details.changedKeys.join(", ")}`;
+  if (typeof details.dataType === "string") return `Cleaned: ${details.dataType}`;
   return entry.targetType;
 }
 

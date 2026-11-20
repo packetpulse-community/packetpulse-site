@@ -15,6 +15,18 @@ const ACTION_LABELS: Record<AdminActivityAction, string> = {
   recording_unapproved: "Recording unapprovals",
   blog_approved: "Blog approvals",
   blog_unapproved: "Blog unapprovals",
+  forum_thread_locked: "Thread locks",
+  forum_thread_unlocked: "Thread unlocks",
+  forum_thread_pinned: "Thread pins",
+  forum_thread_unpinned: "Thread unpins",
+  forum_thread_deleted: "Thread deletions",
+  quiz_created: "Quizzes created",
+  quiz_updated: "Quiz updates",
+  quiz_deleted: "Quiz deletions",
+  user_data_cleaned: "User data clean-ups",
+  users_data_bulk_cleaned: "Bulk data clean-ups",
+  site_settings_changed: "Settings changes",
+  admin_registered: "Admin sign-ups",
 };
 
 // Segment colors from the design system's real palette (indigo/cyan/yellow/
