@@ -115,6 +115,15 @@ describe("Audit coverage of privileged routes (e2e)", () => {
   const makeThread = () =>
     prisma.forumThread.create({ data: { categoryId, authorId: ownerId, title: uniq(), content: "c", slug: uniq() } });
 
+  const makeSkill = (status: "active" | "retired" = "active") => {
+    const name = uniq();
+    return prisma.skill.create({ data: { name, nameKey: name.toLowerCase(), matchKey: name.replace(/\W/g, "").toLowerCase(), level: "major", status } });
+  };
+  const makeSuggestion = () => {
+    const name = uniq();
+    return prisma.skillSuggestion.create({ data: { name, nameKey: name.toLowerCase(), matchKey: name.replace(/\W/g, "").toLowerCase(), suggestedById: ownerId } });
+  };
+
   // action, target, and how to trigger the route as the admin
   type Scenario = () => Promise<{ action: string; targetId?: string }>;
   const scenarios: Record<string, Scenario> = {
@@ -274,6 +283,52 @@ describe("Audit coverage of privileged routes (e2e)", () => {
       await api("delete", `/api/forums/threads/${t.id}/replies/${r.id}`).expect(200);
       return { action: "forum_reply_deleted", targetId: r.id };
     },
+    "POST /api/skills": async () => {
+      const res = await api("post", "/api/skills", { name: uniq(), level: "major" }).expect(201);
+      return { action: "skill_created", targetId: res.body.id };
+    },
+    "PUT /api/skills/:id": async () => {
+      const k = await makeSkill();
+      await api("put", `/api/skills/${k.id}`, { description: "edited" }).expect(200);
+      return { action: "skill_updated", targetId: k.id };
+    },
+    "PUT /api/skills/:id/retire": async () => {
+      const k = await makeSkill();
+      await api("put", `/api/skills/${k.id}/retire`, { reason: `${TAG} retire this skill` }).expect(200);
+      return { action: "skill_retired", targetId: k.id };
+    },
+    "PUT /api/skills/:id/restore": async () => {
+      const k = await makeSkill("retired");
+      await api("put", `/api/skills/${k.id}/restore`, {}).expect(200);
+      return { action: "skill_restored", targetId: k.id };
+    },
+    "POST /api/skills/:id/aliases": async () => {
+      const k = await makeSkill();
+      await api("post", `/api/skills/${k.id}/aliases`, { alias: uniq() }).expect(201);
+      return { action: "skill_alias_added", targetId: k.id };
+    },
+    "DELETE /api/skills/:id/aliases/:aliasId": async () => {
+      const k = await makeSkill();
+      const a = await prisma.skillAlias.create({ data: { skillId: k.id, alias: uniq(), aliasKey: uniq().toLowerCase(), matchKey: uniq().replace(/\W/g, "").toLowerCase() } });
+      await api("delete", `/api/skills/${k.id}/aliases/${a.id}`).expect(200);
+      return { action: "skill_alias_removed", targetId: k.id };
+    },
+    "PUT /api/skills/suggestions/:id/add": async () => {
+      const s = await makeSuggestion();
+      await api("put", `/api/skills/suggestions/${s.id}/add`, { level: "major" }).expect(200);
+      return { action: "skill_suggestion_added", targetId: s.id };
+    },
+    "PUT /api/skills/suggestions/:id/merge": async () => {
+      const k = await makeSkill();
+      const s = await makeSuggestion();
+      await api("put", `/api/skills/suggestions/${s.id}/merge`, { skillId: k.id }).expect(200);
+      return { action: "skill_suggestion_merged", targetId: s.id };
+    },
+    "PUT /api/skills/suggestions/:id/reject": async () => {
+      const s = await makeSuggestion();
+      await api("put", `/api/skills/suggestions/${s.id}/reject`, { reason: `${TAG} reject this one` }).expect(200);
+      return { action: "skill_suggestion_rejected", targetId: s.id };
+    },
   };
 
   beforeAll(async () => {
@@ -304,6 +359,8 @@ describe("Audit coverage of privileged routes (e2e)", () => {
     await prisma.resource.deleteMany({ where: { categoryId } });
     await prisma.recording.deleteMany({ where: { categoryId } });
     await prisma.forumThread.deleteMany({ where: { categoryId } });
+    await prisma.skillSuggestion.deleteMany({ where: { nameKey: { startsWith: TAG.toLowerCase() } } });
+    await prisma.skill.deleteMany({ where: { nameKey: { startsWith: TAG.toLowerCase() } } });
     await prisma.category.deleteMany({ where: { OR: [{ id: categoryId }, { slug: { startsWith: TAG.toLowerCase() } }] } });
     await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } });
     await app.close();

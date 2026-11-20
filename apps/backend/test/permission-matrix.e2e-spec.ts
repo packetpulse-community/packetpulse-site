@@ -56,6 +56,7 @@ const ROLE_MATRIX: Record<string, string[]> = {
     "admin:view-analytics",
     "admin:manage-settings",
     "categories:manage",
+    "skills:manage",
   ],
   super_admin: [], // bypasses permission checks in RolesGuard
 };
@@ -79,6 +80,7 @@ const PUBLIC_ROUTES = new Set([
   "GET /api/blogs/slug/:slug",
   "GET /api/blogs/:id",
   "GET /api/categories",
+  "GET /api/skills",
   "GET /api/recordings",
   "GET /api/recordings/:id",
   "GET /api/forums/categories",
@@ -131,6 +133,10 @@ const AUTHENTICATED_ONLY: Record<string, string> = {
   "POST /api/quizzes/:id/attempts/:attemptId/submit": "own attempt",
   "POST /api/network-tools/run": "any member; simulated output only",
   "GET /api/dashboard/stats": "own stats",
+  "GET /api/skills/mine": "own skills only",
+  "PUT /api/skills/mine": "own skills only; max 25, active taxonomy skills only",
+  "GET /api/skills/members/:userId": "any member; filtered by the owner's per-skill visibility (private only for the owner)",
+  "POST /api/skills/suggestions": "any member; counts one sighting per member, 5 new names a day",
   "POST /api/files/upload-url": "any member; creates a pending file owned by the caller",
   "POST /api/files/:id/complete": "file owner only (others get 404)",
   "GET /api/files/:id/link": "file owner or admin (others get 404, logged as denied)",

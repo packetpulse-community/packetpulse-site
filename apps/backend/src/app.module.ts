@@ -29,6 +29,7 @@ import { NetworkToolsModule } from "./modules/network-tools";
 import { DashboardModule } from "./modules/dashboard";
 import { LogsModule } from "./modules/logs";
 import { FilesModule } from "./modules/files";
+import { SkillsModule } from "./modules/skills";
 import { AllExceptionsFilter } from "./common/errors";
 import { ServerTimingModule } from "./common/server-timing";
 
@@ -62,6 +63,7 @@ import { ServerTimingModule } from "./common/server-timing";
     DashboardModule,
     LogsModule,
     FilesModule,
+    SkillsModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
