@@ -802,6 +802,15 @@ enum AdminActivityAction {
   users_data_bulk_cleaned
   site_settings_changed
   admin_registered
+  category_created
+  category_updated
+  category_deleted
+  categories_reordered
+  blog_deleted
+  blog_comment_deleted
+  resource_deleted
+  recording_deleted
+  forum_reply_deleted
 }
 
 model AdminActivityLog {

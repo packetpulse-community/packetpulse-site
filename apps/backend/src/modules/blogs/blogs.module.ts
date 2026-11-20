@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { NotificationsModule } from "../notifications";
+import { AdminModule } from "../admin";
 import { BlogsController } from "./presentation/controllers/blogs.controller";
 import { BlogPostsService } from "./application/services/blog-posts.service";
 import { BlogCommentsService } from "./application/services/blog-comments.service";
@@ -8,7 +9,7 @@ import { BlogPostRepository } from "./domain/repositories/blog-post.repository";
 import { BlogPostPrismaRepository } from "./infrastructure/prisma/blog-post.prisma-repository";
 
 @Module({
-  imports: [NotificationsModule],
+  imports: [NotificationsModule, AdminModule],
   controllers: [BlogsController],
   providers: [
     BlogPostsService,

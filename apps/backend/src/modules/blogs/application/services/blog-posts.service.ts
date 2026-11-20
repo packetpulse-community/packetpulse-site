@@ -1,3 +1,4 @@
+import { AdminActivityLogService } from "../../../admin";
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { BlogPostRepository } from "../../domain/repositories/blog-post.repository";
 import { PrismaService } from "../../../../prisma/prisma.service";
@@ -13,6 +14,7 @@ export class BlogPostsService {
     private readonly posts: BlogPostRepository,
     private readonly prisma: PrismaService,
     private readonly announcements: ContentAnnouncementService,
+    private readonly activityLog: AdminActivityLogService,
   ) {}
 
   async list(query: BlogListQueryDto, isAdmin = false) {
@@ -104,6 +106,8 @@ export class BlogPostsService {
     if (!existing) throw new NotFoundException("Blog post not found");
     this.assertOwnerOrAdmin(existing.authorId, userId, roles);
     await this.posts.delete(id);
+    // Staff deleting someone else's post is a privileged action; an author deleting their own is not.
+    if (existing.authorId !== userId) await this.activityLog.log(userId, "blog_deleted", "blog_post", id, { title: existing.title, authorId: existing.authorId });
   }
 
   private assertOwnerOrAdmin(ownerId: string, userId: string, roles: string[]) {

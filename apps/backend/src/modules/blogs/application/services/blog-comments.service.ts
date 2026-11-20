@@ -1,3 +1,4 @@
+import { AdminActivityLogService } from "../../../admin";
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { CreateCommentDto } from "../dto/blogs.dto";
@@ -9,6 +10,7 @@ export class BlogCommentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly activityLog: AdminActivityLogService,
   ) {}
 
   async add(blogPostId: string, userId: string, dto: CreateCommentDto) {
@@ -41,5 +43,7 @@ export class BlogCommentsService {
     if (!isOwner && !isAdmin) throw new ForbiddenException("You do not own this comment");
 
     await this.prisma.blogComment.delete({ where: { id: commentId } });
+    // Staff removing someone else's comment is a privileged action; an author removing their own is not.
+    if (!isOwner) await this.activityLog.log(userId, "blog_comment_deleted", "blog_comment", commentId, { blogPostId, commentAuthorId: comment.userId });
   }
 }

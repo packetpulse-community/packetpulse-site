@@ -3,6 +3,7 @@ import { PrismaService } from "../../../../prisma/prisma.service";
 import { CreateForumReplyDto } from "../dto/forums.dto";
 import { ForumThreadsService } from "./forum-threads.service";
 import { NotificationsService } from "../../../notifications";
+import { AdminActivityLogService } from "../../../admin";
 
 @Injectable()
 export class ForumRepliesService {
@@ -10,6 +11,7 @@ export class ForumRepliesService {
     private readonly prisma: PrismaService,
     private readonly threads: ForumThreadsService,
     private readonly notifications: NotificationsService,
+    private readonly activityLog: AdminActivityLogService,
   ) {}
 
   async add(threadId: string, authorId: string, dto: CreateForumReplyDto) {
@@ -49,6 +51,7 @@ export class ForumRepliesService {
       this.prisma.forumReply.delete({ where: { id: replyId } }),
       this.prisma.forumThread.update({ where: { id: threadId }, data: { replyCount: { decrement: 1 } } }),
     ]);
+    if (reply.authorId !== userId) await this.activityLog.log(userId, "forum_reply_deleted", "forum_reply", replyId, { threadId, replyAuthorId: reply.authorId });
   }
 
   async toggleLike(replyId: string, userId: string) {

@@ -1,3 +1,4 @@
+import { AdminActivityLogService } from "../../../admin";
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
@@ -14,7 +15,10 @@ const summaryInclude = {
 
 @Injectable()
 export class RecordingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activityLog: AdminActivityLogService,
+  ) {}
 
   async list(query: RecordingListQueryDto, isAdmin: boolean) {
     const skip = prismaSkip(query.page, query.limit);
@@ -99,6 +103,7 @@ export class RecordingsService {
     if (!existing) throw new NotFoundException("Recording not found");
     this.assertOwnerOrAdmin(existing.instructorId, userId, roles);
     await this.prisma.recording.delete({ where: { id } });
+    if (existing.instructorId !== userId) await this.activityLog.log(userId, "recording_deleted", "recording", id, { title: existing.title, ownerId: existing.instructorId });
   }
 
   async toggleLike(id: string, userId: string) {

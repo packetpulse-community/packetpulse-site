@@ -1,3 +1,4 @@
+import { AdminActivityLogService } from "../../../admin";
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, ResourceType } from "@prisma/client";
 import { PrismaService } from "../../../../prisma/prisma.service";
@@ -18,6 +19,7 @@ export class ResourcesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly announcements: ContentAnnouncementService,
+    private readonly activityLog: AdminActivityLogService,
   ) {}
 
   async list(query: ResourceListQueryDto, isAdmin: boolean) {
@@ -124,6 +126,7 @@ export class ResourcesService {
     if (!existing) throw new NotFoundException("Resource not found");
     this.assertOwnerOrAdmin(existing.userId, userId, roles);
     await this.prisma.resource.delete({ where: { id } });
+    if (existing.userId !== userId) await this.activityLog.log(userId, "resource_deleted", "resource", id, { title: existing.title, ownerId: existing.userId });
   }
 
   async incrementDownload(id: string) {
