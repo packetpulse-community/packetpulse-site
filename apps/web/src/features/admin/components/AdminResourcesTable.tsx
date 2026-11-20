@@ -11,6 +11,7 @@ import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { adminClientApi } from "../api/admin.api";
 import { resourcesClientApi, type ResourceSummary } from "@/features/resources/api/resources.api";
 import { ResourceForm } from "./ResourceForm";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 export function AdminResourcesTable({ resources }: { resources: ResourceSummary[] }) {
   const router = useRouter();
@@ -74,7 +75,13 @@ export function AdminResourcesTable({ resources }: { resources: ResourceSummary[
             </div>
           </Card>
         ))}
-        {resources.length === 0 && <p className="text-muted-foreground">No resources found.</p>}
+        {resources.length === 0 && (
+          <EmptyState
+            title="No resources yet"
+            description="Resources you create, and those submitted by members, are listed here for review."
+            action={{ label: "Create resource", onClick: () => setCreating(true) }}
+          />
+        )}
       </div>
 
       {(editing || creating) && (

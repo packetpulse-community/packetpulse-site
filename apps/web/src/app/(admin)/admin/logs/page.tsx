@@ -4,6 +4,7 @@ import { LogsFilters } from "@/features/admin/components/LogsFilters";
 import { Pagination } from "@/shared/components/Pagination";
 import { Badge } from "@/shared/ui/primitives/Badge";
 import { Card } from "@/shared/ui/primitives/Card";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 const LEVEL_VARIANT = {
   error: "danger",
@@ -47,7 +48,13 @@ export default async function AdminLogsPage({ searchParams }: AdminLogsPageProps
             {log.data ? <pre className="overflow-x-auto text-xs text-muted-foreground">{JSON.stringify(log.data)}</pre> : null}
           </Card>
         ))}
-        {logs.length === 0 && <p className="text-muted-foreground">No logs recorded yet.</p>}
+        {logs.length === 0 && (
+          <EmptyState
+            title="No logs recorded yet"
+            description="Application events appear here as they happen."
+            action={{ label: "Back to the dashboard", href: "/admin" }}
+          />
+        )}
       </div>
 
       <Pagination page={page} totalPages={totalPages} basePath="/admin/logs" />

@@ -10,6 +10,7 @@ import { Badge } from "@/shared/ui/primitives/Badge";
 import { Button } from "@/shared/ui/primitives/Button";
 import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { quizzesClientApi, type QuizSummary } from "@/features/quizzes/api/quizzes.api";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 export function AdminQuizzesTable({ quizzes }: { quizzes: QuizSummary[] }) {
   const router = useRouter();
@@ -69,7 +70,13 @@ export function AdminQuizzesTable({ quizzes }: { quizzes: QuizSummary[] }) {
             </div>
           </Card>
         ))}
-        {quizzes.length === 0 && <p className="text-muted-foreground">No quizzes found.</p>}
+        {quizzes.length === 0 && (
+          <EmptyState
+            title="No quizzes yet"
+            description="Quizzes you create are listed here. Publish one to let members earn certificates."
+            action={{ label: "Create quiz", href: "/admin/quizzes/new" }}
+          />
+        )}
       </div>
 
       <Dialog open={!!deleting} onClose={() => setDeleting(null)} title="Delete quiz" description="This action cannot be undone.">

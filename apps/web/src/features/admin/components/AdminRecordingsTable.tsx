@@ -11,6 +11,7 @@ import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { adminClientApi } from "../api/admin.api";
 import { recordingsClientApi, type RecordingSummary } from "@/features/recordings/api/recordings.api";
 import { RecordingForm } from "./RecordingForm";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 export function AdminRecordingsTable({ recordings }: { recordings: RecordingSummary[] }) {
   const router = useRouter();
@@ -74,7 +75,13 @@ export function AdminRecordingsTable({ recordings }: { recordings: RecordingSumm
             </div>
           </Card>
         ))}
-        {recordings.length === 0 && <p className="text-muted-foreground">No recordings found.</p>}
+        {recordings.length === 0 && (
+          <EmptyState
+            title="No recordings yet"
+            description="Recordings you create, and those submitted by members, are listed here for review."
+            action={{ label: "Create recording", onClick: () => setCreating(true) }}
+          />
+        )}
       </div>
 
       {(editing || creating) && (

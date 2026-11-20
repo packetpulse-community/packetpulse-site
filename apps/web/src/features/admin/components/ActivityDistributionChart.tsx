@@ -1,4 +1,5 @@
 import type { AdminActivityAction } from "@packetpulse/types";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 interface ActivityDistributionChartProps {
   data: { action: AdminActivityAction; count: number }[];
@@ -58,7 +59,14 @@ export function ActivityDistributionChart({ data }: ActivityDistributionChartPro
   const total = data.reduce((sum, d) => sum + d.count, 0);
 
   if (total === 0) {
-    return <p className="text-muted-foreground">No admin activity recorded yet.</p>;
+    return (
+      <EmptyState
+        as="h3"
+        title="No admin activity yet"
+        description="Admin actions are counted here once they happen."
+        action={{ label: "View logs", href: "/admin/logs" }}
+      />
+    );
   }
 
   let cumulative = 0;

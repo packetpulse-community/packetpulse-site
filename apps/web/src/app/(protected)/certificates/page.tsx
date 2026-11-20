@@ -3,6 +3,7 @@ import { quizzesServerApi } from "@/features/quizzes/api/quizzes.api";
 import { Card } from "@/shared/ui/primitives/Card";
 import { Badge } from "@/shared/ui/primitives/Badge";
 import { CopyVerifyLinkButton } from "@/features/quizzes/components/CopyVerifyLinkButton";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 export default async function CertificatesPage() {
   const cookieHeader = (await cookies()).toString();
@@ -29,7 +30,13 @@ export default async function CertificatesPage() {
             </div>
           </Card>
         ))}
-        {certificates.length === 0 && <p className="text-muted-foreground">No certificates yet — pass a quiz to earn one.</p>}
+        {certificates.length === 0 && (
+          <EmptyState
+            title="No certificates yet"
+            description="Pass a quiz to earn a certificate. Each one has a link anyone can use to verify it."
+            action={{ label: "Browse quizzes", href: "/quizzes" }}
+          />
+        )}
       </div>
     </div>
   );

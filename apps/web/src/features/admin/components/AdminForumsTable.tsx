@@ -10,6 +10,7 @@ import { Button } from "@/shared/ui/primitives/Button";
 import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { forumsClientApi, type ForumThreadSummary } from "@/features/forums/api/forums.api";
 import { ForumThreadEditForm } from "./ForumThreadEditForm";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 export function AdminForumsTable({ threads }: { threads: ForumThreadSummary[] }) {
   const router = useRouter();
@@ -75,7 +76,13 @@ export function AdminForumsTable({ threads }: { threads: ForumThreadSummary[] })
             </div>
           </Card>
         ))}
-        {threads.length === 0 && <p className="text-muted-foreground">No threads found.</p>}
+        {threads.length === 0 && (
+          <EmptyState
+            title="No threads yet"
+            description="Threads started by members appear here for moderation."
+            action={{ label: "Open the forum", href: "/forums" }}
+          />
+        )}
       </div>
 
       {editing && <ForumThreadEditForm thread={editing} open={true} onClose={() => setEditing(null)} />}

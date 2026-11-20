@@ -11,6 +11,7 @@ import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { adminClientApi } from "../api/admin.api";
 import { blogsClientApi, type BlogPostSummary } from "@/features/blogs/api/blogs.api";
 import { BlogForm } from "./BlogForm";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 export function AdminBlogsTable({ posts }: { posts: BlogPostSummary[] }) {
   const router = useRouter();
@@ -70,7 +71,13 @@ export function AdminBlogsTable({ posts }: { posts: BlogPostSummary[] }) {
             </div>
           </Card>
         ))}
-        {posts.length === 0 && <p className="text-muted-foreground">No blog posts found.</p>}
+        {posts.length === 0 && (
+          <EmptyState
+            title="No blog posts yet"
+            description="Posts you write, and those submitted by members, are listed here for review."
+            action={{ label: "Create post", onClick: () => setCreating(true) }}
+          />
+        )}
       </div>
 
       {(editing || creating) && (
