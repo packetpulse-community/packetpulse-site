@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import compression from "compression";
 import { AppModule } from "./app.module";
+import { parseTrustProxy } from "./common/config/trust-proxy";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
@@ -17,8 +18,18 @@ async function bootstrap() {
   // whole site and one person's retries locked every user out. Trusting the proxy
   // chain makes req.ip the original client from X-Forwarded-For. Trade-off: a
   // client calling the backend directly can spoof that header to dodge throttling.
-  app.set("trust proxy", true);
+  // TRUST_PROXY narrows this (hop count or proxy addresses); unset keeps `true` so
+  // production behaviour does not change until the owner sets it (finding S-11).
+  const trustProxy = parseTrustProxy(process.env.TRUST_PROXY);
+  app.set("trust proxy", trustProxy);
   app.useLogger(app.get(Logger));
+  if (process.env.NODE_ENV === "production" && trustProxy === true) {
+    app
+      .get(Logger)
+      .warn(
+        "TRUST_PROXY is not set (trusting every proxy) — client IPs, and so per-IP rate limits, can be spoofed with an X-Forwarded-For header. Set TRUST_PROXY to the number of proxies in front of the app; see docs/ops/bot-protection.md.",
+      );
+  }
 
   app.use(helmet());
   app.use(compression());
