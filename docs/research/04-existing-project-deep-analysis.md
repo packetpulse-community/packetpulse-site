@@ -212,3 +212,10 @@ Two real gaps this static review missed, found and fixed by the data-driven test
 | --- | --- | --- | --- |
 | S-16 | Medium | Quiz authoring routes (`GET /quizzes/:id/edit`, `PUT`, `DELETE`, and a hand-written check on `POST`) declared no permission; a member who still owned a quiz, for example a demoted instructor, could keep reading the answer key and editing or deleting it | All four use `@RequirePermission(QUIZZES_AUTHOR)`; ownership stays in the service |
 | S-17 | Medium | `GET /blogs/:id` and `GET /blogs/slug/:slug` were public and returned unapproved or unpublished posts (and counted a view), so the moderation queue was readable by anyone with an id or slug | Detail routes return 404 unless the post is published and approved, or the viewer is the author or an admin |
+
+Found by the field-protection sweep (TASK-012):
+
+| ID | Severity | Finding | Fix |
+| --- | --- | --- | --- |
+| S-18 | Low | Public certificate verification returned the whole certificate row, including the certificate id, user id, quiz id, attempt id and file URL, which let anyone link a certificate to an account | Returns only the holder's name, quiz title, certificate number and date |
+| S-19 | Low | The public client-log endpoint echoed the stored row back, including IP address, user agent and user id | Returns only the id and time; admins still read full rows |
