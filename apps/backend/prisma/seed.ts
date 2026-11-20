@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { seedSkills } from "./seed-skills";
 
 const prisma = new PrismaClient();
 
@@ -22,6 +23,7 @@ const PERMISSIONS = [
   "admin:view-analytics",
   "admin:manage-settings",
   "categories:manage",
+  "skills:manage",
 ] as const;
 
 const MEMBER_PERMISSIONS = ["blogs:create", "resources:create", "recordings:create", "forums:create", "quizzes:attempt"] as const;
@@ -47,6 +49,7 @@ const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
     "admin:view-analytics",
     "admin:manage-settings",
     "categories:manage",
+    "skills:manage",
   ],
   // super_admin bypasses permission checks entirely in RolesGuard (plan §4) — no
   // role_permissions rows needed for it.
@@ -89,7 +92,9 @@ async function main() {
     await prisma.category.upsert({ where: { slug: category.slug }, update: {}, create: category });
   }
 
-  console.log("Seeded roles, permissions, and categories.");
+  const skillsCreated = await seedSkills(prisma);
+
+  console.log(`Seeded roles, permissions, categories and ${skillsCreated} new skills.`);
 }
 
 main()

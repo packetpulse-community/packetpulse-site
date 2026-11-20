@@ -11,3 +11,4 @@ export * from "./logs";
 export * from "./files";
 export * from "./field-policy";
 export * from "./notifications";
+export * from "./skills";

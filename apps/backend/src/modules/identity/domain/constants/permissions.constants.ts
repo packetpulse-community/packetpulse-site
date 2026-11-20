@@ -18,6 +18,7 @@ export const PERMISSIONS = {
   ADMIN_VIEW_ANALYTICS: "admin:view-analytics",
   ADMIN_MANAGE_SETTINGS: "admin:manage-settings",
   CATEGORIES_MANAGE: "categories:manage",
+  SKILLS_MANAGE: "skills:manage",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
