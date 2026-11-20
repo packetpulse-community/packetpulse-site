@@ -1,56 +1,105 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { QuizAttemptStatus } from "@packetpulse/types";
 import { cn } from "@/shared/utils/cn";
+import { ApiError } from "@/shared/api/http-client";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { quizzesClientApi } from "../api/quizzes.api";
 import type { QuizForTaking, SubmitResult } from "../api/quizzes.api";
+import { clockOffsetMs, describeBlock, formatClock, remainingSeconds } from "../api/attempt-timer";
 
 type AnswerMap = Record<string, string[]>; // questionId -> selected option ids
 
-function formatTime(seconds: number) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
+function errorMessage(err: unknown, fallback: string) {
+  return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
 }
 
-// Advisory-only countdown — the backend doesn't enforce time limits server-side
-// either (no expiry check in quiz-attempts.service.ts's submit), so this never
-// blocks submission past zero, it just signals urgency to the user.
-function TimerBadge({ seconds }: { seconds: number }) {
-  const [remaining, setRemaining] = useState(seconds);
+// Countdown against the server's clock. The server rejects a submission past the
+// deadline (plus a few seconds of grace); this badge only shows how long is left.
+function TimerBadge({ deadlineAt, offsetMs, onExpire }: { deadlineAt: string; offsetMs: number; onExpire: () => void }) {
+  const [remaining, setRemaining] = useState(() => remainingSeconds(deadlineAt, offsetMs, Date.now()) ?? 0);
+  const expired = useRef(onExpire);
+  expired.current = onExpire;
 
   useEffect(() => {
-    const interval = setInterval(() => setRemaining((r) => Math.max(0, r - 1)), 1000);
+    const tick = () => {
+      const left = remainingSeconds(deadlineAt, offsetMs, Date.now()) ?? 0;
+      setRemaining(left);
+      if (left === 0) expired.current();
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [deadlineAt, offsetMs]);
 
   return (
-    <span className={cn("rounded-md px-2 py-1 text-sm font-medium", remaining <= 30 ? "text-destructive" : "text-muted-foreground")}>
-      {formatTime(remaining)}
+    <span
+      role="timer"
+      aria-label={`Time remaining ${formatClock(remaining)}`}
+      className={cn("rounded-md px-2 py-1 text-sm font-medium", remaining <= 30 ? "text-destructive" : "text-muted-foreground")}
+    >
+      {formatClock(remaining)}
     </span>
   );
 }
 
-export function QuizAttempt({ quiz }: { quiz: QuizForTaking }) {
-  const [attemptId, setAttemptId] = useState<string | null>(null);
+interface RunningAttempt {
+  id: string;
+  deadlineAt: string | null;
+  offsetMs: number;
+}
+
+export function QuizAttempt({ quiz, status }: { quiz: QuizForTaking; status: QuizAttemptStatus }) {
+  const router = useRouter();
+  // The page was rendered just now, so serverNow is as fresh as the response itself.
+  const [running, setRunning] = useState<RunningAttempt | null>(() =>
+    status.inProgress
+      ? {
+          id: status.inProgress.id,
+          deadlineAt: status.inProgress.deadlineAt,
+          offsetMs: clockOffsetMs(status.serverNow, Date.now()),
+        }
+      : null,
+  );
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [result, setResult] = useState<SubmitResult | null>(null);
+  const [timeUp, setTimeUp] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const startMutation = useMutation({
     mutationFn: () => quizzesClientApi.startAttempt(quiz.id),
-    onSuccess: (attempt) => setAttemptId(attempt.id),
+    onSuccess: (attempt) => {
+      setError(null);
+      setTimeUp(false);
+      setRunning({ id: attempt.id, deadlineAt: attempt.deadlineAt, offsetMs: clockOffsetMs(attempt.serverNow, Date.now()) });
+    },
+    onError: (err) => {
+      setError(errorMessage(err, "Could not start the quiz"));
+      router.refresh(); // pick up the server's current attempt count and block reason
+    },
   });
 
   const submitMutation = useMutation({
     mutationFn: () => {
-      if (!attemptId) throw new Error("No active attempt");
+      if (!running) throw new Error("No active attempt");
       const payload = quiz.questions.map((q) => ({ questionId: q.id, selectedOptionIds: answers[q.id] ?? [] }));
-      return quizzesClientApi.submitAttempt(quiz.id, attemptId, payload);
+      return quizzesClientApi.submitAttempt(quiz.id, running.id, payload);
     },
-    onSuccess: setResult,
+    onSuccess: (res) => {
+      setResult(res);
+      router.refresh();
+    },
+    onError: (err) => {
+      setError(errorMessage(err, "Could not submit the quiz"));
+      if (err instanceof ApiError && err.status === 409) {
+        setTimeUp(true);
+        router.refresh();
+      }
+    },
   });
 
   function toggleOption(questionId: string, optionId: string, isSingleChoice: boolean) {
@@ -75,25 +124,61 @@ export function QuizAttempt({ quiz }: { quiz: QuizForTaking }) {
             </Link>
           </div>
         ) : (
-          <p className="text-muted-foreground">You need {quiz.passingScorePct}% to pass. Try again later.</p>
+          <p className="text-muted-foreground">You need {quiz.passingScorePct}% to pass.</p>
         )}
       </div>
     );
   }
 
-  if (!attemptId) {
+  if (timeUp && running) {
+    return (
+      <div role="alert" className="glass-panel flex flex-col gap-2 rounded-lg p-6">
+        <h2 className="text-lg font-semibold">Time is up</h2>
+        <p className="text-muted-foreground">{error ?? "The time limit for this attempt has passed, so it can no longer be submitted."}</p>
+        <p className="text-sm text-muted-foreground">This attempt still counts towards your attempt limit.</p>
+        <button
+          onClick={() => {
+            setRunning(null);
+            setTimeUp(false);
+            setError(null);
+            router.refresh();
+          }}
+          className={cn(buttonVariants({ variant: "outline" }), "w-fit")}
+        >
+          Back to quiz
+        </button>
+      </div>
+    );
+  }
+
+  if (!running) {
+    const blocked = describeBlock(status.blockedReason, status.nextAttemptAt);
     return (
       <div className="glass-panel flex flex-col gap-4 rounded-lg p-6">
         <p className="text-muted-foreground">
           {quiz.questions.length} questions · pass at {quiz.passingScorePct}%
-          {quiz.timeLimitSeconds ? ` · ${formatTime(quiz.timeLimitSeconds)} time limit` : ""}
+          {quiz.timeLimitSeconds ? ` · ${formatClock(quiz.timeLimitSeconds)} time limit` : ""}
         </p>
+        <p className="text-sm" data-testid="attempts-remaining">
+          {status.attemptsRemaining === null
+            ? "Unlimited attempts"
+            : `${status.attemptsRemaining} of ${status.maxAttempts} attempts remaining`}
+          {status.quizExpiresAt && !status.blockedReason ? ` · closes ${new Date(status.quizExpiresAt).toLocaleString()}` : ""}
+        </p>
+        {quiz.timeLimitSeconds ? (
+          <p className="text-sm text-muted-foreground">The timer starts when you press Start and cannot be paused. Late answers are not accepted.</p>
+        ) : null}
+        {(blocked || error) && (
+          <p role="alert" className="text-sm text-destructive">
+            {error ?? blocked}
+          </p>
+        )}
         <button
           onClick={() => startMutation.mutate()}
-          disabled={startMutation.isPending}
+          disabled={startMutation.isPending || !status.canStart}
           className={cn(buttonVariants({ variant: "gradient" }), "w-fit")}
         >
-          {startMutation.isPending ? "Starting…" : "Start quiz"}
+          {startMutation.isPending ? "Starting…" : status.attemptsUsed > 0 ? "Retake quiz" : "Start quiz"}
         </button>
       </div>
     );
@@ -107,10 +192,10 @@ export function QuizAttempt({ quiz }: { quiz: QuizForTaking }) {
       }}
       className="flex flex-col gap-6"
     >
-      {quiz.timeLimitSeconds && (
-        <div className="glass-panel flex items-center justify-between rounded-lg p-3">
-          <span className="text-sm text-muted-foreground">Time remaining (advisory — submitting late still works)</span>
-          <TimerBadge seconds={quiz.timeLimitSeconds} />
+      {running.deadlineAt && (
+        <div className="glass-panel sticky top-2 z-10 flex items-center justify-between rounded-lg p-3">
+          <span className="text-sm text-muted-foreground">Time remaining</span>
+          <TimerBadge deadlineAt={running.deadlineAt} offsetMs={running.offsetMs} onExpire={() => setTimeUp(true)} />
         </div>
       )}
 
@@ -135,6 +220,12 @@ export function QuizAttempt({ quiz }: { quiz: QuizForTaking }) {
           })}
         </fieldset>
       ))}
+
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
       <button
         type="submit"

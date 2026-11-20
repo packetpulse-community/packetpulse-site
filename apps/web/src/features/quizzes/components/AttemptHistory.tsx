@@ -13,7 +13,11 @@ export function AttemptHistory({ attempts }: { attempts: QuizAttemptWithCertific
             <div>
               <p className="text-sm">{new Date(attempt.startedAt).toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">
-                {attempt.status === "in_progress" ? "In progress" : `Score: ${attempt.scorePct}%`}
+                {attempt.status === "in_progress"
+                  ? "In progress"
+                  : attempt.status === "expired"
+                    ? "Time ran out — not scored"
+                    : `Score: ${attempt.scorePct}%`}
               </p>
             </div>
             {attempt.passed !== null && (

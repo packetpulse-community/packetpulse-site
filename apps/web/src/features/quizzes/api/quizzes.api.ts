@@ -1,6 +1,6 @@
 import { apiFetch, apiFetchClient } from "@/shared/api/http-client";
 import type { Paginated } from "@/features/blogs/api/blogs.api";
-import type { CreateQuizDto, UpdateQuizDto } from "@packetpulse/types";
+import type { CreateQuizDto, QuizAttemptStatus, UpdateQuizDto } from "@packetpulse/types";
 
 export interface CategoryRef {
   id: string;
@@ -15,6 +15,10 @@ export interface QuizSummary {
   category: CategoryRef;
   passingScorePct: number;
   timeLimitSeconds: number | null;
+  maxAttempts: number | null;
+  retakeGapSeconds: number;
+  expiresAt: string | null;
+  archivedAt: string | null;
   isPublished: boolean;
   _count: { questions: number };
 }
@@ -51,6 +55,18 @@ export interface QuizAttempt {
   status: "in_progress" | "submitted" | "expired";
   scorePct: number | null;
   passed: boolean | null;
+  deadlineAt: string | null;
+}
+
+// The start response also carries the server's clock so the countdown can follow it.
+export interface StartedAttempt extends QuizAttempt {
+  startedAt: string;
+  serverNow: string;
+}
+
+export interface MyAttempts {
+  attempts: QuizAttemptWithCertificate[];
+  status: QuizAttemptStatus;
 }
 
 export interface SubmitResult {
@@ -116,11 +132,11 @@ export const quizzesServerApi = {
   verifyCertificate: (certificateNumber: string, cookieHeader = "") =>
     apiFetch<CertificateVerification>(`/quizzes/certificates/verify/${certificateNumber}`, { cookieHeader }),
   myAttempts: (quizId: string, cookieHeader: string) =>
-    apiFetch<QuizAttemptWithCertificate[]>(`/quizzes/${quizId}/attempts/mine`, { cookieHeader }),
+    apiFetch<MyAttempts>(`/quizzes/${quizId}/attempts/mine`, { cookieHeader }),
 };
 
 export const quizzesClientApi = {
-  startAttempt: (quizId: string) => apiFetchClient<QuizAttempt>(`/quizzes/${quizId}/attempts`, { method: "POST" }),
+  startAttempt: (quizId: string) => apiFetchClient<StartedAttempt>(`/quizzes/${quizId}/attempts`, { method: "POST" }),
   submitAttempt: (quizId: string, attemptId: string, answers: { questionId: string; selectedOptionIds: string[] }[]) =>
     apiFetchClient<SubmitResult>(`/quizzes/${quizId}/attempts/${attemptId}/submit`, {
       method: "POST",
@@ -129,5 +145,5 @@ export const quizzesClientApi = {
   createQuiz: (dto: CreateQuizDto) => apiFetchClient<QuizForAuthoring>("/quizzes", { method: "POST", body: JSON.stringify(dto) }),
   updateQuiz: (id: string, dto: UpdateQuizDto) =>
     apiFetchClient<QuizSummary>(`/quizzes/${id}`, { method: "PUT", body: JSON.stringify(dto) }),
-  deleteQuiz: (id: string) => apiFetchClient<{ success: boolean }>(`/quizzes/${id}`, { method: "DELETE" }),
+  deleteQuiz: (id: string) => apiFetchClient<{ success: boolean; archived: boolean }>(`/quizzes/${id}`, { method: "DELETE" }),
 };

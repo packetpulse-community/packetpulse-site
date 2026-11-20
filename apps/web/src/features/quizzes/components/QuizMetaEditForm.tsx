@@ -8,6 +8,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { UpdateQuizSchema } from "@packetpulse/types";
 import { quizzesClientApi, type QuizForAuthoring } from "../api/quizzes.api";
+import { toLocalInputValue } from "../api/attempt-timer";
 import { categoriesClientApi } from "@/features/categories/api/categories.api";
 import { ApiError } from "@/shared/api/http-client";
 import { Button } from "@/shared/ui/primitives/Button";
@@ -36,6 +37,10 @@ export function QuizMetaEditForm({ quiz }: { quiz: QuizForAuthoring }) {
       categoryId: quiz.category.id,
       passingScorePct: quiz.passingScorePct,
       timeLimitSeconds: quiz.timeLimitSeconds ?? undefined,
+      maxAttempts: quiz.maxAttempts,
+      retakeGapSeconds: quiz.retakeGapSeconds,
+      // datetime-local needs a local string; setValueAs turns it back into a Date on submit.
+      expiresAt: toLocalInputValue(quiz.expiresAt) as unknown as Date,
       isPublished: quiz.isPublished,
     },
   });
@@ -87,6 +92,44 @@ export function QuizMetaEditForm({ quiz }: { quiz: QuizForAuthoring }) {
             min={1}
             className={inputClass}
             {...register("timeLimitSeconds", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="maxAttempts" className="text-sm font-medium">
+            Max attempts per member (blank = unlimited)
+          </label>
+          <input
+            id="maxAttempts"
+            type="number"
+            min={1}
+            className={inputClass}
+            {...register("maxAttempts", { setValueAs: (v) => (v === "" || v == null ? null : Number(v)) })}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="retakeGapSeconds" className="text-sm font-medium">
+            Wait between attempts (seconds)
+          </label>
+          <input
+            id="retakeGapSeconds"
+            type="number"
+            min={0}
+            className={inputClass}
+            {...register("retakeGapSeconds", { setValueAs: (v) => (v === "" || v == null ? 0 : Number(v)) })}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="expiresAt" className="text-sm font-medium">
+            Closes at (optional)
+          </label>
+          <input
+            id="expiresAt"
+            type="datetime-local"
+            className={inputClass}
+            {...register("expiresAt", { setValueAs: (v) => (v ? new Date(v) : null) })}
           />
         </div>
       </div>

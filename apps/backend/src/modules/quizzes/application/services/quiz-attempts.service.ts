@@ -33,13 +33,14 @@ export class QuizAttemptsService {
       await this.expireStale(tx, quizId, userId, now);
       const attempts = await tx.quizAttempt.findMany({ where: { quizId, userId }, orderBy: { startedAt: "desc" } });
 
+      // serverNow lets the screen run a countdown against the server's clock, not its own.
       const running = attempts.find((a) => a.status === "in_progress");
-      if (running) return running;
+      if (running) return { ...running, serverNow: now.toISOString() };
 
       const block = this.blockFor(quiz, attempts, now);
       if (block) throw new ConflictException(this.blockMessage(block.reason, block.nextAttemptAt));
 
-      return tx.quizAttempt.create({
+      const created = await tx.quizAttempt.create({
         data: {
           quizId,
           userId,
@@ -47,6 +48,7 @@ export class QuizAttemptsService {
           deadlineAt: quiz.timeLimitSeconds ? new Date(now.getTime() + quiz.timeLimitSeconds * 1000) : null,
         },
       });
+      return { ...created, serverNow: now.toISOString() };
     });
   }
 

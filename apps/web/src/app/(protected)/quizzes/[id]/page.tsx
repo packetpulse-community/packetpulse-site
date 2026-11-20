@@ -6,7 +6,7 @@ import { AttemptHistory } from "@/features/quizzes/components/AttemptHistory";
 export default async function QuizDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const cookieHeader = (await cookies()).toString();
-  const [quiz, attempts] = await Promise.all([
+  const [quiz, mine] = await Promise.all([
     quizzesServerApi.getForTaking(id, cookieHeader),
     quizzesServerApi.myAttempts(id, cookieHeader),
   ]);
@@ -18,9 +18,9 @@ export default async function QuizDetailPage({ params }: { params: Promise<{ id:
         <p className="text-muted-foreground">{quiz.description}</p>
       </header>
 
-      <QuizAttempt quiz={quiz} />
+      <QuizAttempt quiz={quiz} status={mine.status} />
 
-      <AttemptHistory attempts={attempts} />
+      <AttemptHistory attempts={mine.attempts} />
     </div>
   );
 }
