@@ -2,7 +2,10 @@ import { INestApplication } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Test } from "@nestjs/testing";
 import cookieParser from "cookie-parser";
+import { createHash } from "node:crypto";
+import Redis from "ioredis";
 import request from "supertest";
+import { REDIS_CLIENT } from "../src/common/redis/redis.constants";
 import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { CaptchaService } from "../src/common/captcha";
@@ -31,6 +34,9 @@ describe("Bot protection e2e (TASK-013 / TEST-013 / SEC-06)", () => {
   const email = "e2e-captcha-user@example.com";
   const password = "Passw0rd!23";
   const server = () => app.getHttpServer();
+  // Failed logins for this address build a Redis lockout that would turn later runs' 401 into 429;
+  // remove only that key (never flush keys we did not create).
+  const lockKey = `login:fail:${createHash("sha256").update("nobody-captcha@example.com").digest("hex")}`;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
@@ -43,10 +49,12 @@ describe("Bot protection e2e (TASK-013 / TEST-013 / SEC-06)", () => {
     await app.init();
     prisma = app.get(PrismaService);
     await prisma.user.deleteMany({ where: { email } });
+    await app.get<Redis>(REDIS_CLIENT).del(lockKey);
   });
 
   afterAll(async () => {
     await prisma.user.deleteMany({ where: { email } });
+    await app.get<Redis>(REDIS_CLIENT).del(lockKey);
     await app.close();
   });
 
