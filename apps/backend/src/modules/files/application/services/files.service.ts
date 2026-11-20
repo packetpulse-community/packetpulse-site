@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { FileAccessAction, StoredFile } from "@prisma/client";
 import { extname } from "path";
@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
 import { CreateUploadUrlDto, FILE_LINK_TTL_SECONDS } from "@packetpulse/types";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { StorageProvider } from "../../../../common/storage/storage-provider";
-import { FileScanner } from "../../domain/file-scanner";
+import { FileScanner, ScannerUnavailableError } from "../../domain/file-scanner";
 import { canOpen } from "../../domain/file-policy";
 
 type Actor = { sub: string; roles: string[] };
@@ -90,14 +90,24 @@ export class FilesService {
       verdict = { clean: false, reason: `size ${head.size} does not match declared ${file.sizeBytes}` };
     } else {
       const bytes = await this.storage.readHead(file.bucket, file.path, HEAD_BYTES);
-      verdict = await this.scanner.scan({
-        bucket: file.bucket,
-        path: file.path,
-        contentType: file.contentType,
-        sizeBytes: file.sizeBytes,
-        kind: file.kind,
-        head: bytes,
-      });
+      try {
+        verdict = await this.scanner.scan({
+          bucket: file.bucket,
+          path: file.path,
+          contentType: file.contentType,
+          sizeBytes: file.sizeBytes,
+          kind: file.kind,
+          head: bytes,
+          readAll: () => this.storage.readHead(file.bucket, file.path, file.sizeBytes),
+        });
+      } catch (e) {
+        // Fail closed: no verdict means no access. The upload stays pending (not rejected,
+        // not deleted), so the caller can retry once the scanner is back.
+        if (e instanceof ScannerUnavailableError) {
+          throw new ServiceUnavailableException("The file could not be scanned right now. Please try again shortly.");
+        }
+        throw e;
+      }
     }
     if (!verdict.clean) await this.storage.delete(file.bucket, file.path);
     const updated = await this.prisma.storedFile.update({
