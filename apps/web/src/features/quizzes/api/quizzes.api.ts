@@ -71,8 +71,8 @@ export interface Certificate {
 export interface CertificateVerification {
   certificateNumber: string;
   issuedAt: string;
-  quiz: { id: string; title: string };
-  user: { id: string; firstName: string; lastName: string };
+  quiz: { title: string };
+  user: { firstName: string; lastName: string };
 }
 
 // Raw Prisma projection (question/option isCorrect included) — only reachable by

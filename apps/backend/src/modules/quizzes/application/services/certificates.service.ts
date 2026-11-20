@@ -13,15 +13,21 @@ export class CertificatesService {
     });
   }
 
+  // Public, unauthenticated: show only what a verifier needs (holder name, quiz title,
+  // number, issue date). No user id, attempt id, file URL or revocation detail (TASK-012).
   async verify(certificateNumber: string) {
     const certificate = await this.prisma.certificate.findUnique({
       where: { certificateNumber },
-      include: {
-        quiz: { select: { id: true, title: true } },
-        user: { select: { id: true, firstName: true, lastName: true } },
+      select: {
+        certificateNumber: true,
+        issuedAt: true,
+        revokedAt: true,
+        quiz: { select: { title: true } },
+        user: { select: { firstName: true, lastName: true } },
       },
     });
     if (!certificate || certificate.revokedAt) throw new NotFoundException("Certificate not found");
-    return certificate;
+    const { revokedAt: _revokedAt, ...visible } = certificate;
+    return visible;
   }
 }
