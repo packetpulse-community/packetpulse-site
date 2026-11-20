@@ -141,6 +141,10 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | Alert rule for `alert:true` job logs | The jobs now emit alertable log lines; nothing is listening yet | TASK-005 |
 | Test hygiene: run backend e2e suites one session at a time | Several sessions running the suite at once share one database and Redis and cause false failures | none |
 
+## Migration status (20 Nov 2026)
+
+`20261116100000_audit_log_append_only` and `20261116175303_private_files` were applied with `prisma migrate deploy` to the Supabase database that `apps/backend/.env` points at (the `aws-0-ap-northeast-1` pooler, 109 users). `prisma migrate status` reports the schema up to date. Read-only checks afterwards: the 16 existing audit rows are intact, the `reason` column and the append-only triggers exist, and the two file tables exist. **If production uses a different Supabase project, it still needs the same two migrations** (the deploy warning below applies to it).
+
 ## Deploy warning (read before deploying the backend)
 
 **Nothing applies database migrations on deploy** (`apps/backend/Dockerfile` starts the app only; `render.yaml` has no pre-deploy command). The current backend code needs two migrations that are not on the live Supabase database yet: `20261116100000_audit_log_append_only` (the audit `reason` column, new action values and the append-only trigger) and `20261116175303_private_files` (the file tables). Deploying this backend without running `prisma migrate deploy` first will make admin actions that write the audit log fail. Procedure: back up Supabase, then run `prisma migrate deploy` from a trusted machine against the **direct** (not pooled) connection, as in `docs/ops/migrations.md`, then deploy.
