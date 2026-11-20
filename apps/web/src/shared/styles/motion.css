@@ -14,7 +14,7 @@
 .skeleton {
   position: relative;
   overflow: hidden;
-  background-color: hsl(var(--muted));
+  background-color: var(--grove-subtle);
 }
 
 .skeleton::after {
@@ -22,7 +22,7 @@
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background-image: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.08), transparent);
+  background-image: linear-gradient(90deg, transparent, color-mix(in srgb, var(--grove-text) 8%, transparent), transparent);
   animation: pp-shimmer 1.4s ease-in-out infinite;
 }
 

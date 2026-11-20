@@ -1,12 +1,13 @@
 /*
  * Signal Grove design tokens (PacketPulse 2.0, Document 2 sections 4, 5, 6).
  *
- * OPT-IN: nothing here applies until an element carries data-theme="grove".
- * The existing :root / .dark values in globals.css are not touched, so the
- * current look is unchanged. Dark values apply under a .dark ancestor or on the
- * same element (`<div data-theme="grove" class="dark">`). Add data-mode="light"
- * to force light values inside a page whose root is already .dark (the app is
- * dark today), e.g. `<div data-theme="grove" data-mode="light">`.
+ * DEFAULT THEME: the light values live on :root, the dark values on any `.dark`
+ * element (the theme switch puts `dark` on <html>, see shared/theme). The
+ * [data-theme="grove"] selector is kept so a subtree can still force a mode:
+ * add data-mode="light" to get light values inside a `.dark` ancestor, e.g.
+ * `<div data-theme="grove" data-mode="light">`. A `.dark` element anywhere
+ * (for example the legacy surface, shared/theme/LegacyScope) re-declares the
+ * dark values for its subtree only.
  *
  * This is the ONLY place raw colour values for the Grove theme may live
  * (Document 2 section 14). Components use the Tailwind names mapped in
@@ -15,6 +16,7 @@
  */
 
 /* Light values plus every non-colour token. */
+:root,
 [data-theme="grove"] {
   /* Surfaces, text, borders (4.1) */
   --grove-page: #f5f8f6;
@@ -100,6 +102,7 @@
 }
 
 /* Dark values: colours only. */
+.dark,
 [data-theme="grove"].dark,
 .dark [data-theme="grove"]:not([data-mode="light"]) {
   --grove-page: #001d21;

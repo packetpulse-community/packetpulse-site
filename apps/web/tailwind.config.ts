@@ -1,11 +1,23 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
-// Base shadcn token system ported as-is from the old packetpulse-community frontend
-// (packetpulse-community/tailwind.config.js) — but its actual visual identity
-// (indigo/purple/cyan gradients, glassmorphism) lives in literal Tailwind utility
-// classes throughout components, not in this token layer — see Button/Card/Badge
-// primitives and the landing/auth pages for that recipe.
+// Colour model: Signal Grove (Document 2) is the default theme. Every semantic name below
+// resolves to a CSS variable from src/shared/styles/grove-tokens.css, which holds the light
+// values on :root and the dark values on `.dark`. Never write raw hex in components.
+//
+// Semantic names for screens: background, surface(.subtle), border(.control), text(.secondary),
+// primary(.hover/.pressed/.text/.foreground), accent (lime), success, warning, danger, info
+// (each with .soft). The shadcn names (foreground, muted, card, popover, secondary,
+// destructive, input, ring) stay as aliases so older components keep working.
+//
+// Colours are functions so opacity modifiers work (bg-primary/10) on var() based values.
+// Typed as string because Tailwind's config types do not model the function form it accepts.
+const v = (name: string): string =>
+  (({ opacityValue }: { opacityValue?: string }) =>
+    opacityValue === undefined || opacityValue === "1"
+      ? `var(${name})`
+      : `color-mix(in srgb, var(${name}) calc(${opacityValue} * 100%), transparent)`) as unknown as string;
+
 const config: Config = {
   darkMode: ["class"],
   content: ["./src/**/*.{ts,tsx}"],
@@ -19,42 +31,38 @@ const config: Config = {
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        // --- semantic names (use these in new and migrated code) ---
+        background: v("--grove-page"),
+        surface: { DEFAULT: v("--grove-surface"), subtle: v("--grove-subtle") },
+        border: v("--grove-border"),
+        control: v("--grove-control"),
+        text: { DEFAULT: v("--grove-text"), secondary: v("--grove-text-secondary") },
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: v("--grove-brand"),
+          hover: v("--grove-brand-hover"),
+          pressed: v("--grove-brand-pressed"),
+          text: v("--grove-brand-text"),
+          foreground: v("--grove-on-brand"),
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: v("--grove-lime"),
+          hover: v("--grove-lime-hover"),
+          pressed: v("--grove-lime-pressed"),
+          foreground: v("--grove-on-lime"),
         },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-        // Signal Grove (opt-in theme, Document 2). Values come from
-        // src/shared/styles/grove-tokens.css and only resolve inside
-        // [data-theme="grove"]; never write raw hex in components.
+        success: { DEFAULT: v("--state-success"), soft: v("--state-success-soft") },
+        warning: { DEFAULT: v("--state-warning"), soft: v("--state-warning-soft") },
+        danger: { DEFAULT: v("--state-danger"), soft: v("--state-danger-soft") },
+        info: { DEFAULT: v("--state-information"), soft: v("--state-information-soft") },
+        // --- shadcn aliases kept so existing components resolve to the Grove values ---
+        foreground: v("--grove-text"),
+        input: v("--grove-control"),
+        ring: v("--grove-focus"),
+        secondary: { DEFAULT: v("--grove-subtle"), foreground: v("--grove-text") },
+        destructive: { DEFAULT: v("--grove-destructive"), foreground: v("--grove-on-destructive") },
+        muted: { DEFAULT: v("--grove-subtle"), foreground: v("--grove-text-secondary") },
+        popover: { DEFAULT: v("--grove-surface"), foreground: v("--grove-text") },
+        card: { DEFAULT: v("--grove-surface"), foreground: v("--grove-text") },
         grove: {
           page: "var(--grove-page)",
           surface: "var(--grove-surface)",
