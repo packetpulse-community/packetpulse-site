@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { buildCsp, cspHeaderName, generateNonce, parseCspMode } from "@/shared/security/csp";
+import { buildCsp, cspHeaderName, parseCspMode } from "@/shared/security/csp";
 
 // Pages that must never bounce through /refresh (they either don't need a session
 // or are part of getting one).
@@ -38,21 +38,15 @@ export function proxy(request: NextRequest) {
   const headers = new Headers(request.headers);
   headers.set(PATH_HEADER, pathname + search);
 
-  // Content-Security-Policy (TASK-011): header name and strictness follow CSP_MODE, default
-  // report-only. With CSP_NONCE=true each request gets a nonce that Next reads from the
-  // request's CSP header and stamps on its own inline scripts.
+  // Content-Security-Policy (TASK-011): header name and strictness follow CSP_MODE (default
+  // report-only). Scripts use 'unsafe-inline' because Next's inline bootstrap needs it and a
+  // nonce cannot reach prerendered pages; see docs/ops/web-security.md.
   const mode = parseCspMode(process.env.CSP_MODE);
-  const nonce = process.env.CSP_NONCE === "true" ? generateNonce() : undefined;
   const csp = buildCsp({
     mode,
     production: process.env.NODE_ENV === "production",
-    nonce,
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   });
-  if (nonce) {
-    headers.set(cspHeaderName(mode), csp);
-    headers.set("x-nonce", nonce);
-  }
   const pass = () => {
     const res = NextResponse.next({ request: { headers } });
     res.headers.set(cspHeaderName(mode), csp);

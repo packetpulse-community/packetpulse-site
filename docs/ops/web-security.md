@@ -2,7 +2,7 @@
 
 Document 4 TASK-011 (TEST-011). Covers response headers, the request-forgery (CSRF) assessment and scanning.
 
-## Response headers (`apps/web/next.config.mjs`, `headers()`)
+## Response headers (`apps/web/next.config.mjs`, `headers()`; CSP in `apps/web/src/proxy.ts`)
 
 | Header | Value | Why |
 |---|---|---|
@@ -11,15 +11,31 @@ Document 4 TASK-011 (TEST-011). Covers response headers, the request-forgery (CS
 | `Permissions-Policy` | camera, microphone, geolocation, payment, usb all off | The site uses none of these; denying them limits what injected script could do. |
 | `X-Frame-Options` | `DENY` | Clickjacking protection for old browsers. |
 | `Strict-Transport-Security` | 2 years, includeSubDomains | HTTPS only. Vercel serves HTTPS; no `preload` until the owner is sure every subdomain is HTTPS. |
-| `Content-Security-Policy-Report-Only` | see below | Observe before enforcing. |
+| `Content-Security-Policy-Report-Only` (default) or `Content-Security-Policy` | built by `apps/web/src/shared/security/csp.ts`, set per request in `proxy.ts`; see below | Name and strictness follow `CSP_MODE`. |
 
 The backend already sets `helmet()` defaults on API responses.
 
-### Why the CSP is report-only
+### Content-Security-Policy and `CSP_MODE`
 
-Next.js App Router injects inline bootstrap scripts, so a strict `script-src 'self'` would break every page unless a per-request nonce is added through middleware (a larger change touching `apps/web/src`, out of scope here). `'unsafe-inline'` weakens script protection, so this policy is a **starting point**: it already forbids framing, `<object>`, foreign `<base>` and foreign form targets, and limits connections to self plus the Supabase origin. Enforcing it blind could blank pages (PDF preview iframes, Supabase realtime, the Socket.IO websocket), so violations are only reported in the browser console for now. There is no report endpoint yet.
+`CSP_MODE` (server env var, read at request time) is `report-only` (default; anything else also means report-only) or `enforce`. Until the owner sets `enforce`, nothing is blocked.
 
-Path to enforcement: (1) browse the main flows in production with the console open and collect violations; (2) add nonce support and drop `'unsafe-inline'` from `script-src`; (3) rename the header to `Content-Security-Policy`; (4) optionally add a report endpoint.
+Directives (both modes): `default-src 'self'`; `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com` (`'unsafe-eval'` only outside production); `style-src 'self' 'unsafe-inline'`; `img-src 'self' data: blob: https:`; `font-src 'self' data:`; `connect-src 'self'` + Turnstile + the Supabase origin and its `wss://` from `NEXT_PUBLIC_SUPABASE_URL`; `frame-src 'self'` + Turnstile + the Supabase origin; `worker-src 'self' blob:`; `manifest-src 'self'`; `frame-ancestors 'none'`; `base-uri 'self'`; `form-action 'self'`; `object-src 'none'`. `enforce` in production additionally sends `upgrade-insecure-requests`. The API and Socket.IO are same-origin through the `/api` and `/socket.io` rewrites, so no API origin is listed. Fonts are self-hosted/system, so no font CDN is needed. A unit test (`csp.test.ts`) pins these, and that production never contains `unsafe-eval`.
+
+Known remaining weakness: `script-src` still has `'unsafe-inline'` (Next's inline bootstrap). A nonce was tried in a throwaway build: it put nonces on dynamically rendered pages, but pages prerendered with `generateStaticParams` (`/tools/packet-lab/*`) get no nonce, so their scripts would be blocked, and forcing everything dynamic costs the static marketing pages. `buildCsp` supports a `nonce` option, but `proxy.ts` does not use it. Revisit with Next's PPR/SRI-based strict CSP before relying on script protection from this policy.
+
+### Rollout
+
+1. Deploy with `CSP_MODE` unset (or `report-only`). The header is `Content-Security-Policy-Report-Only`; behaviour is unchanged.
+2. For about a week, browse the main flows on the real deployment with DevTools open (home, login/register with Turnstile on, dashboard, blogs, resources with a PDF preview, certificates, Packet Lab, admin) and check the console for "violates the following Content Security Policy directive". There is no report endpoint yet, so this is manual.
+3. Fix real violations in code, or add an origin only if it is genuinely needed.
+4. Set `CSP_MODE=enforce` in the Vercel project env (Production) and redeploy. Re-run the same click-through immediately.
+5. **Rollback:** set `CSP_MODE=report-only` (or delete it) and redeploy. No code change is needed.
+
+### What the browser run verified, and what it could not
+
+Verified on a production build (`next start`) with `CSP_MODE=enforce`, local web only, no backend: `/`, `/login`, `/register`, `/tools/packet-lab`, `/tools/packet-lab/ping-lan` (hydrates, Play works, `securitypolicyviolation` events: none), `/blogs`, `/certificates`, `/design-system`, `/dashboard` (the last four redirect to login without a backend). No CSP violations other than my own test iframe being refused by `frame-ancestors 'none'` (expected). `upgrade-insecure-requests` did not break `http://localhost`.
+
+Not verified: signed-in pages and the admin area (no backend); the Turnstile widget (no site key set, so its script/iframe/connect allowances are from Cloudflare's documented needs, not observed); PDF preview iframes and Supabase storage/realtime (no Supabase run); images from arbitrary https hosts (allowed by `img-src https:` for that reason); the Vercel preview/production deployment, including whether Vercel's own toolbar scripts in preview deployments are blocked.
 
 ## Request-forgery (CSRF) assessment
 

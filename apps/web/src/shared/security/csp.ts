@@ -3,9 +3,9 @@
 //
 // CSP_MODE=report-only (default) | enforce picks the header NAME and, for enforce, adds
 // the hardening directives. Nothing is blocked until the owner sets CSP_MODE=enforce.
-// CSP_NONCE=true switches script-src from 'unsafe-inline' to a per-request nonce with
-// 'strict-dynamic'. A nonce only works on dynamically rendered pages, so it makes every
-// page dynamic (no static prerender); keep it off until that cost is accepted.
+// The nonce option is groundwork and is NOT wired into proxy.ts: a nonce only reaches
+// dynamically rendered pages, and routes using generateStaticParams stay prerendered with no
+// nonce, so their scripts would be blocked (verified in a build). See docs/ops/web-security.md.
 
 export type CspMode = "report-only" | "enforce";
 
@@ -35,10 +35,6 @@ function originOf(url: string | undefined): string | undefined {
 
 export function cspHeaderName(mode: CspMode): string {
   return mode === "enforce" ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only";
-}
-
-export function generateNonce(): string {
-  return btoa(crypto.randomUUID());
 }
 
 export function buildCsp({ mode, production, nonce, supabaseUrl }: CspOptions): string {
