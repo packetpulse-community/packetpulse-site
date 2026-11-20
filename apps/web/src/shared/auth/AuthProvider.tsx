@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { SessionUser } from "./session";
+import { SessionKeepAlive } from "./SessionKeepAlive";
 
 const AuthContext = createContext<SessionUser | null>(null);
 
@@ -10,7 +11,12 @@ const AuthContext = createContext<SessionUser | null>(null);
 // against the httpOnly cookie; this just makes that result available to client
 // components (nav bar, profile menu) (plan §6).
 export function AuthProvider({ user, children }: { user: SessionUser | null; children: React.ReactNode }) {
-  return <AuthContext.Provider value={user}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={user}>
+      <SessionKeepAlive />
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

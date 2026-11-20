@@ -124,11 +124,20 @@ export async function apiFetchClient<T>(path: string, options: RequestInit = {})
 // Single in-flight refresh shared by every caller — a page firing several requests
 // at once must not burn the refresh endpoint's rate limit (or race token rotation,
 // which the backend treats as reuse and revokes the whole session).
+function clearSessionHint() {
+  if (typeof document !== "undefined") document.cookie = "session_active=; Path=/; Max-Age=0; SameSite=Lax";
+}
+
 let refreshInFlight: Promise<boolean> | null = null;
 
 export function refreshSession(): Promise<boolean> {
   refreshInFlight ??= fetch("/api/auth/refresh", { method: "POST", credentials: "include" })
-    .then((res) => res.ok)
+    .then((res) => {
+      // The server said the session is gone (not a network blip or rate limit): drop the presence
+      // hint so the public navbar stops showing Dashboard to a signed-out person.
+      if (res.status === 401 || res.status === 403) clearSessionHint();
+      return res.ok;
+    })
     .catch(() => false)
     .finally(() => {
       refreshInFlight = null;
