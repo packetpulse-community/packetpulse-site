@@ -7,6 +7,7 @@ import { AuthService } from "./application/services/auth.service";
 import { AuthCookieService } from "./application/services/auth-cookie.service";
 import { TokenService } from "./application/services/token.service";
 import { EmailVerificationService } from "./application/services/email-verification.service";
+import { AdminActivityLogService } from "../admin/application/services/admin-activity-log.service";
 import { CaptchaModule } from "../../common/captcha";
 import { NotificationsModule } from "../notifications";
 import { UserRepository } from "./domain/repositories/user.repository";
@@ -39,6 +40,9 @@ import { MaintenanceGuard } from "./presentation/guards/maintenance.guard";
   controllers: [AuthController],
   providers: [
     AuthService,
+    // Needs only PrismaService (global). Provided here as well as in AdminModule because AdminModule
+    // imports IdentityModule, so importing AdminModule back would be a module cycle.
+    AdminActivityLogService,
     AuthCookieService,
     TokenService,
     EmailVerificationService,

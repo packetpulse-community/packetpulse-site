@@ -13,6 +13,7 @@ import { SUPER_ADMIN_ROLE } from "../../domain/constants/permissions.constants";
 import { SiteStatusService } from "../../../../common/site-status/site-status.service";
 import { maintenanceException } from "../../../../common/site-status/maintenance.constants";
 import { RegisterDto, RegisterAdminDto, LoginDto } from "../dto/auth.dto";
+import { AdminActivityLogService } from "../../../admin/application/services/admin-activity-log.service";
 import { REDIS_CLIENT } from "../../../../common/redis/redis.constants";
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
@@ -38,6 +39,7 @@ export class AuthService {
     private readonly emailVerification: EmailVerificationService,
     private readonly siteStatus: SiteStatusService,
     private readonly config: ConfigService,
+    private readonly activityLog: AdminActivityLogService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
@@ -101,6 +103,9 @@ export class AuthService {
       isApproved: true,
       emailVerified: true,
     });
+
+    // Nobody else authorised this account, so record it in the audit log (TASK-015).
+    await this.activityLog.logAdminRegistered(user.id, user.email);
 
     return toPublicUser(user);
   }
