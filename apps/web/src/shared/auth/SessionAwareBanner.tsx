@@ -15,7 +15,7 @@ export function SessionAwareBanner() {
   const pathname = usePathname();
   if (!shouldShowSignedInBanner(hint, pathname)) return null;
   return (
-    <div role="status" className="mb-6 flex flex-col gap-3 rounded-lg border border-indigo-400/30 bg-indigo-500/10 p-4 text-center">
+    <div role="status" className="mb-6 flex flex-col gap-3 rounded-grove-card border border-border bg-surface-subtle p-4 text-center">
       <p className="text-sm font-medium text-foreground">You are already signed in</p>
       <Link href={SIGNED_IN_HOME} className={cn(buttonVariants({ variant: "gradient" }), "w-full")}>
         Continue to your dashboard

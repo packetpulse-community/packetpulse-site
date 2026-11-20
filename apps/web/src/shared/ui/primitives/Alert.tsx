@@ -5,21 +5,21 @@ import { forwardRef, useState } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/utils/cn";
 
-// Ported verbatim from the reference project's src/components/ui/alert.jsx —
-// light-mode colored boxes with dark: variants, one icon per variant.
+// The pre-Grove names (info, success, warning, error) now use the semantic state tokens; the
+// grove-* names are the same thing with the left accent bar. Both always show a glyph.
 const GROVE_ALERT = "rounded-[var(--grove-radius-control)] border-0 border-l-4 shadow-none";
 
 export const alertVariants = cva(
-  "relative w-full rounded-lg border p-4 shadow-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg~*]:pl-7",
+  "relative w-full rounded-grove-control border p-4 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg~*]:pl-7",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
-        info: "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200",
-        success: "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200",
-        warning: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200",
-        error: "border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200",
-        glass: "glass-panel text-foreground",
+        default: "border-border bg-surface text-text",
+        info: "border-info bg-info-soft text-info",
+        success: "border-success bg-success-soft text-success",
+        warning: "border-warning bg-warning-soft text-warning",
+        error: "border-danger bg-danger-soft text-danger",
+        glass: "border-border bg-surface text-text",
         // Signal Grove semantic alerts (Document 2 4.3): soft background, strong
         // text colour, a left accent bar and a glyph, so colour is never alone.
         "grove-information": GROVE_ALERT + " border-state-information bg-state-information-soft text-state-information",

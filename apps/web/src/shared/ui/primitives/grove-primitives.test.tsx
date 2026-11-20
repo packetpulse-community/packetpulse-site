@@ -49,9 +49,10 @@ describe("Button", () => {
     expect(el.props["aria-busy"]).toBeUndefined();
   });
 
-  it("existing variants keep their classes", () => {
+  it("pre-Grove variants resolve to the theme tokens", () => {
     const html = renderToStaticMarkup(<Button variant="gradient">x</Button>);
-    expect(html).toContain("from-indigo-600");
+    expect(html).toContain("bg-primary");
+    expect(html).not.toContain("indigo");
   });
 
   it("grove variants set the 40px / 44px touch minimum height", () => {

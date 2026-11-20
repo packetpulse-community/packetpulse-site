@@ -37,7 +37,7 @@ export function EmptyState({ title, description, action, icon, as: Heading = "h2
   return (
     <div
       className={cn(
-        "glass-panel col-span-full flex flex-col items-center gap-3 rounded-lg px-6 py-10 text-center",
+        "col-span-full flex flex-col items-center gap-3 rounded-grove-card border border-border bg-surface px-6 py-10 text-center",
         className,
       )}
     >

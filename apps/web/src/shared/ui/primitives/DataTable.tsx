@@ -158,7 +158,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
   const to = Math.min(page * pageSize, totalItems);
 
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <div className="rounded-grove-card border border-border bg-surface">
       <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
         {hideSearch ? (
           <div />
@@ -173,7 +173,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
                 setSearchTerm(e.target.value);
                 if (!serverSide) setLocalPage(1);
               }}
-              className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-9 w-full rounded-grove-control border border-control bg-surface pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
         )}
@@ -257,7 +257,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
             type="button"
             onClick={() => handlePageChange(page - 1)}
             disabled={page === 1}
-            className="rounded-lg border border-input p-2 text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-grove-control border border-control p-2 text-text-secondary hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -286,7 +286,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
             type="button"
             onClick={() => handlePageChange(page + 1)}
             disabled={page === totalPages}
-            className="rounded-lg border border-input p-2 text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-grove-control border border-control p-2 text-text-secondary hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ChevronRight className="h-4 w-4" />
           </button>

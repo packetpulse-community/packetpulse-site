@@ -34,7 +34,7 @@ export function StatusScreen({ icon, title, children, action, reference, seconda
     >
       <div
         aria-hidden="true"
-        className="flex h-14 w-14 items-center justify-center rounded-full border border-glass-border bg-glass text-muted-foreground"
+        className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-surface-subtle text-text-secondary"
       >
         {icon}
       </div>

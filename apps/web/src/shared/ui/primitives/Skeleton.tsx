@@ -31,7 +31,7 @@ export function SkeletonScreen({
 // Card-shaped skeleton matching the glass cards used by the list pages.
 export function SkeletonCard({ className }: { className?: string }) {
   return (
-    <div className={cn("glass-panel flex flex-col gap-3 rounded-lg p-6", className)}>
+    <div className={cn("flex flex-col gap-3 rounded-grove-card border border-border bg-surface p-6", className)}>
       <Skeleton className="h-5 w-2/3" />
       <Skeleton className="h-4 w-full" />
       <Skeleton className="h-4 w-5/6" />

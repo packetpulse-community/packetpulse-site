@@ -38,8 +38,8 @@ export function CommandPalette() {
   const groups = [...new Set(entries.map((c) => c.group))];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-24" onClick={() => setOpen(false)}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-lg border border-border bg-card shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-grove-scrim pt-24" onClick={() => setOpen(false)}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-grove-card border border-border bg-surface text-text shadow-grove-overlay">
         <Command label="Command palette">
           <Command.Input
             autoFocus
@@ -57,7 +57,7 @@ export function CommandPalette() {
                       key={cmd.id}
                       value={`${cmd.label} ${cmd.keywords?.join(" ") ?? ""}`}
                       onSelect={() => go(cmd.href)}
-                      className="cursor-pointer rounded px-2 py-2 text-sm data-[selected=true]:bg-accent"
+                      className="cursor-pointer rounded-grove-tag px-2 py-2 text-sm data-[selected=true]:bg-surface-subtle"
                     >
                       {cmd.label}
                     </Command.Item>

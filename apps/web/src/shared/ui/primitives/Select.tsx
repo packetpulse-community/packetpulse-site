@@ -38,13 +38,13 @@ export function Select({ value, options, onChange, className }: SelectProps) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-input bg-background px-3 text-sm text-foreground hover:bg-accent"
+        className="flex h-9 w-full items-center justify-between gap-2 rounded-grove-control border border-control bg-surface px-3 text-sm text-text hover:bg-surface-subtle"
       >
         <span>{selected?.label ?? value}</span>
         <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="absolute right-0 z-20 mt-1 min-w-full overflow-hidden rounded-lg border border-border bg-popover py-1 shadow-lg">
+        <div className="absolute right-0 z-20 mt-1 min-w-full overflow-hidden rounded-grove-card border border-border bg-surface py-1 shadow-grove-overlay">
           {options.map((option) => (
             <button
               key={option.value}
@@ -54,8 +54,8 @@ export function Select({ value, options, onChange, className }: SelectProps) {
                 setOpen(false);
               }}
               className={cn(
-                "block w-full whitespace-nowrap px-3 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground",
-                option.value === value && "bg-accent/50 font-medium",
+                "block w-full whitespace-nowrap px-3 py-1.5 text-left text-sm hover:bg-surface-subtle",
+                option.value === value && "bg-surface-subtle font-medium",
               )}
             >
               {option.label}

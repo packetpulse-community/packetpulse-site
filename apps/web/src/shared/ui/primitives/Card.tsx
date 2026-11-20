@@ -2,14 +2,13 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef } from "react";
 import { cn } from "@/shared/utils/cn";
 
-// Raw-slate recipe ported verbatim from the reference project's
-// src/components/ui/card.jsx — not the bg-card/border-border CSS-variable
-// tokens (the reference never used those for Card, despite them existing).
+// Cards use the theme tokens: surface, 1 px border, 14 px radius. `solid` and `glass` are the
+// pre-Grove names and now render the same Grove card (borders first, no blur or glow).
 export const cardVariants = cva("", {
   variants: {
     variant: {
-      solid: "rounded-lg border border-slate-200 bg-white text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50",
-      glass: "rounded-lg glass-panel glass-interactive text-foreground",
+      solid: "rounded-grove-card border border-border bg-surface text-text",
+      glass: "rounded-grove-card border border-border bg-surface text-text",
       // Signal Grove (Document 2 section 8): surface, 1 px border, 14 px radius,
       // 16 px padding (20 from sm up) applied through CardHeader/CardContent.
       // Informational: not clickable, no hover state.
@@ -64,7 +63,7 @@ CardTitle.displayName = "CardTitle";
 
 export const CardDescription = forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, ...props }, ref) => (
-    <p ref={ref} className={cn("text-sm text-slate-500 dark:text-slate-400", className)} {...props} />
+    <p ref={ref} className={cn("text-sm text-text-secondary", className)} {...props} />
   ),
 );
 CardDescription.displayName = "CardDescription";

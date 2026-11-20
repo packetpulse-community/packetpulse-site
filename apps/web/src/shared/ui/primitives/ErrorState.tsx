@@ -23,7 +23,7 @@ export function ErrorState({ title, description, retry, className }: ErrorStateP
     <div
       role="alert"
       className={cn(
-        "col-span-full flex flex-col items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-6 py-8 text-center text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200",
+        "col-span-full flex flex-col items-center gap-3 rounded-grove-card border border-danger bg-danger-soft px-6 py-8 text-center text-danger",
         className,
       )}
     >

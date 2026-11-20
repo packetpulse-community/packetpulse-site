@@ -51,8 +51,8 @@ export function AnimatedCard({
       className={cn(
         "relative overflow-hidden rounded-2xl p-4",
         variant === "glass"
-          ? "glass-panel glass-interactive"
-          : "border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-gray-900",
+          ? "border border-border bg-surface"
+          : "border border-border bg-surface",
         className,
       )}
     >

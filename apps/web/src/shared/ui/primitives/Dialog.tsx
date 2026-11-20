@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils/cn";
+import { usePortalContainer } from "@/shared/theme/LegacyScope";
 import { Card } from "./Card";
 import {
   createScrollLock,
@@ -46,6 +47,7 @@ const scrollLock = createScrollLock();
 // trapped, Escape closes, outside click closes unless `destructive`, background scroll is locked,
 // and only the topmost of stacked dialogs is interactive. Rendered in a portal on <body>.
 export function Dialog({ open, onClose, title, description, children, className, destructive = false }: DialogProps) {
+  const portalContainer = usePortalContainer();
   const id = useId();
   const titleId = `${id}-title`;
   const descId = `${id}-desc`;
@@ -139,14 +141,14 @@ export function Dialog({ open, onClose, title, description, children, className,
       inert={!isTop}
     >
       <div
-        className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-grove-scrim"
         onClick={destructive ? undefined : () => closeRef.current()}
         aria-hidden="true"
         data-testid="dialog-backdrop"
       />
       <Card
         ref={panelRef}
-        variant="glass"
+        variant="grove"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -169,7 +171,7 @@ export function Dialog({ open, onClose, title, description, children, className,
             type="button"
             onClick={() => closeRef.current()}
             aria-label={`Close dialog: ${title}`}
-            className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="rounded-md p-2 text-muted-foreground hover:bg-surface-subtle hover:text-text focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring"
           >
             <X aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -179,6 +181,6 @@ export function Dialog({ open, onClose, title, description, children, className,
         </div>
       </Card>
     </div>,
-    document.body,
+    portalContainer ?? document.body,
   );
 }
