@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
-import { navCommands } from "@/shared/config/navigation";
+import { useAuth } from "@/shared/auth/AuthProvider";
+import { navigationFor } from "@/shared/config/navigation";
 
 // The primary cross-domain navigation mechanism (plan §6) — fuzzy-searches across
 // domains rather than requiring the user to know where something lives in a menu
@@ -11,6 +12,9 @@ import { navCommands } from "@/shared/config/navigation";
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const auth = useAuth();
+  // Role-aware: only what this person may use (the server re-checks every page anyway).
+  const entries = useMemo(() => navigationFor(auth).palette, [auth]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -31,7 +35,7 @@ export function CommandPalette() {
 
   if (!open) return null;
 
-  const groups = [...new Set(navCommands.map((c) => c.group))];
+  const groups = [...new Set(entries.map((c) => c.group))];
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-24" onClick={() => setOpen(false)}>
@@ -46,11 +50,11 @@ export function CommandPalette() {
             <Command.Empty className="px-2 py-4 text-center text-sm text-muted-foreground">No results.</Command.Empty>
             {groups.map((group) => (
               <Command.Group key={group} heading={group} className="px-2 py-1 text-xs text-muted-foreground">
-                {navCommands
+                {entries
                   .filter((c) => c.group === group)
                   .map((cmd) => (
                     <Command.Item
-                      key={cmd.href + cmd.label}
+                      key={cmd.id}
                       value={`${cmd.label} ${cmd.keywords?.join(" ") ?? ""}`}
                       onSelect={() => go(cmd.href)}
                       className="cursor-pointer rounded px-2 py-2 text-sm data-[selected=true]:bg-accent"
