@@ -1,0 +1,77 @@
+name: Uptime
+
+# TASK-005. Pings the backend health endpoint and the web home page and goes RED when
+# either is down, not 200, or slower than UPTIME_SLOW_MS. It doubles as the keep-warm
+# ping that stops Render's free plan sleeping after ~15 minutes idle.
+#
+# Limits worth knowing (details in docs/ops/monitoring.md):
+#  * GitHub's fastest schedule is every 5 minutes and it is best-effort: runs can be
+#    delayed or skipped under load. 10 minutes keeps the Render service warm and uses
+#    fewer free minutes. This is a backstop, not a paging service.
+#  * A scheduled workflow stops after 60 days without repository activity.
+#  * A red run emails the people watching the repository (and whoever last changed the
+#    schedule) via GitHub notifications; set ALERT_WEBHOOK_URL for chat/phone alerts.
+#
+# Configure in the repository: Settings > Secrets and variables > Actions > Variables
+#   UPTIME_BACKEND_URL  full health URL, e.g. https://<backend host>/api/health
+#   UPTIME_WEB_URL      web home page, e.g. https://<web host>/
+#   UPTIME_SLOW_MS      optional, default 8000
+# Optional secret: ALERT_WEBHOOK_URL (Slack / Discord / ntfy-style incoming webhook).
+# With the variables absent the workflow succeeds and prints a notice.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      BACKEND_URL: ${{ vars.UPTIME_BACKEND_URL }}
+      WEB_URL: ${{ vars.UPTIME_WEB_URL }}
+      UPTIME_SLOW_MS: ${{ vars.UPTIME_SLOW_MS || '8000' }}
+      ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/ops
+          sparse-checkout-cone-mode: true
+
+      - name: Check configuration
+        id: cfg
+        run: |
+          if [ -z "$BACKEND_URL" ] && [ -z "$WEB_URL" ]; then
+            echo "::notice title=Uptime checks not configured::Set the repository variables UPTIME_BACKEND_URL and UPTIME_WEB_URL (Settings > Secrets and variables > Actions > Variables). See docs/ops/monitoring.md. Nothing was checked."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "| Target | Result | Detail | Time |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Backend /api/health
+        id: backend
+        if: steps.cfg.outputs.configured == 'true' && env.BACKEND_URL != ''
+        run: bash scripts/ops/uptime-check.sh backend "$BACKEND_URL" '"status":"ok"'
+
+      # Runs even when the backend probe failed so one run reports both.
+      - name: Web home page
+        id: web
+        if: ${{ !cancelled() && steps.cfg.outputs.configured == 'true' && env.WEB_URL != '' }}
+        run: bash scripts/ops/uptime-check.sh web "$WEB_URL"
+
+      - name: Send alert
+        if: ${{ failure() && env.ALERT_WEBHOOK_URL != '' }}
+        run: |
+          msg="PacketPulse uptime check FAILED: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          curl -sS -m 20 -X POST -H 'Content-Type: application/json' \
+            -d "{\"text\":\"$msg\",\"content\":\"$msg\"}" "$ALERT_WEBHOOK_URL" >/dev/null || echo "::warning::alert webhook call failed"

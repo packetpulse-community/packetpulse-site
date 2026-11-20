@@ -1,0 +1,136 @@
+name: Database backup
+
+# TASK-004. Daily logical backup of the production database (pg_dump), encrypted with
+# gpg, stored as a workflow artifact and/or copied to S3-compatible storage, followed
+# by an automatic restore drill of the fresh dump into a throwaway Postgres service.
+# Supabase's free plan has no downloadable backups, so this is the only copy.
+#
+# Safe when unconfigured: without the BACKUP_DATABASE_URL secret the workflow prints a
+# notice and succeeds without doing anything. Setup and limits: docs/ops/backups.md.
+#
+# Secrets (Settings > Secrets and variables > Actions > Secrets)
+#   BACKUP_DATABASE_URL   Postgres URL, DIRECT or SESSION-pooler (not the 6543 transaction pooler)
+#   BACKUP_PASSPHRASE     encryption passphrase; REQUIRED, an unencrypted dump is never stored
+#   Optional off-site copy (S3-compatible: AWS S3, Cloudflare R2, Backblaze B2):
+#   BACKUP_S3_BUCKET, BACKUP_S3_ACCESS_KEY_ID, BACKUP_S3_SECRET_ACCESS_KEY,
+#   BACKUP_S3_ENDPOINT (omit for AWS), BACKUP_S3_REGION (default auto)
+#   BACKUP_HEARTBEAT_URL  optional dead-man's-switch URL (e.g. Healthchecks.io) pinged on success
+# Variables
+#   BACKUP_STORE          'artifact' (default), 's3', or 'both'
+#   BACKUP_RETENTION_DAYS artifact retention in days (default 14, GitHub allows 1-90)
+#   PG_CLIENT_VERSION     pg client major version; must be >= the server's (default 17)
+
+on:
+  schedule:
+    - cron: '17 20 * * *' # 20:17 UTC = 01:47 IST, a quiet hour
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PG_VERSION: ${{ vars.PG_CLIENT_VERSION || '17' }}
+      STORE: ${{ vars.BACKUP_STORE || 'artifact' }}
+      RETENTION: ${{ vars.BACKUP_RETENTION_DAYS || '14' }}
+      HAS_DB: ${{ secrets.BACKUP_DATABASE_URL != '' }}
+      HAS_PASS: ${{ secrets.BACKUP_PASSPHRASE != '' }}
+    services:
+      # Throwaway server for the automatic restore drill. Version >= the PG client's.
+      drill-postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: drill
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Check configuration
+        id: gate
+        run: |
+          if [ "$HAS_DB" != "true" ]; then
+            echo "::notice title=Backup skipped::The BACKUP_DATABASE_URL secret is not set, so no backup was taken. See docs/ops/backups.md."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif [ "$HAS_PASS" != "true" ]; then
+            echo "::error title=Backup refused::BACKUP_PASSPHRASE is not set. Backups contain personal data and are never stored unencrypted."
+            exit 1
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+
+      - name: Install PostgreSQL client
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common >/dev/null
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y >/dev/null
+          sudo apt-get install -y -qq "postgresql-client-$PG_VERSION" >/dev/null
+          echo "/usr/lib/postgresql/$PG_VERSION/bin" >> "$GITHUB_PATH"
+
+      - name: Back up
+        if: steps.gate.outputs.run == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          BACKUP_DIR: ${{ runner.temp }}/backups
+        run: bash scripts/backup/backup.sh
+
+      # Restores the dump just taken into the service container, checks tables, counts and
+      # the migrations table, drops it. The repo may be ahead of the deployed database
+      # (migrations run on deploy), so the migrations-directory comparison is skipped here;
+      # the table-level and _prisma_migrations completeness checks still apply.
+      - name: Restore drill (automatic)
+        if: steps.gate.outputs.run == 'true'
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          BACKUP_DIR: ${{ runner.temp }}/backups
+          RESTORE_TARGET_URL: postgresql://postgres:drill@localhost:5432/postgres
+          MIGRATIONS_DIR: ''
+        run: bash scripts/backup/restore-drill.sh | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload artifact
+        if: steps.gate.outputs.run == 'true' && (env.STORE == 'artifact' || env.STORE == 'both')
+        uses: actions/upload-artifact@v4
+        with:
+          name: packetpulse-db-backup-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/backups/*.dump.gpg
+            ${{ runner.temp }}/backups/*.sha256
+            ${{ runner.temp }}/backups/*.manifest
+          retention-days: ${{ fromJSON(vars.BACKUP_RETENTION_DAYS || '14') }}
+          if-no-files-found: error
+
+      - name: Copy to S3-compatible storage
+        if: steps.gate.outputs.run == 'true' && (env.STORE == 's3' || env.STORE == 'both')
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.BACKUP_S3_REGION || 'auto' }}
+          BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+        run: |
+          [ -n "$BUCKET" ] || { echo "::error::BACKUP_STORE needs s3 but BACKUP_S3_BUCKET is not set"; exit 1; }
+          ep=(); [ -z "$ENDPOINT" ] || ep=(--endpoint-url "$ENDPOINT")
+          aws "${ep[@]}" s3 cp "${{ runner.temp }}/backups/" "s3://$BUCKET/packetpulse/" --recursive \
+            --exclude '*' --include '*.dump.gpg' --include '*.sha256' --include '*.manifest'
+          echo "Uploaded to the bucket. Old objects are NOT pruned by this job: set a lifecycle rule on the bucket."
+
+      - name: Heartbeat
+        if: steps.gate.outputs.run == 'true'
+        env:
+          HEARTBEAT_URL: ${{ secrets.BACKUP_HEARTBEAT_URL }}
+        run: '[ -z "$HEARTBEAT_URL" ] || curl -fsS -m 20 --retry 3 "$HEARTBEAT_URL" >/dev/null'
