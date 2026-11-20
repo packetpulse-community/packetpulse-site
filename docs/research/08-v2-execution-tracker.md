@@ -82,7 +82,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 
 | Task | Status | Evidence and what remains |
 | --- | --- | --- |
-| TASK-032 Assessment engine | In progress | Quizzes, attempts, scoring, certificates. Missing: attempt and retake limits, time limit enforcement, expiry, version, autosave (PRD-017, TEST-049) |
+| TASK-032 Assessment engine | In progress | Quizzes, attempts, scoring, certificates. **Done on `feat/2.0-stabilise`:** per-quiz attempt cap (`maxAttempts`, default 3, null = unlimited), retake gap, server-side `deadlineAt` fixed at start and enforced on submit (5 s grace, late = 409, attempt marked expired and still counted), quiz `expiresAt`, lazy expiry of abandoned attempts, resume of a running attempt, certificate retention (`Certificate` FKs are NO ACTION; deleting a quiz that issued certificates archives it), SCR-034 shows attempts remaining and a server-clock timer. Migration `20261120185429_quiz_integrity`; 22 e2e tests in `quiz-integrity.e2e-spec.ts` (full e2e 223 pass), 5 web unit tests. Fixes S-7, S-9, D-1, D-4 (except `version`). **Remains:** quiz `version`, autosave of answers (PRD-017), expiry as a scheduled job (currently lazy), certificate validity period, admin quiz table wording (see below), browser walkthrough of SCR-034 |
 | TASK-033 Evidence submission and review | Open | Only self-entered `UserCertification` rows |
 | TASK-034 Badge lifecycle, public verification page | Open | A public certificate verifier exists (precursor); no labels, expiry, revoke flow |
 
