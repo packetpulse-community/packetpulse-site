@@ -12,14 +12,18 @@ import { ApiError } from "@/shared/api/http-client";
 import { SocialLoginRow } from "./SocialLoginRow";
 import { Turnstile, useCaptcha } from "@/shared/components/Turnstile";
 import { cn } from "@/shared/utils/cn";
+import { safeNext } from "@/shared/auth/safe-next";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 
 export function LoginForm({
   justRegistered = false,
   passwordReset = false,
+  next,
 }: {
   justRegistered?: boolean;
   passwordReset?: boolean;
+  /** ?next= from the URL: where to return after sign-in. Sanitised here (same-site paths only). */
+  next?: string | null;
 }) {
   const router = useRouter();
   const captcha = useCaptcha();
@@ -33,7 +37,8 @@ export function LoginForm({
   const mutation = useMutation({
     mutationFn: authApi.login,
     onSuccess: () => {
-      router.push("/dashboard");
+      // Deep links survive sign-in: back to the page they asked for, else the dashboard.
+      router.push(safeNext(next));
       router.refresh();
     },
     onError: (err) => {

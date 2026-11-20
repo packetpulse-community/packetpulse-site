@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/shared/auth/session";
+import { redirectToLogin } from "@/shared/auth/redirect-to-login";
 import { AuthProvider } from "@/shared/auth/AuthProvider";
 import { WorkflowShell } from "@/shared/layouts/WorkflowShell";
 
@@ -7,7 +7,7 @@ import { WorkflowShell } from "@/shared/layouts/WorkflowShell";
 // (not a client-side redirect-after-flash) before anything renders (plan §6).
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) return redirectToLogin();
 
   return (
     <AuthProvider user={user}>

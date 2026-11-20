@@ -26,14 +26,24 @@ function isStaticPublic(pathname: string) {
   );
 }
 
+// Layouts cannot see the URL they render for, but they must know it to send a
+// signed-out visitor to /login?next=<path> (deep links survive sign-in). Forward it
+// as a request header — set here for EVERY page request, overwriting anything the
+// client sent, so it cannot be spoofed. See shared/auth/redirect-to-login.ts.
+const PATH_HEADER = "x-pp-path";
+
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  if (SKIP_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return NextResponse.next();
-  if (isStaticPublic(pathname)) return NextResponse.next();
+  const headers = new Headers(request.headers);
+  headers.set(PATH_HEADER, pathname + search);
+  const pass = () => NextResponse.next({ request: { headers } });
+
+  if (SKIP_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return pass();
+  if (isStaticPublic(pathname)) return pass();
 
   const signedIn = request.cookies.has("session_active");
   const hasAccessToken = request.cookies.has("accessToken");
-  if (!signedIn || hasAccessToken) return NextResponse.next();
+  if (!signedIn || hasAccessToken) return pass();
 
   const url = request.nextUrl.clone();
   url.pathname = "/refresh";

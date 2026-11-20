@@ -4,22 +4,19 @@ import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { refreshSession } from "@/shared/api/http-client";
-
-// Only same-site paths — never an absolute or protocol-relative URL — so ?next=
-// can't be used as an open redirect.
-function safeNext(next: string | null) {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
-}
+import { loginUrlFor, safeNext } from "@/shared/auth/safe-next";
 
 export function RefreshSession() {
   const params = useSearchParams();
 
   useEffect(() => {
-    const next = safeNext(params.get("next"));
+    // Same-site paths only (shared/auth/safe-next) — ?next= can never be an open redirect.
+    const requested = params.get("next");
+    const next = safeNext(requested);
     refreshSession().then((ok) => {
       // Full navigation (not router.push) so the next page's server render sees
       // the freshly set cookies.
-      window.location.replace(ok ? next : "/login");
+      window.location.replace(ok ? next : loginUrlFor(requested));
     });
   }, [params]);
 
