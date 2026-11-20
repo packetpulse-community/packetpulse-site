@@ -15,7 +15,7 @@ export function PasswordRequirements({ password, confirm }: { password: string; 
       {items.map((item) => (
         <li
           key={item.id}
-          className={cn("flex items-center gap-1.5", item.met ? "text-emerald-500" : "text-muted-foreground")}
+          className={cn("flex items-center gap-1.5", item.met ? "text-success" : "text-muted-foreground")}
         >
           {item.met ? <Check className="h-3.5 w-3.5 shrink-0" /> : <X className="h-3.5 w-3.5 shrink-0" />}
           <span>{item.label}</span>

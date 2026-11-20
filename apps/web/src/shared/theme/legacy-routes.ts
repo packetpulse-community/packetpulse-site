@@ -38,7 +38,8 @@ export const ROUTE_GROUPS: readonly RouteGroup[] = [
   { id: "dashboard", label: "Dashboard", prefixes: ["/dashboard"], status: "legacy", scope: "content" },
   { id: "learning", label: "Quizzes, resources, recordings, certificates", prefixes: ["/quizzes", "/resources", "/recordings", "/certificates"], status: "legacy", scope: "content" },
   { id: "community", label: "Forums and network tools", prefixes: ["/forums", "/network-tools"], status: "legacy", scope: "content" },
-  { id: "account", label: "Profile, notifications, settings", prefixes: ["/profile", "/notifications", "/settings"], status: "legacy", scope: "content" },
+  { id: "profile", label: "Profile and skills picker", prefixes: ["/profile"], status: "migrated", scope: "content" },
+  { id: "account", label: "Notifications and settings", prefixes: ["/notifications", "/settings"], status: "legacy", scope: "content" },
   { id: "admin", label: "Admin", prefixes: ["/admin"], status: "legacy", scope: "content" },
 ];
 
