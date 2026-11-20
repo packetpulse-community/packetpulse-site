@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { SessionAwareBanner } from "@/shared/auth/SessionAwareBanner";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <Image src="/logo.png" alt="PacketPulse" width={140} height={54} className="h-14 w-auto" priority />
         </Link>
 
+        <SessionAwareBanner />
         {children}
       </div>
     </div>
