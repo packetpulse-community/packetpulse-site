@@ -12,3 +12,6 @@ coverage/
 .env.prod
 .DS_Store
 *.tsbuildinfo
+
+# local database backups (scripts/backup/backup.sh)
+/backups/
