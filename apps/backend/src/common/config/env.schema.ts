@@ -35,6 +35,9 @@ const BaseEnvSchema = z.object({
   // Which proxies to trust for the client IP (finding S-11): true | false | hop count |
   // comma-separated IPs/CIDRs. Unset = true (today's behaviour). See docs/ops/bot-protection.md.
   TRUST_PROXY: z.string().optional(),
+  // Adds a Server-Timing header (database time, query count, total) to every response. Diagnostic:
+  // unset = on outside production, off in production. Set true to measure on a deployed instance.
+  SERVER_TIMING: z.enum(["true", "false"]).optional(),
   ADMIN_SECURE_CODE: z.string().min(16),
   CORS_ORIGINS: z.string().min(1), // comma-separated allowlist, never "*" (see plan §11)
   // Base URL of the deployed frontend — used to build the clickable link sent in

@@ -30,6 +30,7 @@ import { DashboardModule } from "./modules/dashboard";
 import { LogsModule } from "./modules/logs";
 import { FilesModule } from "./modules/files";
 import { AllExceptionsFilter } from "./common/errors";
+import { ServerTimingModule } from "./common/server-timing";
 
 // Feature modules land here as they're built (migration plan phases). Global guard
 // chain — JwtAuthGuard → MaintenanceGuard → RolesGuard → ApprovedGuard, with @Public() opting a route
@@ -40,6 +41,7 @@ import { AllExceptionsFilter } from "./common/errors";
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]), // global read-standard default
     PrismaModule,
+    ServerTimingModule,
     SiteStatusModule,
     SupabaseModule,
     RedisModule,
