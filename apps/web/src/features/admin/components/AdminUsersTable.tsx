@@ -11,6 +11,7 @@ import { Button } from "@/shared/ui/primitives/Button";
 import { adminClientApi, type AdminUser } from "../api/admin.api";
 import { UserRoleDialog } from "./UserRoleDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
+import { ErrorState } from "@/shared/ui/primitives/ErrorState";
 
 interface AdminUsersTableProps {
   initialApproved?: boolean;
@@ -28,7 +29,7 @@ export function AdminUsersTable({ initialApproved }: AdminUsersTableProps) {
 
   const filters = { page, limit: pageSize, search: search || undefined, approved };
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "users", filters],
     queryFn: () => adminClientApi.listUsers(filters),
   });
@@ -141,6 +142,13 @@ export function AdminUsersTable({ initialApproved }: AdminUsersTableProps) {
 
   return (
     <>
+      {isError && (
+        <ErrorState
+          title="We could not load the users."
+          description="Check your connection and try again. Nothing was changed."
+          retry={{ label: "Try again", onClick: () => void refetch() }}
+        />
+      )}
       <DataTable
         columns={columns}
         data={data?.data ?? []}

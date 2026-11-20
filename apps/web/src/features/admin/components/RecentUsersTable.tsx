@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DataTable, type DataTableColumn } from "@/shared/ui/primitives/DataTable";
+import {
+  DataTable,
+  type DataTableColumn,
+} from "@/shared/ui/primitives/DataTable";
 import { Badge } from "@/shared/ui/primitives/Badge";
 import { adminClientApi, type AdminUser } from "../api/admin.api";
+import { ErrorState } from "@/shared/ui/primitives/ErrorState";
 
 function formatDate(value?: string | null) {
   if (!value) return "Never";
@@ -21,7 +25,7 @@ export function RecentUsersTable() {
   const [search, setSearch] = useState("");
 
   const filters = { page, limit: pageSize, search: search || undefined };
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "users", "recent", filters],
     queryFn: () => adminClientApi.listUsers(filters),
   });
@@ -43,35 +47,59 @@ export function RecentUsersTable() {
       field: "roles",
       header: "Role",
       sortable: false,
-      render: (_, row) => <Badge variant="secondary">{row.roles[0] ?? "member"}</Badge>,
+      render: (_, row) => (
+        <Badge variant="secondary">{row.roles[0] ?? "member"}</Badge>
+      ),
     },
     {
       field: "isApproved",
       header: "Status",
-      render: (value) => (value ? <Badge variant="success">Approved</Badge> : <Badge variant="warning">Pending</Badge>),
+      render: (value) =>
+        value ? (
+          <Badge variant="success">Approved</Badge>
+        ) : (
+          <Badge variant="warning">Pending</Badge>
+        ),
     },
-    { field: "createdAt", header: "Joined", render: (value) => formatDate(value as string) },
-    { field: "lastLoginAt", header: "Last Login", render: (value) => formatDate(value as string | null) },
+    {
+      field: "createdAt",
+      header: "Joined",
+      render: (value) => formatDate(value as string),
+    },
+    {
+      field: "lastLoginAt",
+      header: "Last Login",
+      render: (value) => formatDate(value as string | null),
+    },
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={data?.data ?? []}
-      isLoading={isLoading}
-      serverSide
-      totalItems={data?.total ?? 0}
-      page={page}
-      pageSize={pageSize}
-      onPageChange={(nextPage, nextSize) => {
-        setPage(nextPage);
-        setPageSize(nextSize);
-      }}
-      onSearch={(term) => {
-        setSearch(term);
-        setPage(1);
-      }}
-      rowKey={(row) => row.id}
-    />
+    <div className="flex flex-col gap-4">
+      {isError && (
+        <ErrorState
+          title="We could not load the recent users."
+          description="Check your connection and try again. Nothing was changed."
+          retry={{ label: "Try again", onClick: () => void refetch() }}
+        />
+      )}
+      <DataTable
+        columns={columns}
+        data={data?.data ?? []}
+        isLoading={isLoading}
+        serverSide
+        totalItems={data?.total ?? 0}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={(nextPage, nextSize) => {
+          setPage(nextPage);
+          setPageSize(nextSize);
+        }}
+        onSearch={(term) => {
+          setSearch(term);
+          setPage(1);
+        }}
+        rowKey={(row) => row.id}
+      />
+    </div>
   );
 }

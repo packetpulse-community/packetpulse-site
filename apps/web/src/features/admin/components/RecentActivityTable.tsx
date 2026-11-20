@@ -3,8 +3,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { AdminActivityAction } from "@packetpulse/types";
-import { DataTable, type DataTableColumn } from "@/shared/ui/primitives/DataTable";
+import {
+  DataTable,
+  type DataTableColumn,
+} from "@/shared/ui/primitives/DataTable";
 import { adminClientApi, type AdminActivityLogEntry } from "../api/admin.api";
+import { ErrorState } from "@/shared/ui/primitives/ErrorState";
 
 const ACTION_LABELS: Record<AdminActivityAction, string> = {
   user_approved: "Approved user",
@@ -35,8 +39,10 @@ function describeDetails(entry: AdminActivityLogEntry): string {
   const details = entry.details ?? {};
   if (typeof details.title === "string") return details.title;
   if (typeof details.email === "string") return details.email;
-  if (Array.isArray(details.changedKeys)) return `Changed: ${details.changedKeys.join(", ")}`;
-  if (typeof details.dataType === "string") return `Cleaned: ${details.dataType}`;
+  if (Array.isArray(details.changedKeys))
+    return `Changed: ${details.changedKeys.join(", ")}`;
+  if (typeof details.dataType === "string")
+    return `Cleaned: ${details.dataType}`;
   return entry.targetType;
 }
 
@@ -47,7 +53,7 @@ export function RecentActivityTable() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "activity", { page, limit: pageSize }],
     queryFn: () => adminClientApi.activity({ page, limit: pageSize }),
   });
@@ -62,37 +68,50 @@ export function RecentActivityTable() {
       field: "actor",
       header: "User",
       sortable: false,
-      render: (_, row) => (row.actor ? `${row.actor.firstName} ${row.actor.lastName}` : "System"),
+      render: (_, row) =>
+        row.actor ? `${row.actor.firstName} ${row.actor.lastName}` : "System",
     },
     {
       field: "action",
       header: "Action",
       sortable: false,
-      render: (value) => ACTION_LABELS[value as AdminActivityAction] ?? String(value),
+      render: (value) =>
+        ACTION_LABELS[value as AdminActivityAction] ?? String(value),
     },
     {
       field: "details",
       header: "Details",
       sortable: false,
-      render: (_, row) => <span className="text-muted-foreground">{describeDetails(row)}</span>,
+      render: (_, row) => (
+        <span className="text-muted-foreground">{describeDetails(row)}</span>
+      ),
     },
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={data?.data ?? []}
-      isLoading={isLoading}
-      serverSide
-      hideSearch
-      totalItems={data?.total ?? 0}
-      page={page}
-      pageSize={pageSize}
-      onPageChange={(nextPage, nextSize) => {
-        setPage(nextPage);
-        setPageSize(nextSize);
-      }}
-      rowKey={(row) => row.id}
-    />
+    <div className="flex flex-col gap-4">
+      {isError && (
+        <ErrorState
+          title="We could not load the admin activity."
+          description="Check your connection and try again. Nothing was changed."
+          retry={{ label: "Try again", onClick: () => void refetch() }}
+        />
+      )}
+      <DataTable
+        columns={columns}
+        data={data?.data ?? []}
+        isLoading={isLoading}
+        serverSide
+        hideSearch
+        totalItems={data?.total ?? 0}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={(nextPage, nextSize) => {
+          setPage(nextPage);
+          setPageSize(nextSize);
+        }}
+        rowKey={(row) => row.id}
+      />
+    </div>
   );
 }
