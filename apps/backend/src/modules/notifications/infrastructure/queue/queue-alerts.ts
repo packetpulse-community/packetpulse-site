@@ -1,5 +1,6 @@
 import { Logger } from "@nestjs/common";
 import { Job, UnrecoverableError } from "bullmq";
+import { notifyAlertWebhook } from "./alert-webhook";
 
 export function recipientDomain(address: string | undefined): string {
   const at = address?.lastIndexOf("@") ?? -1;
@@ -14,6 +15,8 @@ export function logQueueAlert(
   fields: Record<string, unknown>,
 ) {
   logger.error(JSON.stringify({ alert: true, event, ...fields }));
+  // Optional push (ALERT_WEBHOOK_URL). Rate-limited, redacted and never throws.
+  notifyAlertWebhook(event, fields);
 }
 
 export function handleJobFailed(
