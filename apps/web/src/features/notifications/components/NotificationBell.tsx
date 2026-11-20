@@ -5,21 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { notificationsApi } from "../api/notifications.api";
 import { useRealtime } from "@/shared/hooks/useRealtime";
-
-function describeNotification(type: string, payload: Record<string, unknown>): string {
-  switch (type) {
-    case "forum_reply":
-      return `New reply on "${payload.threadTitle ?? "your thread"}"`;
-    case "blog_comment":
-      return `New comment on "${payload.blogPostTitle ?? "your post"}"`;
-    case "approval":
-      return payload.approved ? "Your account was approved" : "Your account approval was revoked";
-    case "certificate_issued":
-      return `Certificate issued for "${payload.quizTitle ?? "a quiz"}"`;
-    default:
-      return "You have a new notification";
-  }
-}
+import { describeNotification } from "../lib/describe";
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
