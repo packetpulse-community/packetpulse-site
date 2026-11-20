@@ -12,6 +12,7 @@ import { categoriesClientApi, type Category } from "../api/categories.api";
 import { Card } from "@/shared/ui/primitives/Card";
 import { Button } from "@/shared/ui/primitives/Button";
 import { Dialog } from "@/shared/ui/primitives/Dialog";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 import { ApiError } from "@/shared/api/http-client";
 
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
@@ -91,6 +92,7 @@ function CategoryForm({
 export function CategoriesTable({ categories }: { categories: Category[] }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Category | "new" | null>(null);
+  const [deleting, setDeleting] = useState<Category | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => categoriesClientApi.delete(id),
@@ -132,29 +134,56 @@ export function CategoriesTable({ categories }: { categories: Category[] }) {
               {category.description && <span className="text-sm text-muted-foreground">{category.description}</span>}
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" onClick={() => move(index, -1)} disabled={index === 0}>
-                <ArrowUp className="h-4 w-4" />
+              <Button variant="outline" size="sm" onClick={() => move(index, -1)} disabled={index === 0} aria-label={`Move ${category.name} up`}>
+                <ArrowUp aria-hidden="true" className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" onClick={() => move(index, 1)} disabled={index === categories.length - 1}>
-                <ArrowDown className="h-4 w-4" />
+              <Button variant="outline" size="sm" onClick={() => move(index, 1)} disabled={index === categories.length - 1} aria-label={`Move ${category.name} down`}>
+                <ArrowDown aria-hidden="true" className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setEditing(category)}>
-                <Pencil className="h-4 w-4" />
+              <Button variant="outline" size="sm" onClick={() => setEditing(category)} aria-label={`Edit category ${category.name}`}>
+                <Pencil aria-hidden="true" className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  if (confirm(`Delete "${category.name}"?`)) deleteMutation.mutate(category.id);
-                }}
+                onClick={() => setDeleting(category)}
+                aria-label={`Delete category ${category.name}`}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 aria-hidden="true" className="h-4 w-4" />
               </Button>
             </div>
           </div>
         ))}
-        {categories.length === 0 && <p className="p-4 text-muted-foreground">No categories yet.</p>}
+        {categories.length === 0 && (
+          <EmptyState
+            title="No categories yet"
+            description="Categories group resources, recordings and posts so members can find them. Create the first one to start organising content."
+            action={{ label: "New category", onClick: () => setEditing("new") }}
+            className="border-0"
+          />
+        )}
       </Card>
+
+      <Dialog
+        open={!!deleting}
+        onClose={() => setDeleting(null)}
+        destructive
+        title={`Delete the category "${deleting?.name ?? ""}"?`}
+        description="The category is removed permanently. This cannot be undone."
+      >
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setDeleting(null)} disabled={deleteMutation.isPending}>
+            Keep category
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={deleteMutation.isPending}
+            onClick={() => deleting && deleteMutation.mutate(deleting.id, { onSettled: () => setDeleting(null) })}
+          >
+            Delete category
+          </Button>
+        </div>
+      </Dialog>
 
       {editing && (
         <CategoryForm
