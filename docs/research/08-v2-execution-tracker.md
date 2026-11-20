@@ -9,16 +9,16 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | Milestone | Tasks | In progress | Open | Blocked |
 | --- | --- | --- | --- | --- |
 | M0 Audit and baseline | 6 | 5 | 0 | 1 |
-| M1 Foundation | 11 | 10 | 1 | 0 |
+| M1 Foundation | 11 | 11 | 0 | 0 |
 | M2 Design system and shell | 4 | 4 | 0 | 0 |
-| M3 Identity, profile, community | 6 | 2 | 4 | 0 |
+| M3 Identity, profile, community | 6 | 3 | 3 | 0 |
 | M4 Learn and practice | 4 | 1 | 3 | 0 |
 | M5 Prove and verify | 3 | 1 | 2 | 0 |
 | M6 Careers | 8 | 0 | 8 | 0 |
 | M7 Operations | 6 | 2 | 4 | 0 |
 | M8 Release | 6 | 0 | 6 | 0 |
 | M9 Improve | 2 | 0 | 2 | 0 |
-| **Total** | **56** | **25** | **30** | **1** |
+| **Total** | **56** | **27** | **28** | **1** |
 
 **Next in Document 4 order:** close M0 (TASK-001, 002, 006 need your approval or a second reviewer; TASK-003 and 005 are doable now; TASK-004 is blocked on hosting access), then start M1 with TASK-008 (permission engine), which almost everything else depends on.
 
@@ -170,4 +170,16 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 - **API shape change:** `GET /notifications` now returns `{ items, unreadCount, page, pageSize, total }` instead of a bare array. Because Vercel and Render deploy separately, the web client accepts both shapes for now (commit `9af5880`); delete the array branch once both sides are live.
 - **Dependencies:** nodemailer 6 to 10 and bcrypt 5 to 6 are done (the `tar` override is gone). The audit is now 0 critical and 2 high (zod 3 and one OpenTelemetry package, both deferred majors) and 19 moderate. After deploying, send one real test email and sign in with an existing account (the first checks nodemailer 10, the second verifies an old bcrypt 5 hash).
 - **Open owner inputs for M2 to finish:** OPEN-01 (primary colour, switches the Grove theme on), OPEN-04 values, OPEN-18 (sender domain and WhatsApp provider).
+
+## Notes from batch 6 and batch 7
+
+- **Counts:** the M1 row was wrong before (all 11 M1 tasks were already started); now corrected. TASK-027 (skill taxonomy) is started.
+- **TASK-032 assessment integrity:** attempt caps, retake gap, server deadline, expiry, certificate retention, attempt screen (SCR-034); fixes S-7, S-9, D-1.
+- **TASK-010 / TASK-020 web:** shared empty and error states on admin lists, inline per-field server errors.
+- **TASK-004:** backup and restore-drill scripts, daily encrypted backup workflow (skips without a secret), `docs/ops/backups.md` with a local drill result. Still blocked on owner: backup storage, secrets, and a real restore from the live database. Supabase is on the free plan (no automated backups), so this is the only backup.
+- **TASK-005:** scheduled uptime probe (doubles as the Render keep-warm ping) and an owner contact table. Workflows have only been linted, never run on GitHub.
+- **TASK-011:** CSP built per request with `CSP_MODE=report-only|enforce` (default report-only). Roll-out steps are in `docs/ops/web-security.md`.
+- **TASK-014:** optional ClamAV scanner behind `FileScanner`, fail-closed. **TASK-015:** audit entries for category management and staff deletion of others' content, plus a test that fails when a privileged route writes no audit row. **TASK-016:** optional alert webhook for final job failures and stalls.
+- **TASK-017:** the dependency audit is blocking through an expiring allowlist; release checklist and branch-protection steps written (the GitHub setting itself is for the owner).
+- **Owner actions:** apply the `skill_taxonomy` migration (and the quiz-integrity one if not yet applied) before deploying the backend; set the branch-protection checks; set Turnstile keys and `TRUST_PROXY`; create the private Supabase bucket; flip `CSP_MODE=enforce` after a week of reports.
 
