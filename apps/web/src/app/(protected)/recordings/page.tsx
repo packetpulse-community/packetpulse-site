@@ -7,6 +7,7 @@ import { Pagination } from "@/shared/components/Pagination";
 import { CalloutBox } from "@/shared/components/CalloutBox";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { cn } from "@/shared/utils/cn";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 interface RecordingsPageProps {
   searchParams: Promise<{ search?: string; categoryId?: string; tag?: string; page?: string }>;
@@ -22,6 +23,8 @@ export default async function RecordingsPage({ searchParams }: RecordingsPagePro
   if (params.tag) query.set("tag", params.tag);
   if (params.page) query.set("page", params.page);
   const queryString = query.toString() ? `?${query.toString()}` : "";
+
+  const isFiltered = Boolean(params.search || params.categoryId || params.tag);
 
   const { data: recordings, page, totalPages } = await recordingsServerApi.list(cookieHeader, queryString);
 
@@ -40,7 +43,20 @@ export default async function RecordingsPage({ searchParams }: RecordingsPagePro
         {recordings.map((recording) => (
           <RecordingCard key={recording.id} recording={recording} />
         ))}
-        {recordings.length === 0 && <p className="text-muted-foreground">No recordings yet.</p>}
+        {recordings.length === 0 &&
+          (isFiltered ? (
+            <EmptyState
+              title="No recordings match your search"
+              description="No session matches the search or filters you chose. Clear them to see every recording."
+              action={{ label: "Clear filters", href: "/recordings" }}
+            />
+          ) : (
+            <EmptyState
+              title="No recordings yet"
+              description="Recorded expert sessions appear here once they are published. If you have expertise to share, you can host one."
+              action={{ label: "Get in touch to host a session", href: "/contact" }}
+            />
+          ))}
       </div>
 
       <Pagination page={page} totalPages={totalPages} basePath="/recordings" />

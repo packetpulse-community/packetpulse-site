@@ -5,6 +5,7 @@ import { QuizCard } from "@/features/quizzes/components/QuizCard";
 import { getCurrentUser } from "@/shared/auth/session";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { cn } from "@/shared/utils/cn";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 export default async function QuizzesPage() {
   const cookieHeader = (await cookies()).toString();
@@ -29,7 +30,17 @@ export default async function QuizzesPage() {
         {quizzes.map((quiz) => (
           <QuizCard key={quiz.id} quiz={quiz} />
         ))}
-        {quizzes.length === 0 && <p className="text-muted-foreground">No quizzes published yet.</p>}
+        {quizzes.length === 0 && (
+          <EmptyState
+            title="No quizzes yet"
+            description={
+              canAuthor
+                ? "Members take quizzes here to test their knowledge and earn certificates. None is published yet, so create the first one."
+                : "Members take quizzes here to test their knowledge and earn certificates. None is published yet, so read a resource while you wait."
+            }
+            action={canAuthor ? { label: "Create a quiz", href: "/quizzes/new" } : { label: "Browse resources", href: "/resources" }}
+          />
+        )}
       </div>
     </div>
   );

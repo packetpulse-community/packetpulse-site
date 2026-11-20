@@ -7,6 +7,7 @@ import { Pagination } from "@/shared/components/Pagination";
 import { CalloutBox } from "@/shared/components/CalloutBox";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { cn } from "@/shared/utils/cn";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 interface ResourcesPageProps {
   searchParams: Promise<{ search?: string; categoryId?: string; resourceType?: string; tag?: string; page?: string }>;
@@ -23,6 +24,8 @@ export default async function ResourcesPage({ searchParams }: ResourcesPageProps
   if (params.tag) query.set("tag", params.tag);
   if (params.page) query.set("page", params.page);
   const queryString = query.toString() ? `?${query.toString()}` : "";
+
+  const isFiltered = Boolean(params.search || params.categoryId || params.resourceType || params.tag);
 
   const { data: resources, page, totalPages } = await resourcesServerApi.list(cookieHeader, queryString);
 
@@ -41,7 +44,20 @@ export default async function ResourcesPage({ searchParams }: ResourcesPageProps
         {resources.map((resource) => (
           <ResourceCard key={resource.id} resource={resource} />
         ))}
-        {resources.length === 0 && <p className="text-muted-foreground">No resources yet.</p>}
+        {resources.length === 0 &&
+          (isFiltered ? (
+            <EmptyState
+              title="No resources match your search"
+              description="Nothing in the library matches the search or filters you chose. Clear them to see every resource."
+              action={{ label: "Clear filters", href: "/resources" }}
+            />
+          ) : (
+            <EmptyState
+              title="No resources yet"
+              description="The library holds guides, tools and reference sheets shared by members. None has been published yet, so yours could be the first."
+              action={{ label: "Contribute a resource", href: "/contact" }}
+            />
+          ))}
       </div>
 
       <Pagination page={page} totalPages={totalPages} basePath="/resources" />

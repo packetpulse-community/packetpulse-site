@@ -8,6 +8,7 @@ import { Pagination } from "@/shared/components/Pagination";
 import { CalloutBox } from "@/shared/components/CalloutBox";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { cn } from "@/shared/utils/cn";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 interface BlogsPageProps {
   searchParams: Promise<{ search?: string; categoryId?: string; tag?: string; page?: string }>;
@@ -50,7 +51,20 @@ export default async function BlogsPage({ searchParams }: BlogsPageProps) {
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
-        {posts.length === 0 && <p className="text-muted-foreground">No posts yet.</p>}
+        {posts.length === 0 &&
+          (isFiltered ? (
+            <EmptyState
+              title="No articles match your search"
+              description="No article matches the search or filters you chose. Clear them to see every article."
+              action={{ label: "Clear filters", href: "/blogs" }}
+            />
+          ) : (
+            <EmptyState
+              title="No articles yet"
+              description="Articles written by community members appear here once they are published. You can write the first one."
+              action={{ label: "Become a contributor", href: "/contact" }}
+            />
+          ))}
       </div>
 
       <Pagination page={page} totalPages={totalPages} basePath="/blogs" />

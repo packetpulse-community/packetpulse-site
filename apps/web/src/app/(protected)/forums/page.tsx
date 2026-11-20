@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { forumsServerApi } from "@/features/forums/api/forums.api";
 import { ThreadCard } from "@/features/forums/components/ThreadCard";
 import { NewThreadForm } from "@/features/forums/components/NewThreadForm";
+import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 export default async function ForumsPage() {
   const cookieHeader = (await cookies()).toString();
@@ -19,13 +20,21 @@ export default async function ForumsPage() {
         </p>
       </div>
 
-      <NewThreadForm categories={categories} />
+      <div id="new-thread">
+        <NewThreadForm categories={categories} />
+      </div>
 
       <div className="flex flex-col gap-3">
         {threadsPage.data.map((thread) => (
           <ThreadCard key={thread.id} thread={thread} />
         ))}
-        {threadsPage.data.length === 0 && <p className="text-muted-foreground">No threads yet — start one above.</p>}
+        {threadsPage.data.length === 0 && (
+          <EmptyState
+            title="No threads yet"
+            description="Members ask questions and share fixes in threads. None has been started yet, so ask the first question."
+            action={{ label: "Start a thread", href: "#new-thread" }}
+          />
+        )}
       </div>
     </div>
   );
