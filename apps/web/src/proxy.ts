@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { buildCsp, cspHeaderName, generateNonce, parseCspMode } from "@/shared/security/csp";
 
 // Pages that must never bounce through /refresh (they either don't need a session
 // or are part of getting one).
@@ -36,7 +37,27 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const headers = new Headers(request.headers);
   headers.set(PATH_HEADER, pathname + search);
-  const pass = () => NextResponse.next({ request: { headers } });
+
+  // Content-Security-Policy (TASK-011): header name and strictness follow CSP_MODE, default
+  // report-only. With CSP_NONCE=true each request gets a nonce that Next reads from the
+  // request's CSP header and stamps on its own inline scripts.
+  const mode = parseCspMode(process.env.CSP_MODE);
+  const nonce = process.env.CSP_NONCE === "true" ? generateNonce() : undefined;
+  const csp = buildCsp({
+    mode,
+    production: process.env.NODE_ENV === "production",
+    nonce,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  });
+  if (nonce) {
+    headers.set(cspHeaderName(mode), csp);
+    headers.set("x-nonce", nonce);
+  }
+  const pass = () => {
+    const res = NextResponse.next({ request: { headers } });
+    res.headers.set(cspHeaderName(mode), csp);
+    return res;
+  };
 
   if (SKIP_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return pass();
   if (isStaticPublic(pathname)) return pass();
