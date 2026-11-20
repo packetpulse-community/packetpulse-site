@@ -8,17 +8,15 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { UpdateForumThreadSchema } from "@packetpulse/types";
 import { forumsClientApi, type ForumThreadSummary } from "@/features/forums/api/forums.api";
-import { ApiError } from "@/shared/api/http-client";
 import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { Button } from "@/shared/ui/primitives/Button";
+import { applyServerFormError } from "@/shared/api/form-errors";
+
+const FORM_FIELDS = ["content", "title"] as const;
 
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
 type ThreadFormValues = z.infer<typeof UpdateForumThreadSchema>;
-
-function errorMessage(err: unknown, fallback: string) {
-  return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
-}
 
 export function ForumThreadEditForm({ thread, open, onClose }: { thread: ForumThreadSummary; open: boolean; onClose: () => void }) {
   const router = useRouter();
@@ -40,7 +38,7 @@ export function ForumThreadEditForm({ thread, open, onClose }: { thread: ForumTh
       router.refresh();
       onClose();
     },
-    onError: (err) => setError("root", { message: errorMessage(err, "Could not save thread") }),
+    onError: (err) => applyServerFormError(setError, err, FORM_FIELDS, "Could not save thread"),
   });
 
   return (
@@ -58,7 +56,7 @@ export function ForumThreadEditForm({ thread, open, onClose }: { thread: ForumTh
           {errors.content && <p className="text-sm text-destructive">{errors.content.message}</p>}
         </div>
 
-        {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+        {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>

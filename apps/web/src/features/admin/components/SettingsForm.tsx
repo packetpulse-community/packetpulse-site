@@ -6,10 +6,12 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { UpdateSiteSettingsSchema, type UpdateSiteSettingsDto } from "@packetpulse/types";
 import { adminClientApi, type SiteSettings } from "../api/admin.api";
-import { ApiError } from "@/shared/api/http-client";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/primitives/Card";
+import { applyServerFormError } from "@/shared/api/form-errors";
+
+const FORM_FIELDS = ["adminEmail", "apiRateLimit", "maxUploadSizeMb", "maxUserResourcesCount", "sessionTimeoutMinutes", "siteDescription", "siteName"] as const;
 
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
@@ -21,10 +23,6 @@ function NotActiveNote() {
       <span aria-hidden="true">⚠ </span>Saved, but not active yet: this setting has no effect on the site.
     </p>
   );
-}
-
-function errorMessage(err: unknown, fallback: string) {
-  return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
 }
 
 export function SettingsForm({ settings }: { settings: SiteSettings }) {
@@ -54,7 +52,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
   const mutation = useMutation({
     mutationFn: adminClientApi.updateSettings,
     onSuccess: () => toast.success("Settings saved"),
-    onError: (err) => setError("root", { message: errorMessage(err, "Could not save settings") }),
+    onError: (err) => applyServerFormError(setError, err, FORM_FIELDS, "Could not save settings"),
   });
 
   return (
@@ -164,7 +162,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
         </CardContent>
       </Card>
 
-      {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+      {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
 
       <div className="flex justify-end">
         <button type="submit" disabled={isSubmitting || mutation.isPending} className={cn(buttonVariants({ variant: "gradient" }))}>

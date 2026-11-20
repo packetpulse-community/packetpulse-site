@@ -9,9 +9,11 @@ import { toast } from "sonner";
 import { CreateRecordingSchema, type CreateRecordingDto } from "@packetpulse/types";
 import { recordingsClientApi, type RecordingSummary } from "@/features/recordings/api/recordings.api";
 import { categoriesClientApi } from "@/features/categories/api/categories.api";
-import { ApiError } from "@/shared/api/http-client";
 import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { Button } from "@/shared/ui/primitives/Button";
+import { applyServerFormError } from "@/shared/api/form-errors";
+
+const FORM_FIELDS = ["description", "durationSeconds", "recordingUrl", "tags", "thumbnailUrl", "title"] as const;
 
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
@@ -22,10 +24,6 @@ const RecordingFormSchema = CreateRecordingSchema.extend({
   tags: z.string().optional(),
 });
 type RecordingFormValues = z.infer<typeof RecordingFormSchema>;
-
-function errorMessage(err: unknown, fallback: string) {
-  return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
-}
 
 export function RecordingForm({
   recording,
@@ -73,7 +71,7 @@ export function RecordingForm({
       reset();
       onClose();
     },
-    onError: (err) => setError("root", { message: errorMessage(err, "Could not save recording") }),
+    onError: (err) => applyServerFormError(setError, err, FORM_FIELDS, "Could not save recording"),
   });
 
   function onSubmit(values: RecordingFormValues) {
@@ -122,12 +120,14 @@ export function RecordingForm({
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Duration (seconds)</label>
             <input type="number" className={inputClass} {...register("durationSeconds")} />
+            {errors.durationSeconds && <p className="text-sm text-destructive">{errors.durationSeconds.message}</p>}
           </div>
         </div>
 
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">Tags (comma-separated)</label>
           <input className={inputClass} {...register("tags")} />
+          {errors.tags && <p className="text-sm text-destructive">{errors.tags.message}</p>}
         </div>
 
         <label className="flex items-center gap-2 text-sm">
@@ -135,7 +135,7 @@ export function RecordingForm({
           Premium
         </label>
 
-        {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+        {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>

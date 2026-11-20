@@ -14,6 +14,9 @@ import { Button } from "@/shared/ui/primitives/Button";
 import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 import { ApiError } from "@/shared/api/http-client";
+import { applyServerFormError } from "@/shared/api/form-errors";
+
+const FORM_FIELDS = ["description", "name", "slug"] as const;
 
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
@@ -53,7 +56,7 @@ function CategoryForm({
       router.refresh();
       onClose();
     },
-    onError: (err) => setError("root", { message: errorMessage(err, "Could not save category") }),
+    onError: (err) => applyServerFormError(setError, err, FORM_FIELDS, "Could not save category"),
   });
 
   return (
@@ -74,7 +77,7 @@ function CategoryForm({
           <textarea rows={2} className={inputClass} {...register("description")} />
         </div>
 
-        {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+        {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>

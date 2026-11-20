@@ -9,9 +9,11 @@ import { toast } from "sonner";
 import { CreateResourceSchema, type CreateResourceDto } from "@packetpulse/types";
 import { resourcesClientApi, type ResourceSummary } from "@/features/resources/api/resources.api";
 import { categoriesClientApi } from "@/features/categories/api/categories.api";
-import { ApiError } from "@/shared/api/http-client";
 import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { Button } from "@/shared/ui/primitives/Button";
+import { applyServerFormError } from "@/shared/api/form-errors";
+
+const FORM_FIELDS = ["description", "externalLink", "fileUrl", "tags", "thumbnailUrl", "title"] as const;
 
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
@@ -32,10 +34,6 @@ const ResourceFormSchema = CreateResourceSchema.innerType().extend({
 type ResourceFormValues = z.infer<typeof ResourceFormSchema>;
 
 const RESOURCE_TYPES = ["pdf", "video", "article", "tutorial", "diagram", "config_template", "tool", "external_link"] as const;
-
-function errorMessage(err: unknown, fallback: string) {
-  return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
-}
 
 export function ResourceForm({
   resource,
@@ -84,7 +82,7 @@ export function ResourceForm({
       reset();
       onClose();
     },
-    onError: (err) => setError("root", { message: errorMessage(err, "Could not save resource") }),
+    onError: (err) => applyServerFormError(setError, err, FORM_FIELDS, "Could not save resource"),
   });
 
   function onSubmit(values: ResourceFormValues) {
@@ -137,15 +135,18 @@ export function ResourceForm({
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">External Link</label>
           <input className={inputClass} {...register("externalLink")} />
+          {errors.externalLink && <p className="text-sm text-destructive">{errors.externalLink.message}</p>}
           {errors.fileUrl && <p className="text-sm text-destructive">{errors.fileUrl.message}</p>}
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">Thumbnail URL</label>
           <input className={inputClass} {...register("thumbnailUrl")} />
+          {errors.thumbnailUrl && <p className="text-sm text-destructive">{errors.thumbnailUrl.message}</p>}
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">Tags (comma-separated)</label>
           <input className={inputClass} {...register("tags")} />
+          {errors.tags && <p className="text-sm text-destructive">{errors.tags.message}</p>}
         </div>
 
         <div className="flex items-center gap-6">
@@ -159,7 +160,7 @@ export function ResourceForm({
           </label>
         </div>
 
-        {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+        {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>

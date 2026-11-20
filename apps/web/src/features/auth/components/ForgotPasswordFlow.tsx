@@ -17,15 +17,15 @@ import {
   type ResetPasswordDto,
 } from "@packetpulse/types";
 import { authApi } from "../api/auth.api";
-import { ApiError } from "@/shared/api/http-client";
 import { cn } from "@/shared/utils/cn";
 import { Turnstile, useCaptcha } from "@/shared/components/Turnstile";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { PasswordRequirements } from "@/shared/components/PasswordRequirements";
+import { applyServerFormError } from "@/shared/api/form-errors";
 
-function errorMessage(err: unknown, fallback: string) {
-  return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
-}
+const EMAIL_FIELDS = ["email"] as const;
+const OTP_FIELDS = ["otp"] as const;
+const RESET_FIELDS = ["password", "confirmPassword"] as const;
 
 const inputClass = "rounded-md border border-input bg-background px-3 py-2.5";
 const buttonClass = cn(buttonVariants({ variant: "gradient" }), "w-full");
@@ -43,7 +43,7 @@ function RequestOtpStep({ onRequested }: { onRequested: (email: string) => void 
     mutationFn: authApi.forgotPassword,
     onSuccess: (_, dto) => onRequested(dto.email),
     onError: (err) => {
-      setError("root", { message: errorMessage(err, "Could not send the reset code") });
+      applyServerFormError(setError, err, EMAIL_FIELDS, "Could not send the reset code");
       if (captcha.enabled) captcha.reset();
     },
   });
@@ -55,7 +55,7 @@ function RequestOtpStep({ onRequested }: { onRequested: (email: string) => void 
         <input type="email" placeholder="Email address" className={inputClass} {...register("email")} />
         {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
       </div>
-      {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+      {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
       <Turnstile captcha={captcha} />
       <button
         type="submit"
@@ -81,7 +81,7 @@ function VerifyOtpStep({ email, onVerified }: { email: string; onVerified: (temp
     mutationFn: authApi.verifyOtp,
     onSuccess: (result) => onVerified(result.tempToken),
     onError: (err) => {
-      setError("root", { message: errorMessage(err, "Invalid or expired code") });
+      applyServerFormError(setError, err, OTP_FIELDS, "Invalid or expired code");
       if (captcha.enabled) captcha.reset();
     },
   });
@@ -101,7 +101,7 @@ function VerifyOtpStep({ email, onVerified }: { email: string; onVerified: (temp
         />
         {errors.otp && <p className="text-sm text-destructive">{errors.otp.message}</p>}
       </div>
-      {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+      {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
       <Turnstile captcha={captcha} />
       <button
         type="submit"
@@ -135,7 +135,7 @@ function ResetPasswordStep({ tempToken }: { tempToken: string }) {
   const mutation = useMutation({
     mutationFn: ({ tempToken, password }: ResetPasswordDto) => authApi.resetPassword({ tempToken, password }),
     onSuccess: () => router.push("/login?reset=true"),
-    onError: (err) => setError("root", { message: errorMessage(err, "Could not reset your password") }),
+    onError: (err) => applyServerFormError(setError, err, RESET_FIELDS, "Could not reset your password"),
   });
 
   return (
@@ -163,7 +163,7 @@ function ResetPasswordStep({ tempToken }: { tempToken: string }) {
         {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
       </div>
       <PasswordRequirements password={watch("password") ?? ""} confirm={watch("confirmPassword") ?? ""} />
-      {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+      {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
       <button type="submit" disabled={isSubmitting || mutation.isPending} className={buttonClass}>
         <Lock className="h-4 w-4" />
         {mutation.isPending ? "Resetting…" : "Reset password"}

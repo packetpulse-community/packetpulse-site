@@ -8,12 +8,14 @@ import Link from "next/link";
 import { Lock } from "lucide-react";
 import { LoginSchema, type LoginDto } from "@packetpulse/types";
 import { authApi } from "../api/auth.api";
-import { ApiError } from "@/shared/api/http-client";
 import { SocialLoginRow } from "./SocialLoginRow";
 import { Turnstile, useCaptcha } from "@/shared/components/Turnstile";
 import { cn } from "@/shared/utils/cn";
 import { safeNext } from "@/shared/auth/safe-next";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
+import { applyServerFormError } from "@/shared/api/form-errors";
+
+const FORM_FIELDS = ["email", "password"] as const;
 
 export function LoginForm({
   justRegistered = false,
@@ -42,8 +44,7 @@ export function LoginForm({
       router.refresh();
     },
     onError: (err) => {
-      const message = err instanceof ApiError ? (err.body as { message?: string })?.message : undefined;
-      setError("root", { message: message ?? "Login failed" });
+      applyServerFormError(setError, err, FORM_FIELDS, "Login failed");
       if (captcha.enabled) captcha.reset();
     },
   });
@@ -105,7 +106,7 @@ export function LoginForm({
           </Link>
         </div>
 
-        {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+        {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
 
         <Turnstile captcha={captcha} />
 

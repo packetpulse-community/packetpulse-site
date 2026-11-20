@@ -10,10 +10,12 @@ import { Lock } from "lucide-react";
 import { RegisterSchema } from "@packetpulse/types";
 import { PasswordRequirements } from "@/shared/components/PasswordRequirements";
 import { authApi } from "../api/auth.api";
-import { ApiError } from "@/shared/api/http-client";
 import { Turnstile, useCaptcha } from "@/shared/components/Turnstile";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
+import { applyServerFormError } from "@/shared/api/form-errors";
+
+const FORM_FIELDS = ["confirmPassword", "email", "firstName", "lastName", "password", "professionalExperience", "termsAccepted", "whatsappNumber"] as const;
 
 const EXPERIENCE_OPTIONS = [
   { value: "student", label: "Student" },
@@ -51,8 +53,7 @@ export function RegisterForm() {
     mutationFn: authApi.register,
     onSuccess: () => router.push("/login?registered=true"),
     onError: (err) => {
-      const message = err instanceof ApiError ? (err.body as { message?: string })?.message : undefined;
-      setError("root", { message: message ?? "Registration failed" });
+      applyServerFormError(setError, err, FORM_FIELDS, "Registration failed");
       if (captcha.enabled) captcha.reset();
     },
   });
@@ -193,7 +194,7 @@ export function RegisterForm() {
         </label>
         {errors.termsAccepted && <p className="text-sm text-destructive">{errors.termsAccepted.message}</p>}
 
-        {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+        {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
 
         <Turnstile captcha={captcha} />
 

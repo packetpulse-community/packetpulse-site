@@ -8,16 +8,14 @@ import { toast } from "sonner";
 import { Lock } from "lucide-react";
 import { ChangePasswordSchema, type ChangePasswordDto } from "@packetpulse/types";
 import { profileClientApi } from "../api/profile.api";
-import { ApiError } from "@/shared/api/http-client";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { PasswordRequirements } from "@/shared/components/PasswordRequirements";
+import { applyServerFormError } from "@/shared/api/form-errors";
+
+const FORM_FIELDS = ["currentPassword", "newPassword"] as const;
 
 const inputClass = "rounded-md border border-input bg-background px-3 py-2.5";
-
-function errorMessage(err: unknown, fallback: string) {
-  return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
-}
 
 // confirmNewPassword is client-only — stripped before the request.
 const ChangePasswordFormSchema = ChangePasswordSchema.extend({ confirmNewPassword: z.string() })
@@ -48,7 +46,7 @@ export function ChangePasswordForm() {
       toast.success("Password changed. Other sessions have been signed out.");
       reset();
     },
-    onError: (err) => setError("root", { message: errorMessage(err, "Could not change your password") }),
+    onError: (err) => applyServerFormError(setError, err, FORM_FIELDS, "Could not change your password"),
   });
 
   return (
@@ -85,7 +83,7 @@ export function ChangePasswordForm() {
 
       <PasswordRequirements password={watch("newPassword") ?? ""} confirm={watch("confirmNewPassword") ?? ""} />
 
-      {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+      {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
 
       <button
         type="submit"

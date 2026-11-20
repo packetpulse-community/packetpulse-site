@@ -6,16 +6,14 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { UpdateProfileSchema, type UpdateProfileDto } from "@packetpulse/types";
 import { profileClientApi } from "../api/profile.api";
-import { ApiError } from "@/shared/api/http-client";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import type { SessionUser } from "@/shared/auth/session";
+import { applyServerFormError } from "@/shared/api/form-errors";
+
+const FORM_FIELDS = ["bio", "firstName", "lastName", "whatsappNumber"] as const;
 
 const inputClass = "rounded-md border border-input bg-background px-3 py-2.5";
-
-function errorMessage(err: unknown, fallback: string) {
-  return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
-}
 
 export function EditProfileForm({ user }: { user: SessionUser }) {
   const {
@@ -35,7 +33,7 @@ export function EditProfileForm({ user }: { user: SessionUser }) {
   const mutation = useMutation({
     mutationFn: profileClientApi.updateProfile,
     onSuccess: () => toast.success("Profile updated"),
-    onError: (err) => setError("root", { message: errorMessage(err, "Could not update your profile") }),
+    onError: (err) => applyServerFormError(setError, err, FORM_FIELDS, "Could not update your profile"),
   });
 
   return (
@@ -73,7 +71,7 @@ export function EditProfileForm({ user }: { user: SessionUser }) {
         {errors.bio && <p className="text-sm text-destructive">{errors.bio.message}</p>}
       </div>
 
-      {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+      {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
 
       <button
         type="submit"
