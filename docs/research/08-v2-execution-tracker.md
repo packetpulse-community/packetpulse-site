@@ -10,7 +10,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | --- | --- | --- | --- | --- |
 | M0 Audit and baseline | 6 | 5 | 0 | 1 |
 | M1 Foundation | 11 | 10 | 1 | 0 |
-| M2 Design system and shell | 4 | 3 | 1 | 0 |
+| M2 Design system and shell | 4 | 4 | 0 | 0 |
 | M3 Identity, profile, community | 6 | 2 | 4 | 0 |
 | M4 Learn and practice | 4 | 1 | 3 | 0 |
 | M5 Prove and verify | 3 | 1 | 2 | 0 |
@@ -18,7 +18,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | M7 Operations | 6 | 2 | 4 | 0 |
 | M8 Release | 6 | 0 | 6 | 0 |
 | M9 Improve | 2 | 0 | 2 | 0 |
-| **Total** | **56** | **24** | **31** | **1** |
+| **Total** | **56** | **25** | **30** | **1** |
 
 **Next in Document 4 order:** close M0 (TASK-001, 002, 006 need your approval or a second reviewer; TASK-003 and 005 are doable now; TASK-004 is blocked on hosting access), then start M1 with TASK-008 (permission engine), which almost everything else depends on.
 
@@ -54,9 +54,9 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | Task | Status | Evidence and what remains |
 | --- | --- | --- |
 | TASK-018 Design tokens and component library | In progress | Done: the Signal Grove tokens (Document 2 section 4) as an **opt-in** theme, light and dark, mapped in Tailwind; a contrast test of every token pair (77 assertions, anchors match the document: forest on white 7.33, control border 4.04 light and 5.24 dark); `StatusChip` (text plus glyph, never colour alone), verification labels, Button states, Card and Alert; a `/design-system` page (noindex) showing every token and every state. The existing app is visually unchanged. Remaining: owner decision OPEN-01 (primary colour), then switching the Grove theme on and replacing hard-coded colour classes in components |
-| TASK-019 App shell, navigation by role | Open | One member list plus Admin; no Mentor, Instructor or Recruiter navigation |
+| TASK-019 App shell and navigation by role | In progress | Done (TEST-006 front-end side): one typed navigation model, `navigationFor(user)`, drives the sidebar, admin sidebar, command palette and a mobile bottom bar from permissions and roles (items a person cannot use are not rendered); breadcrumbs from a route-title registry, never raw ids; deep links survive sign-in through `/login?next=` with only same-site paths accepted; denied admin pages explain themselves instead of redirecting silently, and moderators can reach the moderation lists they may use. 66 new unit tests. Remaining: Mentor and Recruiter navigation once those roles exist |
 | TASK-020 States and accessibility baseline | In progress | Done: not-found, error and global-error screens (no technical detail, a reference code), loading skeletons, shared `EmptyState` and `ErrorState` used on the main list pages, an accessible `Dialog` (focus trap, portal, labelled, scroll lock, one at a time) used for the category delete in place of the browser `confirm()`, a skip link, one `main` landmark per page, focus moves to the page heading after navigation, and reduced motion is honoured. Remaining: adopt the shared states on the remaining list pages and forms under `features/**`, and a real screen-reader pass (TASK-050) |
-| TASK-021 Notification service | In progress | In-app bell, BullMQ email, realtime push. Missing: preferences, quiet hours, WhatsApp opt-in, delivery log |
+| TASK-021 Notification service | In progress | Done (TEST-032): a central dispatcher decides every channel per notification and writes a delivery-log row for each decision; in-app always on; email follows the member's preference; quiet hours (default 21:00 to 08:00 IST) defer non-critical email as a delayed job; critical events (security alerts) pass at any time and cannot be switched off; at most 3 non-critical messages per member per day; WhatsApp needs an explicit opt-in and a confirmed number and records `skipped:no_provider` (no provider integrated); preferences and inbox API (API-038, API-039) and the pages `/settings/notifications` (SCR-037) and `/notifications` (SCR-013). Remaining: choose and connect a WhatsApp provider (OPEN-18), sender-domain authentication, sending digests, owner approval of the OPEN-04 values |
 
 ## M3 Identity, profile and community
 
@@ -163,4 +163,11 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 - **Git history caveat:** the sessions share one git index, so the accessibility session's first commit (boundaries, skeletons, `motion.css`) landed inside another session's commit `e3f4304`, which is titled as a contrast-test type fix. The content is correct and builds pass; only that commit's title understates it. Later sessions must commit with explicit paths and check `git status` before and after.
 - **Public pages:** signed-in visitors now see "Go to dashboard" on the hero and final call to action, "Open Network Tools" on the tools call to action, "Dashboard" in the footer, and a banner on the sign-in pages. The pages stay prerendered, and the first paint shows a same-size placeholder instead of either label.
 - **Owner decision needed:** OPEN-01 (primary colour) unblocks switching the Grove theme on. Open `/design-system` on the preview to compare the current look with the Grove theme in light and dark.
+
+## Notes from batch 5 and the dependency upgrades
+
+- **A third migration is pending on the live database.** `20261120182751_notification_service` (preference, settings and delivery-log tables) is applied locally only. The backend must not be deployed before it is applied to every database it runs against (`docs/ops/migrations.md`).
+- **API shape change:** `GET /notifications` now returns `{ items, unreadCount, page, pageSize, total }` instead of a bare array. Because Vercel and Render deploy separately, the web client accepts both shapes for now (commit `9af5880`); delete the array branch once both sides are live.
+- **Dependencies:** nodemailer 6 to 10 and bcrypt 5 to 6 are done (the `tar` override is gone). The audit is now 0 critical and 2 high (zod 3 and one OpenTelemetry package, both deferred majors) and 19 moderate. After deploying, send one real test email and sign in with an existing account (the first checks nodemailer 10, the second verifies an old bcrypt 5 hash).
+- **Open owner inputs for M2 to finish:** OPEN-01 (primary colour, switches the Grove theme on), OPEN-04 values, OPEN-18 (sender domain and WhatsApp provider).
 
