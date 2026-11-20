@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Menu, Search } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 import { authApi } from "@/features/auth/api/auth.api";
 import { useAuth } from "@/shared/auth/AuthProvider";
 import { cn } from "@/shared/utils/cn";
 
-export function AppTopbar({ onMenuClick }: { onMenuClick: () => void }) {
+export function AppTopbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -34,9 +35,11 @@ export function AppTopbar({ onMenuClick }: { onMenuClick: () => void }) {
 
   return (
     <header className="glass-panel-strong sticky top-0 z-20 flex h-16 items-center justify-between gap-4 rounded-none px-4 lg:px-8">
-      <button onClick={onMenuClick} className="text-muted-foreground hover:text-foreground lg:hidden">
-        <Menu className="h-6 w-6" />
-      </button>
+      {/* Below 1024 px the sidebar is replaced by the bottom tab bar, so the logo takes its place. */}
+      <Link href="/dashboard" className="flex items-center gap-2 font-semibold lg:hidden">
+        <Image src="/logo.png" alt="PacketPulse" width={28} height={28} className="h-7 w-auto" />
+        <span className="sr-only sm:not-sr-only">PacketPulse</span>
+      </Link>
 
       <button
         onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
@@ -48,6 +51,14 @@ export function AppTopbar({ onMenuClick }: { onMenuClick: () => void }) {
       </button>
 
       <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+          aria-label="Search"
+          className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground sm:hidden"
+        >
+          <Search className="h-5 w-5" />
+        </button>
         <NotificationBell />
 
         <div ref={menuRef} className="relative">
@@ -63,13 +74,20 @@ export function AppTopbar({ onMenuClick }: { onMenuClick: () => void }) {
           </button>
 
           {menuOpen && (
-            <div className="glass-panel-strong absolute right-0 top-10 z-20 w-48 rounded-lg py-1">
+            <div className="glass-panel-strong absolute right-0 top-10 z-20 w-56 rounded-lg py-1">
               <Link
                 href="/profile"
                 onClick={() => setMenuOpen(false)}
                 className="block px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 Profile
+              </Link>
+              <Link
+                href="/settings/notifications"
+                onClick={() => setMenuOpen(false)}
+                className="block px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                Notification settings
               </Link>
               <div className="my-1 border-t border-glass-border" />
               <button

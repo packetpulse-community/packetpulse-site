@@ -59,3 +59,17 @@ export function matchesRule(subject: AccessSubject, rule: AccessRule): boolean {
   if ("anyOf" in rule) return rule.anyOf.some((r) => matchesRule(subject, r));
   return rule.allOf.every((r) => matchesRule(subject, r));
 }
+
+const ROLE_LABELS: ReadonlyArray<[string, string]> = [
+  [SUPER_ADMIN, "Super admin"],
+  [ADMIN, "Administrator"],
+  ["moderator", "Moderator"],
+  ["instructor", "Instructor"],
+  ["mentor", "Mentor"],
+  ["recruiter", "Recruiter"],
+];
+
+/** The most senior role, as words, for the account block ("Member" when there is none). */
+export function primaryRoleLabel(subject: Pick<AccessSubject, "roles">): string {
+  return ROLE_LABELS.find(([role]) => subject.roles.includes(role))?.[1] ?? "Member";
+}

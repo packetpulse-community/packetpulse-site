@@ -38,7 +38,7 @@ export function AdminTopbar({ user, onMenuClick }: AdminTopbarProps) {
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-card px-4 lg:px-8">
-      <button onClick={onMenuClick} className="text-muted-foreground hover:text-foreground lg:hidden">
+      <button onClick={onMenuClick} aria-label="Open menu" className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground lg:hidden">
         <Menu className="h-6 w-6" />
       </button>
       <div className="hidden lg:block" />
@@ -59,13 +59,20 @@ export function AdminTopbar({ user, onMenuClick }: AdminTopbarProps) {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-10 z-20 w-48 rounded-lg border border-border bg-popover py-1 shadow-lg">
+            <div className="absolute right-0 top-10 z-20 w-56 rounded-lg border border-border bg-popover py-1 shadow-lg">
               <Link
                 href="/profile"
                 onClick={() => setMenuOpen(false)}
                 className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 Profile
+              </Link>
+              <Link
+                href="/settings/notifications"
+                onClick={() => setMenuOpen(false)}
+                className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                Notification settings
               </Link>
               <div className="my-1 border-t border-border" />
               <button

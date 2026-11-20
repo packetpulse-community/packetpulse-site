@@ -1,55 +1,27 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  Activity,
-  BarChart3,
-  BookOpen,
-  FileText,
-  LayoutDashboard,
-  LogOut,
-  MessageSquare,
-  ScrollText,
-  Settings,
-  Tag,
-  Terminal,
-  Users,
-  Video,
-  X,
-  HelpCircle,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, LogOut, X } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { authApi } from "@/features/auth/api/auth.api";
-
-const NAV_ITEMS = [
-  { label: "Overview", href: "/admin", icon: LayoutDashboard },
-  { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Resources", href: "/admin/resources", icon: FileText },
-  { label: "Recordings", href: "/admin/recordings", icon: Video },
-  { label: "Blogs", href: "/admin/blogs", icon: BookOpen },
-  { label: "Forums", href: "/admin/forums", icon: MessageSquare },
-  { label: "Quizzes", href: "/admin/quizzes", icon: HelpCircle },
-  { label: "Categories", href: "/admin/categories", icon: Tag },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "System Status", href: "/admin/status", icon: Activity },
-  { label: "Logs", href: "/admin/logs", icon: ScrollText },
-  { label: "API Docs", href: "/admin/api-docs", icon: Terminal },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
-] as const;
+import { useAuth } from "@/shared/auth/AuthProvider";
+import { navigationFor } from "@/shared/config/navigation";
+import { SidebarNav } from "@/shared/layouts/SidebarNav";
 
 interface AdminSidebarProps {
   open: boolean;
   onClose: () => void;
 }
 
+// The admin rail is the same navigation model as the member sidebar, cut to the
+// pages this person may open inside /admin (admins: everything; moderators: only
+// the moderation lists their permissions allow).
 export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
-  const pathname = usePathname();
   const router = useRouter();
-
-  function isActive(href: string) {
-    return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
-  }
+  const auth = useAuth();
+  const { admin } = useMemo(() => navigationFor(auth), [auth]);
 
   async function handleLogout() {
     await authApi.logout();
@@ -64,7 +36,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
       )}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-card transition-transform duration-300 ease-in-out lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-[232px] flex-col border-r border-border bg-card transition-transform duration-300 ease-in-out lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -72,32 +44,25 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
           <Link href="/admin" className="font-semibold">
             PacketPulse Admin
           </Link>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground lg:hidden">
+          <button
+            onClick={onClose}
+            aria-label="Close menu"
+            className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground lg:hidden"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                )}
-              >
-                <Icon className="h-5 w-5" />
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav aria-label="Admin" className="flex flex-1 flex-col gap-1 overflow-y-auto p-4">
+          <Link
+            href="/dashboard"
+            onClick={onClose}
+            className="mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          >
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            Back to PacketPulse
+          </Link>
+          <SidebarNav sections={admin} onNavigate={onClose} />
         </nav>
 
         <div className="border-t border-border p-4">
