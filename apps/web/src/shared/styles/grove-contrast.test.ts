@@ -13,7 +13,7 @@ function blockVars(selectorStart: string): Record<string, string> {
   if (start < 0) throw new Error(`Missing block ${selectorStart}`);
   const body = css.slice(css.indexOf("{", start) + 1, css.indexOf("}", start));
   const vars: Record<string, string> = {};
-  for (const m of body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) vars[m[1]] = m[2].trim();
+  for (const m of body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) vars[m[1] as string] = (m[2] as string).trim();
   return vars;
 }
 
@@ -24,7 +24,7 @@ const themes = { light, dark };
 
 describe("Signal Grove tokens", () => {
   it("dark block overrides every colour that the light block defines", () => {
-    const colourVars = Object.keys(light).filter((k) => /^#[0-9a-f]{6}$/i.test(light[k]));
+    const colourVars = Object.keys(light).filter((k) => /^#[0-9a-f]{6}$/i.test(light[k] ?? ""));
     const darkOnly = blockVars('[data-theme="grove"].dark,');
     for (const k of colourVars) expect(darkOnly, `dark value missing for ${k}`).toHaveProperty(k);
   });
@@ -33,8 +33,8 @@ describe("Signal Grove tokens", () => {
     describe(`${theme} theme`, () => {
       for (const pair of CONTRAST_PAIRS) {
         it(`${pair.name} (${pair.kind}) >= ${MIN_RATIO[pair.kind]}:1`, () => {
-          const fg = vars[pair.fg];
-          const bg = vars[pair.bg];
+          const fg = vars[pair.fg] as string;
+          const bg = vars[pair.bg] as string;
           expect(fg, `${pair.fg} is not defined`).toBeDefined();
           expect(bg, `${pair.bg} is not defined`).toBeDefined();
           const ratio = contrastRatio(fg, bg);

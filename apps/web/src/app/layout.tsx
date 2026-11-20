@@ -3,6 +3,7 @@ import { QueryProvider } from "@/shared/providers/QueryProvider";
 import { TooltipProvider } from "@/shared/ui/primitives/Tooltip";
 import { GlobalErrorLogger } from "@/shared/components/GlobalErrorLogger";
 import "@/shared/styles/globals.css";
+import "@/shared/styles/motion.css";
 
 export const metadata: Metadata = {
   title: "PacketPulse",
