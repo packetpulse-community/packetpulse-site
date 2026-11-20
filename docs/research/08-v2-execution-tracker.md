@@ -10,7 +10,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | --- | --- | --- | --- | --- |
 | M0 Audit and baseline | 6 | 5 | 0 | 1 |
 | M1 Foundation | 11 | 10 | 1 | 0 |
-| M2 Design system and shell | 4 | 1 | 3 | 0 |
+| M2 Design system and shell | 4 | 3 | 1 | 0 |
 | M3 Identity, profile, community | 6 | 2 | 4 | 0 |
 | M4 Learn and practice | 4 | 1 | 3 | 0 |
 | M5 Prove and verify | 3 | 1 | 2 | 0 |
@@ -18,7 +18,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | M7 Operations | 6 | 2 | 4 | 0 |
 | M8 Release | 6 | 0 | 6 | 0 |
 | M9 Improve | 2 | 0 | 2 | 0 |
-| **Total** | **56** | **22** | **33** | **1** |
+| **Total** | **56** | **24** | **31** | **1** |
 
 **Next in Document 4 order:** close M0 (TASK-001, 002, 006 need your approval or a second reviewer; TASK-003 and 005 are doable now; TASK-004 is blocked on hosting access), then start M1 with TASK-008 (permission engine), which almost everything else depends on.
 
@@ -30,7 +30,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | TASK-002 Gap analysis, doc update, threat model, data map | In progress | Every PRD and SCR classified in Doc 02. Threat model and data map drafted in [Doc 10](10-threat-model-and-data-map.md). Remaining: update Docs 1 to 4 (stack wording in DEC-021 and DEC-032, roles, the approval rule) and approval |
 | TASK-003 Environments and secrets | In progress | Done: e2e suite refuses any non-local database (`apps/backend/test/require-local-db.cjs`, verified against the remote host); `docs/ops/environments.md` and README list the four environments and every variable; `.env.example` files updated. Remaining: create real preview and staging environments so "staging never reads production data" is true in practice |
 | TASK-004 Backups and recovery drill | **Blocked** | Needs access to the Supabase and Render projects and a staging copy to restore into. None in the repo. Blocker: owner to provide access and name the plan |
-| TASK-005 Logging, error tracking, uptime, alerts, incident process | In progress | Done: `docs/ops/incident-process.md` and `docs/ops/monitoring.md` (owners left as placeholders). Remaining: name the owners, set up an uptime check on `/api/health`, add error tracking and alert routing, then inject a test error (TEST-009) |
+| TASK-005 Logging, error tracking, uptime, alerts, incident process | In progress | Done: `docs/ops/incident-process.md` and `docs/ops/monitoring.md` (owners left as placeholders); a `Server-Timing` header (`db;dur=..;desc="n queries", app;dur=..`, on outside production, off in production unless `SERVER_TIMING=true`) so the browser Network panel shows where each request spends time. Remaining: name the owners, set up an uptime check on `/api/health`, add error tracking and alert routing, then inject a test error (TEST-009) |
 | TASK-006 Authentication review and decision (OPEN-13) | In progress | Decision record drafted: [Doc 09](09-auth-review-decision-record.md). Awaiting the owner's approval |
 
 ## M1 Foundation
@@ -39,7 +39,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | --- | --- | --- |
 | TASK-007 Migrations and background work | In progress | Done (TEST-009): `apps/backend/scripts/check-migrations.sh` rehearses every migration on a throwaway database from empty and over fixture data, detects schema drift, and runs in CI as a blocking step; every existing migration is reviewed for risk (`docs/ops/migration-review.md`); procedure written (`docs/ops/migrations.md`). Remaining: **nothing applies migrations on deploy** (see the deploy warning below), run the rehearsal against a copy of the real Supabase data, and decide on a Render pre-deploy command |
 | TASK-008 Permission engine | In progress | Done: route inventory ([Doc 11](11-route-inventory.md)) and a data-driven permission matrix e2e test that discovers routes from Nest metadata (TEST-005, TEST-006). It found and fixed two real gaps: quiz authoring routes with no permission check, and unapproved blog posts readable publicly by id or slug. Remaining: resource and state rules (for example "own company only"), and the admin and identity areas' per-route rules as they grow |
-| TASK-009 Sessions and step-up | In progress | Done (SEC-05, TEST-007): members signed out after 30 days idle; staff after 30 minutes idle and 8 hours absolute; enforced on refresh, no schema change, limits configurable by env. Remaining: step-up (reason plus fresh code), and the unenforced `sessionTimeoutMinutes` admin setting (remove it or make it real) |
+| TASK-009 Sessions and step-up | In progress | Done (SEC-05, TEST-007): members signed out after 30 days idle; staff after 30 minutes idle and 8 hours absolute; enforced on refresh, limits configurable by env. Quiet refresh: a visible tab renews the session about every 10 minutes (one extra refresh call per active tab per 10 minutes), and a failed refresh clears the stale presence cookie. Remaining: step-up (reason plus a fresh code), and the unenforced `sessionTimeoutMinutes` admin setting |
 | TASK-010 Validation and error format | In progress | Done (TEST-011): a global exception filter gives every error one body `{ statusCode, code, message, fields?, requestId? }` with stable codes; validation errors list each failing field; 5xx errors never expose stack, paths, SQL or internal messages; Prisma errors map to CONFLICT or NOT_FOUND without naming models; the maintenance flag still works; shared `ApiErrorBody` type and typed readers in the web client. Remaining: web forms should adopt the `fields` list for inline errors |
 | TASK-011 Web security hardening | In progress | Done: security headers and a report-only CSP on the web app, CSRF assessment (`docs/ops/web-security.md`), secret scanning in CI (no leaks in 73 commits). Remaining: enforce the CSP, and dependency findings: `pnpm audit` reports 36 high and 7 critical (next, tar, proxy-addr, multer, nodemailer, body-parser and others) that need framework upgrades |
 | TASK-012 Field-level protection | In progress | Done (TEST-034): a declarative field policy (one table entry per sensitive field, built so the later recruiter and date-of-birth rule is one more entry) and a test that calls every GET route as a member, moderator, instructor and anonymously and fails if another account's email, WhatsApp number, last login, token hashes, IPs or user agents appear. It found and fixed two leaks (public certificate verification and the public log endpoint). Remaining: apply it to the v2 fields as they are added (date of birth, CTC, notes) |
@@ -53,9 +53,9 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 
 | Task | Status | Evidence and what remains |
 | --- | --- | --- |
-| TASK-018 Tokens and component library | Open | Colours live in class names, not tokens; dark-only (Doc 03 s2) |
+| TASK-018 Design tokens and component library | In progress | Done: the Signal Grove tokens (Document 2 section 4) as an **opt-in** theme, light and dark, mapped in Tailwind; a contrast test of every token pair (77 assertions, anchors match the document: forest on white 7.33, control border 4.04 light and 5.24 dark); `StatusChip` (text plus glyph, never colour alone), verification labels, Button states, Card and Alert; a `/design-system` page (noindex) showing every token and every state. The existing app is visually unchanged. Remaining: owner decision OPEN-01 (primary colour), then switching the Grove theme on and replacing hard-coded colour classes in components |
 | TASK-019 App shell, navigation by role | Open | One member list plus Admin; no Mentor, Instructor or Recruiter navigation |
-| TASK-020 States and accessibility baseline | Open | No `loading`, `error`, `not-found` boundaries; the dialog has no focus trap (Doc 03 s3) |
+| TASK-020 States and accessibility baseline | In progress | Done: not-found, error and global-error screens (no technical detail, a reference code), loading skeletons, shared `EmptyState` and `ErrorState` used on the main list pages, an accessible `Dialog` (focus trap, portal, labelled, scroll lock, one at a time) used for the category delete in place of the browser `confirm()`, a skip link, one `main` landmark per page, focus moves to the page heading after navigation, and reduced motion is honoured. Remaining: adopt the shared states on the remaining list pages and forms under `features/**`, and a real screen-reader pass (TASK-050) |
 | TASK-021 Notification service | In progress | In-app bell, BullMQ email, realtime push. Missing: preferences, quiet hours, WhatsApp opt-in, delivery log |
 
 ## M3 Identity, profile and community
@@ -129,7 +129,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | Item | Why | Task |
 | --- | --- | --- |
 | ~~Web admin screens must send a `reason`~~ Done for user deletion; the web app has no clean-data screen | The backend returns 400 without a reason | TASK-015 |
-| Wire `logAdminRegistered` into the shared-code admin signup | The audit helper exists but the identity route does not call it yet | TASK-015, TASK-044 |
+| ~~Wire `logAdminRegistered` into the shared-code admin signup~~ Done (admin signup now writes an `admin_registered` audit entry) | The audit helper exists but the identity route does not call it yet | TASK-015, TASK-044 |
 | Remove or enforce the `sessionTimeoutMinutes` setting | Session limits now come from env variables; the admin field still does nothing | TASK-009, TASK-047 |
 | Upgrade vulnerable dependencies (36 high, 7 critical) | Currently report-only in CI; blocking would fail every pull request | TASK-011 |
 | Mark `secret-scan` and `dependency-audit` as required checks | A failed check only blocks release if branch protection requires it (GitHub setting) | TASK-017 |
@@ -157,3 +157,10 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | Measure and set `TRUST_PROXY` | The default is unchanged (trust everything); a wrong hop count either shares one IP limit between all visitors or re-opens spoofing | TASK-013 |
 | Allow `https://challenges.cloudflare.com` in the CSP before enforcing it | The report-only CSP will otherwise block the widget | TASK-011 |
 | Add `prisma migrate deploy` as a Render pre-deploy command | Needs a staging environment first | TASK-003, TASK-007 |
+
+## Notes from batch 4 (15 commits)
+
+- **Git history caveat:** the sessions share one git index, so the accessibility session's first commit (boundaries, skeletons, `motion.css`) landed inside another session's commit `e3f4304`, which is titled as a contrast-test type fix. The content is correct and builds pass; only that commit's title understates it. Later sessions must commit with explicit paths and check `git status` before and after.
+- **Public pages:** signed-in visitors now see "Go to dashboard" on the hero and final call to action, "Open Network Tools" on the tools call to action, "Dashboard" in the footer, and a banner on the sign-in pages. The pages stay prerendered, and the first paint shows a same-size placeholder instead of either label.
+- **Owner decision needed:** OPEN-01 (primary colour) unblocks switching the Grove theme on. Open `/design-system` on the preview to compare the current look with the Grove theme in light and dark.
+
