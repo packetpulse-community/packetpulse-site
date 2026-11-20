@@ -11,6 +11,7 @@ import { RegisterSchema } from "@packetpulse/types";
 import { PasswordRequirements } from "@/shared/components/PasswordRequirements";
 import { authApi } from "../api/auth.api";
 import { ApiError } from "@/shared/api/http-client";
+import { Turnstile, useCaptcha } from "@/shared/components/Turnstile";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 
@@ -37,6 +38,7 @@ type RegisterFormValues = z.infer<typeof RegisterFormSchema>;
 
 export function RegisterForm() {
   const router = useRouter();
+  const captcha = useCaptcha();
   const {
     register,
     handleSubmit,
@@ -51,6 +53,7 @@ export function RegisterForm() {
     onError: (err) => {
       const message = err instanceof ApiError ? (err.body as { message?: string })?.message : undefined;
       setError("root", { message: message ?? "Registration failed" });
+      if (captcha.enabled) captcha.reset();
     },
   });
 
@@ -62,6 +65,7 @@ export function RegisterForm() {
       password: values.password,
       whatsappNumber: values.whatsappNumber,
       professionalExperience: values.professionalExperience,
+      captchaToken: captcha.token,
     });
   }
 
@@ -191,9 +195,11 @@ export function RegisterForm() {
 
         {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
 
+        <Turnstile captcha={captcha} />
+
         <button
           type="submit"
-          disabled={isSubmitting || mutation.isPending}
+          disabled={isSubmitting || mutation.isPending || (captcha.enabled && !captcha.token)}
           className={cn(buttonVariants({ variant: "gradient" }), "w-full")}
         >
           <Lock className="h-4 w-4" />

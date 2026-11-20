@@ -10,6 +10,7 @@ import { LoginSchema, type LoginDto } from "@packetpulse/types";
 import { authApi } from "../api/auth.api";
 import { ApiError } from "@/shared/api/http-client";
 import { SocialLoginRow } from "./SocialLoginRow";
+import { Turnstile, useCaptcha } from "@/shared/components/Turnstile";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 
@@ -21,6 +22,7 @@ export function LoginForm({
   passwordReset?: boolean;
 }) {
   const router = useRouter();
+  const captcha = useCaptcha();
   const {
     register,
     handleSubmit,
@@ -37,6 +39,7 @@ export function LoginForm({
     onError: (err) => {
       const message = err instanceof ApiError ? (err.body as { message?: string })?.message : undefined;
       setError("root", { message: message ?? "Login failed" });
+      if (captcha.enabled) captcha.reset();
     },
   });
 
@@ -66,7 +69,7 @@ export function LoginForm({
         </p>
       )}
 
-      <form onSubmit={handleSubmit((dto) => mutation.mutate(dto))} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit((dto) => mutation.mutate({ ...dto, captchaToken: captcha.token }))} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <input
             type="email"
@@ -99,9 +102,11 @@ export function LoginForm({
 
         {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
 
+        <Turnstile captcha={captcha} />
+
         <button
           type="submit"
-          disabled={isSubmitting || mutation.isPending}
+          disabled={isSubmitting || mutation.isPending || (captcha.enabled && !captcha.token)}
           className={cn(buttonVariants({ variant: "gradient" }), "w-full")}
         >
           <Lock className="h-4 w-4" />

@@ -19,6 +19,7 @@ import {
 import { authApi } from "../api/auth.api";
 import { ApiError } from "@/shared/api/http-client";
 import { cn } from "@/shared/utils/cn";
+import { Turnstile, useCaptcha } from "@/shared/components/Turnstile";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { PasswordRequirements } from "@/shared/components/PasswordRequirements";
 
@@ -30,6 +31,7 @@ const inputClass = "rounded-md border border-input bg-background px-3 py-2.5";
 const buttonClass = cn(buttonVariants({ variant: "gradient" }), "w-full");
 
 function RequestOtpStep({ onRequested }: { onRequested: (email: string) => void }) {
+  const captcha = useCaptcha();
   const {
     register,
     handleSubmit,
@@ -40,18 +42,26 @@ function RequestOtpStep({ onRequested }: { onRequested: (email: string) => void 
   const mutation = useMutation({
     mutationFn: authApi.forgotPassword,
     onSuccess: (_, dto) => onRequested(dto.email),
-    onError: (err) => setError("root", { message: errorMessage(err, "Could not send the reset code") }),
+    onError: (err) => {
+      setError("root", { message: errorMessage(err, "Could not send the reset code") });
+      if (captcha.enabled) captcha.reset();
+    },
   });
 
   return (
-    <form onSubmit={handleSubmit((dto) => mutation.mutate(dto))} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit((dto) => mutation.mutate({ ...dto, captchaToken: captcha.token }))} className="flex flex-col gap-4">
       <p className="text-center text-sm text-muted-foreground">Enter your email and we'll send you a reset code.</p>
       <div className="flex flex-col gap-1">
         <input type="email" placeholder="Email address" className={inputClass} {...register("email")} />
         {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
       </div>
       {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
-      <button type="submit" disabled={isSubmitting || mutation.isPending} className={buttonClass}>
+      <Turnstile captcha={captcha} />
+      <button
+        type="submit"
+        disabled={isSubmitting || mutation.isPending || (captcha.enabled && !captcha.token)}
+        className={buttonClass}
+      >
         {mutation.isPending ? "Sending…" : "Send reset code"}
       </button>
     </form>
@@ -59,6 +69,7 @@ function RequestOtpStep({ onRequested }: { onRequested: (email: string) => void 
 }
 
 function VerifyOtpStep({ email, onVerified }: { email: string; onVerified: (tempToken: string) => void }) {
+  const captcha = useCaptcha();
   const {
     register,
     handleSubmit,
@@ -69,11 +80,14 @@ function VerifyOtpStep({ email, onVerified }: { email: string; onVerified: (temp
   const mutation = useMutation({
     mutationFn: authApi.verifyOtp,
     onSuccess: (result) => onVerified(result.tempToken),
-    onError: (err) => setError("root", { message: errorMessage(err, "Invalid or expired code") }),
+    onError: (err) => {
+      setError("root", { message: errorMessage(err, "Invalid or expired code") });
+      if (captcha.enabled) captcha.reset();
+    },
   });
 
   return (
-    <form onSubmit={handleSubmit((dto) => mutation.mutate(dto))} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit((dto) => mutation.mutate({ ...dto, captchaToken: captcha.token }))} className="flex flex-col gap-4">
       <p className="text-center text-sm text-muted-foreground">Enter the 6-digit code sent to {email}.</p>
       <input type="hidden" {...register("email")} />
       <div className="flex flex-col gap-1">
@@ -88,7 +102,12 @@ function VerifyOtpStep({ email, onVerified }: { email: string; onVerified: (temp
         {errors.otp && <p className="text-sm text-destructive">{errors.otp.message}</p>}
       </div>
       {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
-      <button type="submit" disabled={isSubmitting || mutation.isPending} className={buttonClass}>
+      <Turnstile captcha={captcha} />
+      <button
+        type="submit"
+        disabled={isSubmitting || mutation.isPending || (captcha.enabled && !captcha.token)}
+        className={buttonClass}
+      >
         {mutation.isPending ? "Verifying…" : "Verify code"}
       </button>
     </form>
