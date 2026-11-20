@@ -19,6 +19,10 @@ export const PasswordSchema = PASSWORD_RULES.reduce(
 // Matches the Prisma ProfessionalExperience enum exactly (apps/backend/prisma/schema.prisma).
 export const ProfessionalExperienceSchema = z.enum(["student", "junior", "mid", "senior", "lead"]);
 
+// Cloudflare Turnstile token (TASK-013). Optional: only sent, and only required by the
+// backend, when bot protection is enabled.
+const captchaToken = z.string().max(4096).optional();
+
 export const RegisterSchema = z.object({
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
@@ -26,6 +30,7 @@ export const RegisterSchema = z.object({
   password: PasswordSchema,
   whatsappNumber: z.string().optional(),
   professionalExperience: ProfessionalExperienceSchema.optional(),
+  captchaToken,
 });
 export type RegisterDto = z.infer<typeof RegisterSchema>;
 
@@ -37,17 +42,20 @@ export type RegisterAdminDto = z.infer<typeof RegisterAdminSchema>;
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  captchaToken,
 });
 export type LoginDto = z.infer<typeof LoginSchema>;
 
 export const ForgotPasswordSchema = z.object({
   email: z.string().email(),
+  captchaToken,
 });
 export type ForgotPasswordDto = z.infer<typeof ForgotPasswordSchema>;
 
 export const VerifyOtpSchema = z.object({
   email: z.string().email(),
   otp: z.string().length(6),
+  captchaToken,
 });
 export type VerifyOtpDto = z.infer<typeof VerifyOtpSchema>;
 

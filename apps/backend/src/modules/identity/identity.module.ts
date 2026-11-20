@@ -7,6 +7,7 @@ import { AuthService } from "./application/services/auth.service";
 import { AuthCookieService } from "./application/services/auth-cookie.service";
 import { TokenService } from "./application/services/token.service";
 import { EmailVerificationService } from "./application/services/email-verification.service";
+import { CaptchaModule } from "../../common/captcha";
 import { NotificationsModule } from "../notifications";
 import { UserRepository } from "./domain/repositories/user.repository";
 import { UserPrismaRepository } from "./infrastructure/prisma/user.prisma-repository";
@@ -25,6 +26,7 @@ import { MaintenanceGuard } from "./presentation/guards/maintenance.guard";
   imports: [
     PassportModule,
     NotificationsModule,
+    CaptchaModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

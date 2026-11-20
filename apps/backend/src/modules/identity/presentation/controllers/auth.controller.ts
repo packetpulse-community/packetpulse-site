@@ -1,6 +1,7 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException, UseGuards } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import { Request, Response } from "express";
+import { CaptchaGuard } from "../../../../common/captcha";
 import { AuthService } from "../../application/services/auth.service";
 import { EmailVerificationService } from "../../application/services/email-verification.service";
 import { AuthCookieService } from "../../application/services/auth-cookie.service";
@@ -37,6 +38,7 @@ export class AuthController {
 
   @Public()
   @Throttle(AUTH_STRICT)
+  @UseGuards(CaptchaGuard)
   @Post("register")
   async register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
@@ -52,6 +54,7 @@ export class AuthController {
   @Public()
   @Throttle(AUTH_STRICT)
   @AllowDuringMaintenance()
+  @UseGuards(CaptchaGuard)
   @Post("login")
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -112,6 +115,7 @@ export class AuthController {
 
   @Public()
   @Throttle(AUTH_STRICT)
+  @UseGuards(CaptchaGuard)
   @Post("forgotpassword")
   @HttpCode(200)
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -121,6 +125,7 @@ export class AuthController {
 
   @Public()
   @Throttle(AUTH_STRICT)
+  @UseGuards(CaptchaGuard)
   @Post("verifyotp")
   @HttpCode(200)
   async verifyOtp(@Body() dto: VerifyOtpDto) {

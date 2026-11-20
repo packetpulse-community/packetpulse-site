@@ -29,6 +29,12 @@ const BaseEnvSchema = z.object({
   // Per-account login lockout (TASK-013): failures allowed per email, and the window/lock length.
   LOGIN_MAX_FAILURES: z.coerce.number().int().positive().default(5),
   LOGIN_LOCK_MINUTES: z.coerce.number().int().positive().default(15),
+  // Bot protection (TASK-013): Cloudflare Turnstile secret key. Unset = captcha disabled;
+  // set = register/login/forgot-password/verify-otp require a valid token.
+  TURNSTILE_SECRET_KEY: z.string().optional(),
+  // Which proxies to trust for the client IP (finding S-11): true | false | hop count |
+  // comma-separated IPs/CIDRs. Unset = true (today's behaviour). See docs/ops/bot-protection.md.
+  TRUST_PROXY: z.string().optional(),
   ADMIN_SECURE_CODE: z.string().min(16),
   CORS_ORIGINS: z.string().min(1), // comma-separated allowlist, never "*" (see plan §11)
   // Base URL of the deployed frontend — used to build the clickable link sent in
