@@ -66,7 +66,7 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>(
 
     return (
       <div ref={ref} role={variant === "grove-danger" ? "alert" : role} className={cn(alertVariants({ variant }), className)} {...props}>
-        <Icon className="h-4 w-4" />
+        <Icon className="h-4 w-4" aria-hidden="true" />
         <div>{children}</div>
         {dismissible && (
           <button
@@ -78,7 +78,7 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>(
             }}
             className="absolute right-3 top-3 rounded-md p-1 opacity-70 hover:opacity-100"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -89,7 +89,8 @@ Alert.displayName = "Alert";
 
 export const AlertTitle = forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h5 ref={ref} className={cn("mb-1 font-medium leading-none tracking-tight", className)} {...props} />
+    // A styled title, not a heading: an h5 inside an alert skips levels on every page (WCAG 1.3.1 / heading-order).
+    <div ref={ref} className={cn("mb-1 font-medium leading-none tracking-tight", className)} {...props} />
   ),
 );
 AlertTitle.displayName = "AlertTitle";

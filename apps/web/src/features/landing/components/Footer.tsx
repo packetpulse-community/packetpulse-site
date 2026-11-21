@@ -74,7 +74,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h3 className="mb-4 text-sm font-semibold">Quick Links</h3>
+          <h2 className="mb-4 text-sm font-semibold">Quick Links</h2>
           <ul className="flex flex-col gap-2">
             {QUICK_LINKS.map((link) => (
               <li key={link.href + link.label}>
@@ -101,7 +101,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h3 className="mb-4 text-sm font-semibold">Contact Us</h3>
+          <h2 className="mb-4 text-sm font-semibold">Contact Us</h2>
           <ul className="flex flex-col gap-2 text-sm text-text-secondary">
             <li>
               <a href="mailto:packetpulse25@gmail.com" className="hover:text-text">

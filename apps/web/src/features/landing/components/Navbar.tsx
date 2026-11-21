@@ -138,10 +138,11 @@ export function Navbar() {
 
         <div className="hidden flex-1 items-center justify-end gap-3 lg:flex">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="search"
               placeholder="Search"
+              aria-label="Search the site (coming soon)"
               disabled
               title="Search coming soon"
               className="w-40 rounded-grove-control border border-control bg-surface py-1.5 pl-9 pr-3 text-sm text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60"

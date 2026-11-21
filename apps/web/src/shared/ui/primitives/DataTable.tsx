@@ -164,10 +164,11 @@ export function DataTable<T>(props: DataTableProps<T>) {
           <div />
         ) : (
           <div className="relative w-full md:w-64">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search..."
+              aria-label="Search table"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -252,14 +253,15 @@ export function DataTable<T>(props: DataTableProps<T>) {
         <p className="text-sm text-muted-foreground">
           Showing {from} to {to} of {totalItems} entries
         </p>
-        <div className="flex items-center gap-1">
+        <nav aria-label="Pagination" className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => handlePageChange(page - 1)}
             disabled={page === 1}
+            aria-label="Previous page"
             className="rounded-grove-control border border-control p-2 text-text-secondary hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           </button>
           {getPageNumbers(page, totalPages).map((p, i) =>
             p === "..." ? (
@@ -271,6 +273,8 @@ export function DataTable<T>(props: DataTableProps<T>) {
                 key={p}
                 type="button"
                 onClick={() => handlePageChange(p)}
+                aria-label={`Page ${p}`}
+                aria-current={p === page ? "page" : undefined}
                 className={cn(
                   "rounded-md border px-3 py-1 text-sm",
                   p === page
@@ -286,11 +290,12 @@ export function DataTable<T>(props: DataTableProps<T>) {
             type="button"
             onClick={() => handlePageChange(page + 1)}
             disabled={page === totalPages}
+            aria-label="Next page"
             className="rounded-grove-control border border-control p-2 text-text-secondary hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
-        </div>
+        </nav>
       </div>
     </div>
   );
