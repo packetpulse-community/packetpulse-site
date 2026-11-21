@@ -16,7 +16,7 @@ export default async function NotificationsPage() {
         <h1 className="text-2xl font-semibold">Notifications</h1>
         <p className="text-muted-foreground">
           What happened on your account and content.{" "}
-          <Link href="/settings/notifications" className="text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-400">
+          <Link href="/settings/notifications" className="text-primary-text underline-offset-4 hover:underline">
             Change what you get by email
           </Link>
           .

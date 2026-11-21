@@ -89,10 +89,10 @@ export function NotificationsList() {
           const href = notificationHref(n.type, n.payload);
           const text = describeNotification(n.type, n.payload);
           return (
-            <li key={n.id} className="glass-panel flex items-start gap-3 rounded-lg px-4 py-3">
+            <li key={n.id} className="border border-border bg-surface flex items-start gap-3 rounded-lg px-4 py-3">
               <span
                 aria-hidden="true"
-                className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${unread ? "bg-indigo-600" : "border border-input"}`}
+                className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${unread ? "bg-primary" : "border border-input"}`}
               />
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <p className={unread ? "font-semibold" : "text-muted-foreground"}>
@@ -113,7 +113,7 @@ export function NotificationsList() {
                 <button
                   type="button"
                   onClick={() => markOne.mutate(n.id)}
-                  className="shrink-0 text-xs text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-400"
+                  className="shrink-0 text-xs text-primary-text underline-offset-4 hover:underline"
                 >
                   Mark read
                 </button>

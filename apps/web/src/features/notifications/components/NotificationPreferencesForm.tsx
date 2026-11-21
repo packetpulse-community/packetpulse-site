@@ -21,7 +21,7 @@ import { ErrorState } from "@/shared/ui/primitives/ErrorState";
 import { Skeleton } from "@/shared/ui/primitives/Skeleton";
 
 const inputClass = "rounded-md border border-input bg-background px-3 py-2.5";
-const checkboxClass = "h-4 w-4 rounded border-input accent-indigo-600";
+const checkboxClass = "h-4 w-4 rounded border-input accent-primary";
 
 function errorMessage(err: unknown, fallback: string) {
   return err instanceof ApiError ? ((err.body as { message?: string })?.message ?? fallback) : fallback;
@@ -131,7 +131,7 @@ function PreferencesFormBody({ view }: { view: NotificationPreferencesView }) {
                     <th scope="row" className="py-3 pr-4 font-normal">
                       <span className="font-medium">{e.label}</span>
                       {e.critical && (
-                        <span className="ml-2 inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
+                        <span className="ml-2 inline-flex items-center gap-1 rounded bg-warning-soft px-1.5 py-0.5 text-xs font-medium text-warning">
                           <Lock className="h-3 w-3" aria-hidden="true" /> Critical
                         </span>
                       )}
