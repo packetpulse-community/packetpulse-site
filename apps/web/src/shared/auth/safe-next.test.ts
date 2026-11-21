@@ -39,7 +39,7 @@ describe("sanitizeNextPath", () => {
   });
 
   it("refuses to bounce back to an auth page (would loop)", () => {
-    for (const p of ["/login", "/login?next=/forums", "/register", "/refresh?next=/x", "/forgot-password", "/verify-email/abc"]) {
+    for (const p of ["/login", "/login?next=/forums", "/register", "/refresh?next=/x", "/forgot-password", "/verify-email/abc", "/onboarding", "/onboarding?next=/forums"]) {
       expect(sanitizeNextPath(p)).toBeNull();
     }
   });

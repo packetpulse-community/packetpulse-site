@@ -56,7 +56,7 @@ export const VerifyEmailCodeSchema = z.object({
 });
 export type VerifyEmailCodeDto = z.infer<typeof VerifyEmailCodeSchema>;
 
-export const ResendEmailCodeSchema = z.object({ email: z.string().email() });
+export const ResendEmailCodeSchema = z.object({ email: z.string().email(), captchaToken: z.string().max(4096).optional() });
 export type ResendEmailCodeDto = z.infer<typeof ResendEmailCodeSchema>;
 
 // ---------------------------------------------------------------- Onboarding (PRD-003, API-006)

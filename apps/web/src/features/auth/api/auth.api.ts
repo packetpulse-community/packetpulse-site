@@ -1,10 +1,18 @@
 import { apiFetchClient } from "@/shared/api/http-client";
-import type { LoginDto, RegisterDto, ForgotPasswordDto, VerifyOtpDto, ResetPasswordDto } from "@packetpulse/types";
+import type {
+  LoginDto,
+  RegisterDto,
+  ForgotPasswordDto,
+  VerifyOtpDto,
+  ResetPasswordDto,
+  VerifyEmailCodeDto,
+  ResendEmailCodeDto,
+} from "@packetpulse/types";
 import type { SessionUser } from "@/shared/auth/session";
 
 export const authApi = {
   login: (dto: LoginDto) => apiFetchClient<{ user: SessionUser }>("/auth/login", { method: "POST", body: JSON.stringify(dto) }),
-  register: (dto: RegisterDto) => apiFetchClient<SessionUser>("/auth/register", { method: "POST", body: JSON.stringify(dto) }),
+  register: (dto: RegisterDto) => apiFetchClient<SessionUser & { emailCodeSent: boolean }>("/auth/register", { method: "POST", body: JSON.stringify(dto) }),
   logout: () => apiFetchClient<{ success: boolean }>("/auth/logout", { method: "POST" }),
   forgotPassword: (dto: ForgotPasswordDto) =>
     apiFetchClient<{ success: boolean }>("/auth/forgotpassword", { method: "POST", body: JSON.stringify(dto) }),
@@ -13,5 +21,9 @@ export const authApi = {
     apiFetchClient<{ success: boolean }>("/auth/resetpassword", { method: "POST", body: JSON.stringify(dto) }),
   verifyEmail: (token: string) =>
     apiFetchClient<{ success: boolean }>("/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) }),
+  verifyEmailCode: (dto: VerifyEmailCodeDto) =>
+    apiFetchClient<{ success: boolean }>("/auth/verify-email-code", { method: "POST", body: JSON.stringify(dto) }),
+  resendEmailCode: (dto: ResendEmailCodeDto) =>
+    apiFetchClient<{ success: boolean }>("/auth/resend-email-code", { method: "POST", body: JSON.stringify(dto) }),
   resendVerification: () => apiFetchClient<{ success: boolean }>("/auth/resend-verification", { method: "POST" }),
 };

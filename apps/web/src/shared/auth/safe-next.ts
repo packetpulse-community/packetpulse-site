@@ -6,7 +6,7 @@
 export const DEFAULT_AFTER_LOGIN = "/dashboard";
 
 // Pages that are part of getting a session; returning to them after sign-in would loop.
-const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/refresh"];
+const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/refresh", "/onboarding"];
 
 /** Returns the path when it is a safe same-site path, otherwise null. */
 export function sanitizeNextPath(raw: string | null | undefined): string | null {

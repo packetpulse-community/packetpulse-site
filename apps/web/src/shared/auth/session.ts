@@ -10,6 +10,8 @@ export interface SessionUser {
   bio: string | null;
   isApproved: boolean;
   emailVerified: boolean;
+  /** False until the required details are in (TASK-023); the member area routes such members to /onboarding. */
+  onboardingComplete: boolean;
   roles: string[];
   permissions: string[];
 }

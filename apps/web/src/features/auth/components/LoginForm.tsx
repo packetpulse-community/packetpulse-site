@@ -14,6 +14,8 @@ import { cn } from "@/shared/utils/cn";
 import { safeNext } from "@/shared/auth/safe-next";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { applyServerFormError } from "@/shared/api/form-errors";
+import { ApiError } from "@/shared/api/http-client";
+import { rememberEmailToVerify } from "../lib/verify-handoff";
 
 const FORM_FIELDS = ["email", "password"] as const;
 
@@ -43,7 +45,15 @@ export function LoginForm({
       router.push(safeNext(next));
       router.refresh();
     },
-    onError: (err) => {
+    onError: (err, vars) => {
+      // Approved (or instant access) but the email is not verified: a code was just sent, so go to
+      // the code screen and come back to the page they asked for afterwards.
+      if (err instanceof ApiError && (err.body as { reason?: string } | null)?.reason === "EMAIL_NOT_VERIFIED") {
+        rememberEmailToVerify(vars.email);
+        const target = safeNext(next, "");
+        router.push(`/verify-email?sent=1${target ? `&next=${encodeURIComponent(target)}` : ""}`);
+        return;
+      }
       applyServerFormError(setError, err, FORM_FIELDS, "Login failed");
       if (captcha.enabled) captcha.reset();
     },
@@ -63,8 +73,8 @@ export function LoginForm({
 
       {justRegistered && (
         <p className="rounded-grove-control border border-success bg-success-soft px-4 py-3 text-sm text-success">
-          Account created. An admin will review it — once it&apos;s approved you&apos;ll get an email with a link to
-          verify your address, and then you can sign in.
+          Account created. An admin will review it — once it&apos;s approved you&apos;ll get an email with a 6-digit
+          code to verify your address, and then you can sign in.
         </p>
       )}
 

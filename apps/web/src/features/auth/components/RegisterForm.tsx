@@ -18,9 +18,10 @@ import { Turnstile, useCaptcha } from "@/shared/components/Turnstile";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { applyServerFormError } from "@/shared/api/form-errors";
+import { rememberEmailToVerify } from "../lib/verify-handoff";
 import { ApiError, apiFieldErrors } from "@/shared/api/http-client";
 
-const FORM_FIELDS = ["confirmPassword", "email", "firstName", "lastName", "password", "professionalExperience", "whatsappNumber"] as const;
+const FORM_FIELDS = ["ageConfirmed", "confirmPassword", "email", "firstName", "lastName", "password", "professionalExperience", "whatsappNumber"] as const;
 
 const EXPERIENCE_OPTIONS = [
   { value: "student", label: "Student" },
@@ -59,7 +60,16 @@ export function RegisterForm() {
 
   const mutation = useMutation({
     mutationFn: authApi.register,
-    onSuccess: () => router.push("/login?registered=true"),
+    // Under instant access (DEC-035 switch) a code was just emailed: go straight to the code screen.
+    // Otherwise the account waits for an admin, exactly as before.
+    onSuccess: (res, vars) => {
+      if (res.emailCodeSent) {
+        rememberEmailToVerify(vars.email);
+        router.push("/verify-email?sent=1");
+      } else {
+        router.push("/login?registered=true");
+      }
+    },
     onError: (err) => {
       // A policy changed while the form was open: reload what is in force and ask again.
       if (err instanceof ApiError && err.status === 409 && /was updated/i.test(String((err.body as { message?: string } | null)?.message ?? ""))) {
@@ -96,6 +106,7 @@ export function RegisterForm() {
       password: values.password,
       whatsappNumber: values.whatsappNumber,
       professionalExperience: values.professionalExperience,
+      ageConfirmed: true,
       consents: buildRegistrationConsents(list, ticks),
       captchaToken: captcha.token,
     });
@@ -147,15 +158,27 @@ export function RegisterForm() {
 
         <div className="flex flex-col gap-1">
           <label htmlFor="whatsappNumber" className="text-sm font-medium">
-            WhatsApp Number
+            WhatsApp Number <span className="font-normal text-muted-foreground">(optional)</span>
           </label>
           <input
             id="whatsappNumber"
-            placeholder="+918793700336"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="+91 98765 43210"
+            aria-describedby={errors.whatsappNumber ? "whatsappNumber-error" : "whatsappNumber-hint"}
+            aria-invalid={errors.whatsappNumber ? true : undefined}
             className="rounded-md border border-input bg-background px-3 py-2.5"
             {...register("whatsappNumber")}
           />
-          {errors.whatsappNumber && <p className="text-sm text-destructive">{errors.whatsappNumber.message}</p>}
+          <p id="whatsappNumber-hint" className="text-xs text-muted-foreground">
+            A 10-digit Indian mobile number, or include your country code.
+          </p>
+          {errors.whatsappNumber && (
+            <p id="whatsappNumber-error" className="text-sm text-destructive">
+              {errors.whatsappNumber.message}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-1">
@@ -209,6 +232,25 @@ export function RegisterForm() {
         </div>
 
         <PasswordRequirements password={watch("password") ?? ""} confirm={watch("confirmPassword") ?? ""} />
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="ageConfirmed" className="flex items-start gap-2 text-sm">
+            <input
+              id="ageConfirmed"
+              type="checkbox"
+              className="mt-1 h-4 w-4 rounded border-input"
+              aria-invalid={errors.ageConfirmed ? true : undefined}
+              aria-describedby={errors.ageConfirmed ? "ageConfirmed-error" : undefined}
+              {...register("ageConfirmed")}
+            />
+            <span>I confirm that I am 18 years old or older.</span>
+          </label>
+          {errors.ageConfirmed && (
+            <p id="ageConfirmed-error" className="text-sm text-destructive">
+              {errors.ageConfirmed.message}
+            </p>
+          )}
+        </div>
 
         {policies.isPending && (
           <p role="status" className="text-sm text-muted-foreground">
