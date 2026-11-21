@@ -11,7 +11,7 @@ CREATE TYPE "ConsentSource" AS ENUM ('registration', 'consent_centre', 'recaptur
 CREATE TYPE "ProfileVisibility" AS ENUM ('private', 'members');
 
 -- AlterEnum
-ALTER TYPE "AdminActivityAction" ADD VALUE 'consent_policy_published';
+ALTER TYPE "AdminActivityAction" ADD VALUE IF NOT EXISTS 'consent_policy_published';
 
 -- CreateTable
 CREATE TABLE "consent_policies" (
@@ -30,6 +30,7 @@ CREATE TABLE "consent_policies" (
 -- CreateTable
 CREATE TABLE "consent_records" (
     "id" TEXT NOT NULL,
+    "seq" SERIAL NOT NULL,
     "user_id" TEXT NOT NULL,
     "purpose" "ConsentPurpose" NOT NULL,
     "action" "ConsentAction" NOT NULL,

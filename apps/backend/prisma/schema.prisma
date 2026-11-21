@@ -1134,6 +1134,8 @@ model ConsentPolicy {
 // (cascade) until the erasure workflow (TASK-046) decides what proof must be kept.
 model ConsentRecord {
   id            String         @id @default(uuid())
+  // Insertion order: the tiebreak when two rows share a millisecond, so "latest" is never ambiguous.
+  seq           Int            @default(autoincrement())
   userId        String         @map("user_id")
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   purpose       ConsentPurpose
