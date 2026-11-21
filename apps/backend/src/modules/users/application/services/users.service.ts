@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { toPublicUser, userWithRolesInclude, CredentialProvider } from "../../../identity";
 import { EmailQueueService } from "../../../notifications";
+import { AccountErasureService } from "../../../data-rights/application/account-erasure.service";
 import { UpdateProfileDto, ChangePasswordDto } from "../dto/users.dto";
 
 @Injectable()
@@ -10,6 +11,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly emailQueue: EmailQueueService,
     private readonly credentials: CredentialProvider,
+    private readonly erasure: AccountErasureService,
   ) {}
 
   async getProfile(userId: string) {
@@ -55,16 +57,10 @@ export class UsersService {
     await this.emailQueue.sendPasswordChangedNotice(user.email);
   }
 
+  // TASK-046: no longer an immediate hard delete (which left the Supabase login behind and cascaded
+  // into other members' threads, S-5/D-2). Re-checks the password, deactivates the account and
+  // schedules the erasure after the grace period. See AccountErasureService.
   async deleteAccount(userId: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new NotFoundException("User not found");
-
-    try {
-      await this.credentials.verifyCredential(user.email, password, user.passwordHash);
-    } catch {
-      throw new BadRequestException("Password is incorrect");
-    }
-
-    await this.prisma.user.delete({ where: { id: userId } });
+    return this.erasure.request(userId, password);
   }
 }

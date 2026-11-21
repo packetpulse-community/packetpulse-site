@@ -15,7 +15,7 @@ from the reviewed list, or if a role holds permissions the plan does not give it
 Global guards, in order (`app.module.ts`): `ThrottlerGuard`, `JwtAuthGuard` (401 unless `@Public`),
 `MaintenanceGuard` (503 for non-admins while maintenance is on, unless `@AllowDuringMaintenance`),
 `RolesGuard` (`@RequirePermission`, 403 `Missing required permission`; `super_admin` bypasses),
-`ApprovedGuard` (403 unless approved and email-verified; admin and super_admin skip it;
+`ApprovedGuard` (401 for an erased account, 403 `ACCOUNT_DEACTIVATED` for an account waiting out its deletion grace period unless the route has `@AllowDeactivated`; then 403 unless approved and email-verified; admin and super_admin skip the approval check;
 `@SkipApproval` and `@SkipEmailVerification` opt out). `EmailVerifiedGuard` exists but is not applied
 anywhere; `ApprovedGuard` already enforces email verification.
 
@@ -61,7 +61,7 @@ maintenance mode.
 | `GET /api/recordings/:id` |  | maintenance |  | unapproved recording only for admin |
 | `GET /api/site-status` |  | — | yes |  |
 
-## Signed in, no specific permission — 44 routes
+## Signed in, no specific permission — 50 routes
 
 | Route | Permission | Guards that apply | Maint. | Ownership / state rule in the service |
 |---|---|---|---|---|
@@ -105,16 +105,23 @@ maintenance mode.
 | `PUT /api/resources/:id` |  | JWT, maintenance, approved, email-verified |  | resource owner or admin |
 | `PUT /api/resources/:id/download` |  | JWT, maintenance, approved, email-verified |  | any member |
 | `PUT /api/resources/:id/like` |  | JWT, maintenance, approved, email-verified |  | any member |
-| `DELETE /api/users/profile` |  | JWT, maintenance, approved, email-verified |  | own account; needs password |
+| `DELETE /api/users/profile` |  | JWT, maintenance, approved, email-verified |  | own account; needs password; since TASK-046 it schedules the deletion (30-day grace) instead of deleting at once |
 | `GET /api/users/profile` |  | JWT, maintenance, approved, email-verified |  | own profile |
 | `PUT /api/users/profile` |  | JWT, maintenance, approved, email-verified |  | own profile |
 | `PUT /api/users/profile/password` |  | JWT, maintenance, approved, email-verified |  | own account; needs current password |
+| `GET /api/data-rights` |  | JWT, maintenance (pending, unverified and deactivated accounts allowed) |  | own export and erasure requests only |
+| `POST /api/data-rights/export` |  | JWT, maintenance (pending, unverified and deactivated accounts allowed) |  | own data only; one open export per member; switch `data_rights.export` |
+| `POST /api/data-rights/export/link` |  | JWT, maintenance (pending, unverified and deactivated accounts allowed) |  | own prepared export only (others 404); 5-minute signed link, logged in the file access log and audit log |
+| `DELETE /api/data-rights/export` |  | JWT, maintenance (pending, unverified and deactivated accounts allowed) |  | own open export only; removes the file |
+| `POST /api/data-rights/erasure` |  | JWT, maintenance (pending, unverified and deactivated accounts allowed) |  | own account; password re-entry; schedules the erasure after the 30-day grace period and deactivates the account |
+| `DELETE /api/data-rights/erasure` |  | JWT, maintenance (pending, unverified and deactivated accounts allowed) |  | own pending deletion only; reactivates the account; refused once the erasure job has started |
 
-## Permission-gated — 48 routes
+## Permission-gated — 49 routes
 
 | Route | Permission | Guards that apply | Maint. | Ownership / state rule in the service |
 |---|---|---|---|---|
 | `GET /api/admin/activity` | `admin:view-analytics` | JWT, maintenance, roles, approved, email-verified |  |  |
+| `GET /api/admin/data-requests` | `admin:view-analytics` | JWT, maintenance, roles, approved, email-verified |  | read-only list of open and finished data requests with their audit entries; no export contents or links |
 | `GET /api/admin/analytics` | `admin:view-analytics` | JWT, maintenance, roles, approved, email-verified |  |  |
 | `PUT /api/admin/blogs/:id/approve` | `blogs:moderate` | JWT, maintenance, roles, approved, email-verified |  |  |
 | `PUT /api/admin/blogs/:id/unapprove` | `blogs:moderate` | JWT, maintenance, roles, approved, email-verified |  |  |
