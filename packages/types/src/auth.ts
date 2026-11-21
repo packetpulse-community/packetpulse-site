@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RegistrationConsentsSchema } from "./consent";
+import { OptionalWhatsappNumberSchema } from "./whatsapp";
 
 // Single source of truth for new-password strength — the backend validates with
 // PasswordSchema, and the frontend renders PASSWORD_RULES as a live checklist, so
@@ -29,8 +30,12 @@ export const RegisterSchema = z.object({
   lastName: z.string().min(1).max(100),
   email: z.string().email(),
   password: PasswordSchema,
-  whatsappNumber: z.string().optional(),
+  // PRD-006: optional; stored as E.164 (India is the default country).
+  whatsappNumber: OptionalWhatsappNumberSchema,
   professionalExperience: ProfessionalExperienceSchema.optional(),
+  // PRD-004: the member confirms they are 18 or older. Stored as a timestamped attestation; the
+  // date of birth itself is collected in onboarding (PRD-003) under field protection.
+  ageConfirmed: z.literal(true, { errorMap: () => ({ message: "Please confirm you are 18 or older" }) }),
   // What the member accepted, by policy version (TASK-025, PRD-010). Replaces the client-only
   // terms tick: the Terms and the Privacy Policy must be in the list.
   consents: RegistrationConsentsSchema,

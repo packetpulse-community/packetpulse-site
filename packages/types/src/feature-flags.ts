@@ -11,6 +11,7 @@ export const FEATURE_FLAG_KEYS = [
   "files.uploads",
   "blogs.comments",
   "notifications.email",
+  "onboarding.instant_access",
 ] as const;
 export type FeatureFlagKey = (typeof FEATURE_FLAG_KEYS)[number];
 

@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { PasswordSchema } from "./auth";
+import { OptionalWhatsappNumberSchema } from "./whatsapp";
 
 export const UpdateProfileSchema = z.object({
   firstName: z.string().min(1).max(100).optional(),
   lastName: z.string().min(1).max(100).optional(),
   bio: z.string().max(2000).optional(),
-  whatsappNumber: z.string().optional(),
+  whatsappNumber: OptionalWhatsappNumberSchema,
 });
 export type UpdateProfileDto = z.infer<typeof UpdateProfileSchema>;
 

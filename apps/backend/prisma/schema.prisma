@@ -52,6 +52,16 @@ model User {
   emailVerified Boolean  @default(false) @map("email_verified")
   lastLoginAt   DateTime? @map("last_login_at")
 
+  // TASK-022 / TASK-023. dateOfBirth is protected by the field policy (PRD-003, PRD-004, SEC-02,
+  // DEC-015: never shown to companies). ageConfirmedAt is the registration-time "I am 18 or
+  // older" attestation. onboardingCompletedAt is set when the required details are all present
+  // (existing members were marked complete by the migration, so nobody is locked out).
+  dateOfBirth           DateTime? @map("date_of_birth") @db.Date
+  ageConfirmedAt        DateTime? @map("age_confirmed_at")
+  targetRole            String?   @map("target_role")
+  careerGoals           String?   @map("career_goals")
+  onboardingCompletedAt DateTime? @map("onboarding_completed_at")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -60,6 +70,7 @@ model User {
   refreshTokens        RefreshToken[]
   passwordResets        PasswordReset[]
   emailVerifications     EmailVerification[]
+  emailVerificationCodes EmailVerificationCode[]
   roles                 UserRole[]
 
   blogPosts            BlogPost[]
@@ -172,6 +183,33 @@ model EmailVerification {
 
   @@index([userId, expiresAt])
   @@map("email_verifications")
+}
+
+// TASK-022 / PRD-001: the 6-digit email code. Only the HMAC of the code is stored, it expires
+// after 10 minutes, and consumedAt is set by one conditional update so a code works once.
+// Wrong-guess counting lives in Redis (same lock pattern as the password-reset code).
+model EmailVerificationCode {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash   String    @map("code_hash")
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("email_verification_codes")
+}
+
+// TASK-047: durable home of the feature switches (was a Redis hash). A row exists only for a
+// switch someone changed; no row means the registry default. Redis is an optional cache only.
+model FeatureFlag {
+  key       String   @id
+  enabled   Boolean
+  updatedBy String?  @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("feature_flags")
 }
 
 // Multi-role RBAC — replaces the old flat member/admin enum. RolesGuard checks
