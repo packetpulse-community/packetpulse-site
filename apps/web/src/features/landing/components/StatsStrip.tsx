@@ -19,7 +19,7 @@ const STATS = [
 function StatValue({ target, suffix, active }: { target: number; suffix: string; active: boolean }) {
   const count = useCountUp(target, active);
   return (
-    <p className="text-3xl font-bold text-indigo-400 sm:text-4xl">
+    <p className="text-3xl font-bold text-primary-text sm:text-4xl">
       {count}
       {suffix}
     </p>
@@ -48,13 +48,13 @@ export function StatsStrip() {
 
   return (
     <section ref={ref} className="container py-16">
-      <Reveal className="rounded-2xl glass-panel-strong p-8 md:p-10">
+      <Reveal className="rounded-2xl border border-border bg-surface p-8 md:p-10">
         <h2 className="mb-10 text-center text-2xl font-semibold">Our Growth in Numbers</h2>
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {STATS.map((stat) => (
             <div key={stat.label} className="flex flex-col items-center text-center">
               <StatValue target={stat.target} suffix={stat.suffix} active={active} />
-              <p className="mt-1 text-sm text-gray-300">{stat.label}</p>
+              <p className="mt-1 text-sm text-text-secondary">{stat.label}</p>
             </div>
           ))}
         </div>

@@ -16,7 +16,7 @@ export function UpcomingEvents() {
     <section className="container py-20">
       <div className="mb-12 flex flex-col items-center gap-2 text-center">
         <h2 className="text-3xl font-semibold">Upcoming Events</h2>
-        <p className="max-w-xl text-gray-300">
+        <p className="max-w-xl text-text-secondary">
           Join our live webinars, workshops, and networking sessions to enhance your skills.
         </p>
       </div>
@@ -24,18 +24,18 @@ export function UpcomingEvents() {
       <div className="grid gap-6 md:grid-cols-3">
         {EVENTS.map((event, index) => (
           <Reveal key={event.title} delayMs={index * 100}>
-            <div className="flex flex-col gap-3 rounded-xl glass-panel p-6">
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-6">
               <div className="flex items-center justify-between">
-                <Calendar className="h-5 w-5 text-indigo-400" />
-                <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-medium text-indigo-400">Coming soon</span>
+                <Calendar className="h-5 w-5 text-primary-text" />
+                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary-text">Coming soon</span>
               </div>
               <h3 className="font-semibold">{event.title}</h3>
-              <p className="text-sm text-gray-300">{event.description}</p>
+              <p className="text-sm text-text-secondary">{event.description}</p>
               <button
                 type="button"
                 disabled
                 title="Registration coming soon"
-                className="mt-2 w-fit rounded-md glass-panel px-4 py-2 text-sm font-medium text-gray-300 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-2 w-fit rounded-grove-control border border-control bg-surface px-4 py-2 text-sm font-medium text-text-secondary disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Register Now
               </button>

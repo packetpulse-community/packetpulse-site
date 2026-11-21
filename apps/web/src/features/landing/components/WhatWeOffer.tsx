@@ -36,12 +36,12 @@ export function WhatWeOffer() {
             key={offering.title}
             delayMs={index * 100}
             as="article"
-            className="flex flex-col gap-4 rounded-xl glass-panel glass-interactive p-8"
+            className="flex flex-col gap-4 rounded-xl border border-border bg-surface transition-colors hover:bg-surface-subtle p-8"
           >
-            <offering.icon className="h-8 w-8 text-indigo-400" />
+            <offering.icon className="h-8 w-8 text-primary-text" />
             <h3 className="text-xl font-semibold">{offering.title}</h3>
-            <p className="flex-1 text-sm text-gray-300">{offering.description}</p>
-            <Link href={offering.href} className="text-sm font-medium text-indigo-400 hover:underline">
+            <p className="flex-1 text-sm text-text-secondary">{offering.description}</p>
+            <Link href={offering.href} className="text-sm font-medium text-primary-text hover:underline">
               {offering.cta} &rarr;
             </Link>
           </Reveal>

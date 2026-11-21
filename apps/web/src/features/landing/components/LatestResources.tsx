@@ -9,10 +9,10 @@ export function LatestResources({ resources }: { resources: ResourceSummary[] })
     <section className="container py-20">
       <div className="mb-12 flex flex-col items-center gap-2 text-center">
         <h2 className="text-3xl font-semibold">Latest Resources</h2>
-        <p className="max-w-xl text-gray-300">
+        <p className="max-w-xl text-text-secondary">
           Stay up-to-date with our most recent networking guides, tutorials, and case studies.
         </p>
-        <Link href="/resources" className="mt-2 text-sm font-medium text-indigo-400 hover:underline">
+        <Link href="/resources" className="mt-2 text-sm font-medium text-primary-text hover:underline">
           View All Resources &rarr;
         </Link>
       </div>
@@ -22,7 +22,7 @@ export function LatestResources({ resources }: { resources: ResourceSummary[] })
           <Reveal key={resource.id} delayMs={index * 100}>
             <Link
               href={`/resources/${resource.id}`}
-              className="group flex flex-col overflow-hidden rounded-xl glass-panel glass-interactive"
+              className="group flex flex-col overflow-hidden rounded-xl border border-border bg-surface transition-colors hover:bg-surface-subtle"
             >
               <div className="aspect-video w-full overflow-hidden bg-muted">
                 {resource.thumbnailUrl ? (
@@ -32,15 +32,15 @@ export function LatestResources({ resources }: { resources: ResourceSummary[] })
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm text-gray-300">No preview</div>
+                  <div className="flex h-full w-full items-center justify-center text-sm text-text-secondary">No preview</div>
                 )}
               </div>
               <div className="flex flex-col gap-2 p-4">
-                <span className="w-fit rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-medium capitalize text-indigo-400">
+                <span className="w-fit rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium capitalize text-primary-text">
                   {resource.resourceType.replace(/_/g, " ")}
                 </span>
                 <h3 className="font-semibold">{resource.title}</h3>
-                <p className="text-sm text-gray-300">
+                <p className="text-sm text-text-secondary">
                   By {resource.user.firstName} {resource.user.lastName}
                 </p>
               </div>

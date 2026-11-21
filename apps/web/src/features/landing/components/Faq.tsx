@@ -36,10 +36,10 @@ export function Faq() {
       <Reveal>
         <div className="mb-12 flex flex-col items-center gap-2 text-center">
           <h2 className="text-3xl font-semibold">Frequently Asked Questions</h2>
-          <p className="max-w-xl text-gray-300">Have questions about PacketPulse? Find answers to commonly asked questions below.</p>
+          <p className="max-w-xl text-text-secondary">Have questions about PacketPulse? Find answers to commonly asked questions below.</p>
         </div>
 
-        <Accordion type="single" collapsible className="mx-auto max-w-2xl divide-y divide-white/10">
+        <Accordion type="single" collapsible className="mx-auto max-w-2xl divide-y divide-border">
           {FAQ_ITEMS.map((item, index) => (
             <AccordionItem key={item.question} value={`item-${index}`}>
               <AccordionTrigger>{item.question}</AccordionTrigger>
@@ -48,9 +48,9 @@ export function Faq() {
           ))}
         </Accordion>
 
-        <p className="mt-10 text-center text-sm text-gray-300">
+        <p className="mt-10 text-center text-sm text-text-secondary">
           Still have questions?{" "}
-          <Link href="/contact" className="font-medium text-indigo-400 hover:underline">
+          <Link href="/contact" className="font-medium text-primary-text hover:underline">
             Contact Support
           </Link>
         </p>
