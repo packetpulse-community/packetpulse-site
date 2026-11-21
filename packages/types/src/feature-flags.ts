@@ -12,6 +12,7 @@ export const FEATURE_FLAG_KEYS = [
   "blogs.comments",
   "notifications.email",
   "onboarding.instant_access",
+  "data_rights.export",
 ] as const;
 export type FeatureFlagKey = (typeof FEATURE_FLAG_KEYS)[number];
 

@@ -62,6 +62,13 @@ model User {
   careerGoals           String?   @map("career_goals")
   onboardingCompletedAt DateTime? @map("onboarding_completed_at")
 
+  // TASK-046 (SCR-038, S-5, D-2). deactivatedAt is set while an erasure request is waiting out its
+  // grace period: the account cannot be used except to look at or cancel the request. erasedAt marks
+  // the tombstone left after erasure: the row stays (content and proof records point at it) but holds
+  // no personal data and cannot sign in.
+  deactivatedAt DateTime? @map("deactivated_at")
+  erasedAt      DateTime? @map("erased_at")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -105,6 +112,7 @@ model User {
   skillSightings          SkillSuggestionSighting[]
   consentRecords          ConsentRecord[]
   profilePrivacy          ProfilePrivacy?
+  dataRequests            DataRequest[]
 
   @@map("users")
 }
@@ -991,6 +999,15 @@ enum AdminActivityAction {
   forum_report_removed
   forum_answer_accepted
   forum_guidelines_published
+  data_export_requested
+  data_export_ready
+  data_export_downloaded
+  data_export_discarded
+  data_export_expired
+  account_deletion_requested
+  account_deletion_cancelled
+  account_erased
+  retention_cleanup_run
 }
 
 model AdminActivityLog {
@@ -1067,6 +1084,9 @@ enum StoredFileKind {
   resume
   certificate
   evidence
+  // TASK-046: the member's own data export (a zip). Created only by the data-rights job, never by
+  // the upload endpoint, and only its owner can open it (staff included in "no").
+  data_export
 }
 
 enum StoredFileStatus {
@@ -1098,6 +1118,7 @@ model StoredFile {
   status       StoredFileStatus @default(pending)
   scanResult   String?          @map("scan_result")
   createdAt    DateTime         @default(now()) @map("created_at")
+  dataRequest  DataRequest?
 
   @@index([ownerId])
   @@index([status, createdAt])
@@ -1332,4 +1353,60 @@ model ProfilePrivacy {
   updatedAt              DateTime          @updatedAt @map("updated_at")
 
   @@map("profile_privacy")
+}
+
+// ---------------------------------------------------------------------------
+// Data rights (TASK-046, PRD-045, DB-028, API-009, SCR-038). One row per export or erasure request,
+// tracked to completion. Holds no personal data itself (the person is the user row, which is
+// anonymised and kept after erasure), so these rows are safe to keep as proof.
+// ---------------------------------------------------------------------------
+
+enum DataRequestKind {
+  export
+  erasure
+}
+
+// export: requested -> preparing -> ready -> expired (or failed, or cancelled when discarded).
+// erasure: scheduled (grace period running) -> completed, or cancelled by the member.
+enum DataRequestStatus {
+  requested
+  preparing
+  ready
+  scheduled
+  completed
+  cancelled
+  expired
+  failed
+}
+
+model DataRequest {
+  id           String            @id @default(uuid())
+  userId       String            @map("user_id")
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind         DataRequestKind
+  status       DataRequestStatus
+  // "open" while the request is not finished, NULL afterwards. With the unique index below this is
+  // what limits a member to one open request of each kind (NULLs never collide in a unique index).
+  activeSlot   String?           @map("active_slot")
+  requestedAt  DateTime          @default(now()) @map("requested_at")
+  // erasure: when the grace period ends and the erasure job may run.
+  scheduledFor DateTime?         @map("scheduled_for")
+  startedAt    DateTime?         @map("started_at")
+  // export: when the file was finished, and when it stops being available.
+  readyAt      DateTime?         @map("ready_at")
+  expiresAt    DateTime?         @map("expires_at")
+  completedAt  DateTime?         @map("completed_at")
+  cancelledAt  DateTime?         @map("cancelled_at")
+  fileId       String?           @unique @map("file_id")
+  file         StoredFile?       @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  attempts     Int               @default(0)
+  // A short code, never a message that could hold personal data.
+  failureCode  String?           @map("failure_code")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  @@unique([userId, kind, activeSlot])
+  @@index([status, scheduledFor])
+  @@index([status, expiresAt])
+  @@index([userId, requestedAt])
+  @@map("data_requests")
 }

@@ -16,3 +16,4 @@ export * from "./feature-flags";
 export * from "./consent";
 export * from "./onboarding";
 export * from "./whatsapp";
+export * from "./data-rights";

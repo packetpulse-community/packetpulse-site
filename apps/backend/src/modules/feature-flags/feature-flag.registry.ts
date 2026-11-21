@@ -80,6 +80,14 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
     changePermission: PERMISSIONS.ADMIN_MANAGE_SETTINGS,
     public: false,
   },
+  {
+    key: "data_rights.export",
+    description:
+      "Members can request a download of their data. When off, new export requests are refused and the page says so; exports already prepared stay downloadable. Account deletion has no switch: it is a legal right and always available.",
+    defaultValue: true,
+    changePermission: PERMISSIONS.ADMIN_MANAGE_SETTINGS,
+    public: true,
+  },
 ];
 
 export const FLAG_BY_KEY = new Map(FEATURE_FLAGS.map((f) => [f.key, f] as const));
