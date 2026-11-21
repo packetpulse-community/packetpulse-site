@@ -66,6 +66,7 @@ import { ServerTimingModule } from "./common/server-timing";
     LogsModule,
     FilesModule,
     SkillsModule,
+    ConsentModule,
     FeatureFlagsModule,
   ],
   providers: [

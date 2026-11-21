@@ -62,6 +62,9 @@ const ROLE_MATRIX: Record<string, string[]> = {
 };
 const ROLES = Object.keys(ROLE_MATRIX);
 
+// Permissions that no role holds on purpose: only the super_admin bypass passes (DEC-015, PRD-044).
+const SUPER_ADMIN_ONLY = ["policies:manage"];
+
 // Routes that anyone may call without signing in. A new @Public route must be added here
 // on purpose.
 const PUBLIC_ROUTES = new Set([
@@ -82,6 +85,7 @@ const PUBLIC_ROUTES = new Set([
   "GET /api/blogs/:id",
   "GET /api/categories",
   "GET /api/skills",
+  "GET /api/consent/policies",
   "GET /api/recordings",
   "GET /api/recordings/:id",
   "GET /api/forums/categories",
@@ -106,7 +110,12 @@ const AUTHENTICATED_ONLY: Record<string, string> = {
   "POST /api/auth/logout": "own session",
   "GET /api/auth/me": "own profile",
   "POST /api/auth/resend-verification": "own account; email-verification exempt",
+  "GET /api/consent/mine": "own consent state and history; open to unapproved and unverified accounts so a changed policy can be re-accepted",
+  "PUT /api/consent/mine": "own consents only; Terms and Privacy cannot be withdrawn; must name the current policy version",
+  "GET /api/members/:userId": "any approved member; private profile fields are stripped by the field-protection policy unless the owner opened them to members (staff and the owner always see them)",
   "GET /api/users/profile": "own profile",
+  "GET /api/users/profile/privacy": "own profile visibility settings",
+  "PUT /api/users/profile/privacy": "own profile visibility settings; private or members only, no public level",
   "PUT /api/users/profile": "own profile",
   "PUT /api/users/profile/password": "own account; needs current password",
   "DELETE /api/users/profile": "own account; needs password",
@@ -261,7 +270,7 @@ describe("Permission matrix (e2e)", () => {
     });
 
     it("every required permission is one a seeded role actually holds", async () => {
-      const all = new Set(Object.values(ROLE_MATRIX).flat());
+      const all = new Set([...Object.values(ROLE_MATRIX).flat(), ...SUPER_ADMIN_ONLY]);
       expect(routes.filter((r) => r.permission && !all.has(r.permission)).map(key)).toEqual([]);
     });
   });

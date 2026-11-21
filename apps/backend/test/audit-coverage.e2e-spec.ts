@@ -324,6 +324,16 @@ describe("Audit coverage of privileged routes (e2e)", () => {
       await api("put", `/api/skills/suggestions/${s.id}/merge`, { skillId: k.id }).expect(200);
       return { action: "skill_suggestion_merged", targetId: s.id };
     },
+    "POST /api/admin/consent/policies": async () => {
+      const res = await api("post", "/api/admin/consent/policies", {
+        purpose: "resume_sharing",
+        title: `${TAG} policy`,
+        summary: `${TAG} plain language summary of the change`,
+        reason: `${TAG} wording clarified`,
+      }).expect(201);
+      const row = await prisma.consentPolicy.findFirstOrThrow({ where: { purpose: "resume_sharing", version: res.body.version } });
+      return { action: "consent_policy_published", targetId: row.id };
+    },
     "PUT /api/skills/suggestions/:id/reject": async () => {
       const s = await makeSuggestion();
       await api("put", `/api/skills/suggestions/${s.id}/reject`, { reason: `${TAG} reject this one` }).expect(200);
@@ -359,6 +369,7 @@ describe("Audit coverage of privileged routes (e2e)", () => {
     await prisma.resource.deleteMany({ where: { categoryId } });
     await prisma.recording.deleteMany({ where: { categoryId } });
     await prisma.forumThread.deleteMany({ where: { categoryId } });
+    await prisma.consentPolicy.deleteMany({ where: { createdById: adminId } });
     await prisma.skillSuggestion.deleteMany({ where: { nameKey: { startsWith: TAG.toLowerCase() } } });
     await prisma.skill.deleteMany({ where: { nameKey: { startsWith: TAG.toLowerCase() } } });
     await prisma.category.deleteMany({ where: { OR: [{ id: categoryId }, { slug: { startsWith: TAG.toLowerCase() } }] } });
