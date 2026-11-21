@@ -16,6 +16,8 @@ Prepared 22 Oct 2026 from the v2 document set (17 Oct 2026) and a read-only audi
 | 10 | [Threat model and data map](10-threat-model-and-data-map.md) | SEC-13 / TASK-002: 15 threats with controls and gaps, a data map, processors and locations |
 | 11 | [Route inventory](11-route-inventory.md) | Every backend route with its access rule, generated from the live router metadata (TASK-008) |
 | 12 | [Session and latency analysis](12-session-and-latency-analysis.md) | Why the public navbar showed Sign In and why the session loads late: measured causes, the fixes made, and ranked options still open |
+| 13 | [UI migration checklist](13-ui-migration-checklist.md) | Which screens are on the Grove theme and which are still legacy |
+| 14 | [Policy review pack](14-policy-review-pack.md) | Every policy text and default the build chose, in plain language, with options, a recommended answer, tick boxes, what needs a lawyer, and an answer sheet for the core admins. Not legal advice |
 
 ## How much to trust this pack
 
