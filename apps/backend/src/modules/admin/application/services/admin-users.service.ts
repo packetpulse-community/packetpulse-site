@@ -7,6 +7,7 @@ import { userWithRolesInclude, toPublicUser, EmailVerificationService } from "..
 import type { UserWithRoles } from "../../../identity";
 import { EmailQueueService, NotificationsService } from "../../../notifications";
 import { AdminActivityLogService } from "./admin-activity-log.service";
+import { AccountErasureService } from "../../../data-rights/application/account-erasure.service";
 
 // toPublicUser (identity module) deliberately omits createdAt/lastLoginAt since it's
 // also used for /auth/me — those fields shouldn't leak into every session response.
@@ -24,6 +25,7 @@ export class AdminUsersService {
     private readonly emailVerification: EmailVerificationService,
     private readonly notifications: NotificationsService,
     private readonly activityLog: AdminActivityLogService,
+    private readonly erasure: AccountErasureService,
   ) {}
 
   async list(query: AdminUserListQueryDto) {
@@ -124,6 +126,8 @@ export class AdminUsersService {
     // exists — onDelete: SetNull only rewrites *existing* rows on a later delete,
     // it doesn't let a *new* insert reference an already-gone id.
     await this.activityLog.log(actorId, "user_deleted", "user", id, { email: user.email }, reason);
-    await this.prisma.user.delete({ where: { id } });
+    // S-5/D-2: erase (login removed, personal data deleted, shared content kept without the name)
+    // instead of a cascading delete that took other members' replies with it.
+    await this.erasure.eraseNow(id);
   }
 }

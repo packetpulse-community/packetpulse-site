@@ -176,7 +176,11 @@ describe("Audit log (e2e)", () => {
       expect(entry.actorId).toBe(adminId);
       expect(entry.targetId).toBe(doomed.id);
       expect(entry.reason).toBe(r);
-      expect(await prisma.user.count({ where: { id: doomed.id } })).toBe(0);
+      // TASK-046: deleting a user erases them (their row stays as an empty tombstone).
+      const tomb = await prisma.user.findUniqueOrThrow({ where: { id: doomed.id } });
+      expect(tomb.erasedAt).not.toBeNull();
+      expect(tomb.email).not.toBe(EMAILS.doomed);
+      await prisma.user.delete({ where: { id: doomed.id } });
     });
 
     it("accepts the deletion reason as a query parameter for clients that cannot send a body", async () => {
@@ -185,6 +189,7 @@ describe("Audit log (e2e)", () => {
       await admin.delete(`/api/admin/users/${doomed.id}?reason=${r}`).expect(200);
       const entries = await prisma.adminActivityLog.findMany({ where: { action: "user_deleted", targetId: doomed.id } });
       expect(entries).toHaveLength(1);
+      await prisma.user.deleteMany({ where: { id: doomed.id } }); // the erased tombstone
     });
   });
 

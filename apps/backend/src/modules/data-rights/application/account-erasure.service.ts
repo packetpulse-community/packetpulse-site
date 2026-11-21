@@ -111,6 +111,19 @@ export class AccountErasureService {
     }
   }
 
+  // Staff-initiated erasure (admin "delete user"): same erasure, no grace period and no password.
+  // Reuses an open request of the member's own if there is one. The caller writes the audit entry
+  // with the staff member's name and reason before calling this.
+  async eraseNow(userId: string, now = new Date()) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { erasedAt: true } });
+    if (!user || user.erasedAt) throw new NotFoundException("User not found");
+    const existing = await this.prisma.dataRequest.findFirst({ where: { userId, kind: "erasure", activeSlot: OPEN } });
+    const request = existing
+      ? await this.prisma.dataRequest.update({ where: { id: existing.id }, data: { scheduledFor: now } })
+      : await this.prisma.dataRequest.create({ data: { userId, kind: "erasure", status: "scheduled", activeSlot: OPEN, requestedAt: now, scheduledFor: now } });
+    return this.erase(request.id, now);
+  }
+
   enqueueErase(requestId: string) {
     return this.queue.add(JOB_ERASE, { requestId }, { jobId: idempotencyJobId("data-erase", requestId), attempts: 5, backoff: { type: "exponential", delay: Number(this.config.get("QUEUE_BACKOFF_MS")) || 60_000 }, removeOnComplete: { age: 86_400 }, removeOnFail: { age: 7 * 86_400 } });
   }

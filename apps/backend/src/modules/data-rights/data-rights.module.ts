@@ -2,7 +2,7 @@ import { Module, OnModuleInit, Logger } from "@nestjs/common";
 import { BullModule, InjectQueue } from "@nestjs/bullmq";
 import { ConfigService } from "@nestjs/config";
 import { Queue } from "bullmq";
-import { AdminModule } from "../admin/admin.module";
+import { AdminActivityLogService } from "../admin/application/services/admin-activity-log.service";
 import { IdentityModule } from "../identity";
 import { NotificationsModule } from "../notifications";
 import { AccountErasureService } from "./application/account-erasure.service";
@@ -15,9 +15,11 @@ import { DataRightsProcessor } from "./infrastructure/data-rights.processor";
 import { AdminDataRequestsController, DataRightsController } from "./presentation/data-rights.controller";
 
 @Module({
-  imports: [BullModule.registerQueue({ name: DATA_RIGHTS_QUEUE }), AdminModule, IdentityModule, NotificationsModule],
+  // AdminActivityLogService is provided here (it needs only Prisma) rather than importing AdminModule,
+  // which imports this module for staff-initiated erasure.
+  imports: [BullModule.registerQueue({ name: DATA_RIGHTS_QUEUE }), IdentityModule, NotificationsModule],
   controllers: [DataRightsController, AdminDataRequestsController],
-  providers: [DataRightsService, DataExportService, AccountErasureService, ExportCollectorService, RetentionService, DataRightsProcessor],
+  providers: [AdminActivityLogService, DataRightsService, DataExportService, AccountErasureService, ExportCollectorService, RetentionService, DataRightsProcessor],
   exports: [AccountErasureService],
 })
 export class DataRightsModule implements OnModuleInit {
