@@ -3,19 +3,24 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock } from "lucide-react";
 import { RegisterSchema } from "@packetpulse/types";
+import { RegistrationConsents } from "@/features/privacy/components/RegistrationConsents";
+import { privacyApi, privacyKeys } from "@/features/privacy/api/privacy.api";
+import { buildRegistrationConsents, missingRequired, missingRequiredMessage, type RegistrationTicks } from "@/features/privacy/lib/consent-logic";
 import { PasswordRequirements } from "@/shared/components/PasswordRequirements";
 import { authApi } from "../api/auth.api";
 import { Turnstile, useCaptcha } from "@/shared/components/Turnstile";
 import { cn } from "@/shared/utils/cn";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { applyServerFormError } from "@/shared/api/form-errors";
+import { ApiError, apiFieldErrors } from "@/shared/api/http-client";
 
-const FORM_FIELDS = ["confirmPassword", "email", "firstName", "lastName", "password", "professionalExperience", "termsAccepted", "whatsappNumber"] as const;
+const FORM_FIELDS = ["confirmPassword", "email", "firstName", "lastName", "password", "professionalExperience", "whatsappNumber"] as const;
 
 const EXPERIENCE_OPTIONS = [
   { value: "student", label: "Student" },
@@ -25,12 +30,12 @@ const EXPERIENCE_OPTIONS = [
   { value: "lead", label: "Lead / Principal (10+ years)" },
 ] as const;
 
-// confirmPassword/termsAccepted have no backend/shared-schema equivalent — they're
-// pure client-side validation, stripped back out before hitting authApi.register,
-// which still only ever receives the exact RegisterDto shape the backend expects.
-const RegisterFormSchema = RegisterSchema.extend({
+// confirmPassword has no backend/shared-schema equivalent — it's pure client-side validation,
+// stripped back out before hitting authApi.register. Consent is not a form field: the ticks are
+// held beside the form and sent as the accepted policy versions (TASK-025), which the server
+// checks and records.
+const RegisterFormSchema = RegisterSchema.omit({ consents: true }).extend({
   confirmPassword: z.string(),
-  termsAccepted: z.literal(true, { errorMap: () => ({ message: "You must agree to the terms to continue" }) }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -41,6 +46,9 @@ type RegisterFormValues = z.infer<typeof RegisterFormSchema>;
 export function RegisterForm() {
   const router = useRouter();
   const captcha = useCaptcha();
+  const policies = useQuery({ queryKey: privacyKeys.policies, queryFn: privacyApi.policies, staleTime: 60_000 });
+  const [ticks, setTicks] = useState<RegistrationTicks>({});
+  const [consentError, setConsentError] = useState("");
   const {
     register,
     handleSubmit,
@@ -53,12 +61,27 @@ export function RegisterForm() {
     mutationFn: authApi.register,
     onSuccess: () => router.push("/login?registered=true"),
     onError: (err) => {
+      // A policy changed while the form was open: reload what is in force and ask again.
+      if (err instanceof ApiError && err.status === 409 && /was updated/i.test(String((err.body as { message?: string } | null)?.message ?? ""))) {
+        setTicks({});
+        void policies.refetch();
+      }
+      const consentFieldError = apiFieldErrors(err).consents;
+      if (consentFieldError) setConsentError(consentFieldError);
       applyServerFormError(setError, err, FORM_FIELDS, "Registration failed");
       if (captcha.enabled) captcha.reset();
     },
   });
 
   function onSubmit(values: RegisterFormValues) {
+    const list = policies.data ?? [];
+    const missing = missingRequired(list, ticks);
+    if (list.length === 0 || missing.length > 0) {
+      setConsentError(list.length === 0 ? "We could not load the terms. Reload the page and try again." : missingRequiredMessage(missing));
+      document.getElementById(`consent-${missing[0] ?? "terms"}`)?.focus();
+      return;
+    }
+    setConsentError("");
     mutation.mutate({
       firstName: values.firstName,
       lastName: values.lastName,
@@ -66,6 +89,7 @@ export function RegisterForm() {
       password: values.password,
       whatsappNumber: values.whatsappNumber,
       professionalExperience: values.professionalExperience,
+      consents: buildRegistrationConsents(list, ticks),
       captchaToken: captcha.token,
     });
   }
@@ -179,20 +203,31 @@ export function RegisterForm() {
 
         <PasswordRequirements password={watch("password") ?? ""} confirm={watch("confirmPassword") ?? ""} />
 
-        <label className="flex items-start gap-2 text-sm text-muted-foreground">
-          <input type="checkbox" className="mt-0.5 rounded border-input" {...register("termsAccepted")} />
-          <span>
-            I agree to the{" "}
-            <Link href="/terms" className="font-medium text-foreground underline">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="font-medium text-foreground underline">
-              Privacy Policy
-            </Link>
-          </span>
-        </label>
-        {errors.termsAccepted && <p className="text-sm text-destructive">{errors.termsAccepted.message}</p>}
+        {policies.isPending && (
+          <p role="status" className="text-sm text-muted-foreground">
+            Loading the terms…
+          </p>
+        )}
+        {policies.isError && (
+          <p role="alert" className="text-sm text-destructive">
+            We could not load the terms and privacy policy.{" "}
+            <button type="button" onClick={() => void policies.refetch()} className="font-medium underline">
+              Try again
+            </button>
+          </p>
+        )}
+        {policies.data && (
+          <RegistrationConsents
+            policies={policies.data}
+            ticks={ticks}
+            onToggle={(purpose, checked) => {
+              setTicks((t) => ({ ...t, [purpose]: checked }));
+              setConsentError("");
+            }}
+            error={consentError}
+            errorId="consent-error"
+          />
+        )}
 
         {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
 
@@ -200,7 +235,7 @@ export function RegisterForm() {
 
         <button
           type="submit"
-          disabled={isSubmitting || mutation.isPending || (captcha.enabled && !captcha.token)}
+          disabled={isSubmitting || mutation.isPending || !policies.data || (captcha.enabled && !captcha.token)}
           className={cn(buttonVariants({ variant: "gradient" }), "w-full")}
         >
           <Lock className="h-4 w-4" />

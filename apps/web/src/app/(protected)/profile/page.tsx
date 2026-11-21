@@ -1,10 +1,12 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/shared/auth/session";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/shared/ui/primitives/Card";
 import { EditProfileForm } from "@/features/profile/components/EditProfileForm";
 import { ChangePasswordForm } from "@/features/profile/components/ChangePasswordForm";
 import { DangerZoneCard } from "@/features/profile/components/DangerZoneCard";
+import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { skillsServerApi } from "@/features/skills/api/skills.api";
 import { SkillPicker } from "@/features/skills/components/SkillPicker";
 
@@ -46,6 +48,18 @@ export default async function ProfilePage() {
         </CardContent>
       </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Privacy and consent</CardTitle>
+          <CardDescription>Choose who can see your profile, and review or withdraw the consents you have given.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/settings/privacy" className={buttonVariants({ variant: "secondary" })}>
+            Open privacy and consent
+          </Link>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

@@ -33,6 +33,7 @@ export const ROUTE_TITLES: Readonly<Record<string, RouteTitle>> = {
   "/profile": { label: "Profile" },
   "/settings": { label: "Settings", linkable: false },
   "/settings/notifications": { label: "Notification settings" },
+  "/settings/privacy": { label: "Privacy and consent" },
   "/blogs": { label: "Blogs" },
   "/blogs/*": { label: "Blog post" },
   "/admin": { label: "Admin" },

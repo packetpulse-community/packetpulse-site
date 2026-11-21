@@ -7,6 +7,7 @@ import { CommandPalette } from "@/shared/components/CommandPalette";
 import { Breadcrumbs, BreadcrumbsProvider } from "@/shared/components/Breadcrumbs";
 import { RouteFocus } from "@/shared/components/RouteFocus";
 import { ResendVerificationBanner } from "@/features/auth/components/ResendVerificationBanner";
+import { ConsentBanner } from "@/features/privacy/components/ConsentBanner";
 import { AppSidebar } from "./AppSidebar";
 import { AppTopbar } from "./AppTopbar";
 import { MobileTabBar } from "./MobileTabBar";
@@ -28,6 +29,7 @@ export function WorkflowShell({ children }: { children: React.ReactNode }) {
           <Breadcrumbs />
           <main id="main" tabIndex={-1} className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 pb-24 outline-none lg:px-8 lg:pb-8">
             <ResendVerificationBanner />
+            <ConsentBanner />
             {/* Dark tokens for screens not yet migrated to Grove (see theme/legacy-routes.ts). */}
             <LegacyScope kind="content" className="rounded-grove-panel p-4 sm:p-6">
               {children}
