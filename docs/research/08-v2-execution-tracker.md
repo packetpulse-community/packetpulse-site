@@ -11,14 +11,14 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | M0 Audit and baseline | 6 | 5 | 0 | 1 |
 | M1 Foundation | 11 | 11 | 0 | 0 |
 | M2 Design system and shell | 4 | 4 | 0 | 0 |
-| M3 Identity, profile, community | 6 | 3 | 3 | 0 |
+| M3 Identity, profile, community | 6 | 5 | 1 | 0 |
 | M4 Learn and practice | 4 | 1 | 3 | 0 |
 | M5 Prove and verify | 3 | 1 | 2 | 0 |
 | M6 Careers | 8 | 0 | 8 | 0 |
-| M7 Operations | 6 | 2 | 4 | 0 |
-| M8 Release | 6 | 0 | 6 | 0 |
+| M7 Operations | 6 | 3 | 3 | 0 |
+| M8 Release | 6 | 1 | 5 | 0 |
 | M9 Improve | 2 | 0 | 2 | 0 |
-| **Total** | **56** | **27** | **28** | **1** |
+| **Total** | **56** | **31** | **24** | **1** |
 
 **Next in Document 4 order:** close M0 (TASK-001, 002, 006 need your approval or a second reviewer; TASK-003 and 005 are doable now; TASK-004 is blocked on hosting access), then start M1 with TASK-008 (permission engine), which almost everything else depends on.
 
@@ -62,12 +62,12 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 
 | Task | Status | Evidence and what remains |
 | --- | --- | --- |
-| TASK-022 Registration and email code | In progress | Email and password register; email **link** (24 h) sent only on admin approval, not a 6-digit code (PRD-001). Missing: PRD-004 (18+), PRD-006 (WhatsApp format) |
-| TASK-023 Onboarding and required details | Open | Only name, email, optional WhatsApp and experience level are collected (PRD-003) |
+| TASK-022 Registration and email code | In progress | Done (backend and web): a 6-digit email code (hashed at rest, 10-minute expiry, attempt lockout, resend cooldown, single use) next to the existing link; 18+ attestation (PRD-004) and WhatsApp number normalisation (PRD-006, E.164). The admin-approval gate is unchanged (DEC-035 undecided); instant onboarding is one feature switch away. Remaining: owner decision DEC-035, a real email-provider test |
+| TASK-023 Onboarding and required details | In progress | Done: resumable onboarding after first sign-in collecting the PRD-003 details, with a route guard that keeps `/login?next=` deep links working. Remaining: owner review of the required-field list |
 | TASK-024 Resume upload and parsing | Open | No resume model |
-| TASK-025 Profile, consent, privacy | Open | The terms tick is client-side only; no consent records |
+| TASK-025 Profile, consent, privacy | In progress | Done: versioned consent records at registration with a member-visible history and re-capture on policy change; profile visibility controls enforced server-side through the field policy; screens on Grove tokens. Migration `20261121150000_consent_privacy`. Remaining: owner-approved policy texts, withdrawal rules per counsel |
 | TASK-026 Community Q&A, guidelines, reputation | In progress | Threads, nested replies, reply likes, moderation. Missing: modes, accepted answer, report, guidelines, reputation |
-| TASK-027 Skill taxonomy and suggestions | Open | Categories classify content, not skills |
+| TASK-027 Skill taxonomy and suggestions | In progress | Done: versioned taxonomy (domains, skills, levels, aliases) with starter seed, suggestion queue, admin management with audit entries, member skill picker on the profile, public read API. Migration `20261121120000_skill_taxonomy`. Remaining: owner review of the starter taxonomy, browser check of the two pages by a person |
 
 ## M4 Learn and practice
 
@@ -100,7 +100,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | TASK-044 Admin security | Open | No MFA, step-up, break-glass or access review; admin created by a shared secret (S-4) |
 | TASK-045 Analytics events and funnel | Open | No analytics provider found; admin analytics page shows counts |
 | TASK-046 Data rights and retention | In progress | Account deletion exists (and leaves the Supabase login, S-5). Missing: export, grace period, retention schedule |
-| TASK-047 Feature switches and policy screens | Open | A `SiteSettings` row exists, but only `maintenanceMode` is enforced; see [Doc 10](10-threat-model-and-data-map.md) T-12 |
+| TASK-047 Feature switches and policy screens | In progress | Done: typed flag registry, guard, admin and public endpoints with audit entries and reasons, enforcement on forums, quizzes, resources, files, blogs, sign-up and email, an admin Feature switches page; flags are now stored durably in the database (migration `20261121170000_onboarding_email_code_feature_flags`), Redis is only a cache. Remaining: policy screens, owner review of the flag list |
 | TASK-048 Integrations (ClickUp, n8n) | Open | Not started; waits for OPEN-12 scope |
 
 ## M8 Release and M9 Improve
@@ -108,7 +108,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | Task | Status | Evidence and what remains |
 | --- | --- | --- |
 | TASK-049 Staged rollout of existing members | Open | Needs TASK-004 and TASK-017 first |
-| TASK-050 Accessibility and device pass | Open | No screen-reader pass; no automated scan yet |
+| TASK-050 Accessibility and device pass | In progress | Done: axe-core component scan in the unit tests and a route scan runner; every scanned page, in light, dark and 375px, reports 0 violations; `docs/ops/accessibility.md` with a manual checklist. Remaining: a real screen-reader and device pass by a person, which automation cannot replace |
 | TASK-051 Localization | Open | `lang="en"`, no i18n |
 | TASK-052 Hide from companies | Open | Depends on M6 |
 | TASK-053 Recruiter reminders and status messages | Open | Depends on M6 |
@@ -182,4 +182,9 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 - **TASK-014:** optional ClamAV scanner behind `FileScanner`, fail-closed. **TASK-015:** audit entries for category management and staff deletion of others' content, plus a test that fails when a privileged route writes no audit row. **TASK-016:** optional alert webhook for final job failures and stalls.
 - **TASK-017:** the dependency audit is blocking through an expiring allowlist; release checklist and branch-protection steps written (the GitHub setting itself is for the owner).
 - **Owner actions:** apply the `skill_taxonomy` migration (and the quiz-integrity one if not yet applied) before deploying the backend; set the branch-protection checks; set Turnstile keys and `TRUST_PROXY`; create the private Supabase bucket; flip `CSP_MODE=enforce` after a week of reports.
+
+## Notes from M3 batch 1
+
+- Migrations added: `20261121150000_consent_privacy` and `20261121170000_onboarding_email_code_feature_flags` (plus `20261121090000_audit_actions_categories_deletions` and `20261121120000_skill_taxonomy` earlier). All four must be applied to every database before the backend that uses them is deployed.
+- Verified together: backend e2e 341 across 25 suites, web unit tests 370, `next build` 49 pages, migration rehearsal passes.
 
