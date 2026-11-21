@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/shared/ui/primitives/ScrollRegion";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, AlertTriangle, XCircle, MinusCircle, RefreshCw } from "lucide-react";
 import { adminClientApi, type SystemStatus, type ServiceState } from "../api/admin.api";
@@ -100,7 +101,7 @@ export function SystemStatusPanel({ initialStatus }: { initialStatus: SystemStat
           <CardTitle className="text-base">API endpoints</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <ScrollRegion label="API endpoints (scrolls sideways)">
             <table className="w-full text-sm">
               <thead className="text-left text-muted-foreground">
                 <tr>
@@ -130,7 +131,7 @@ export function SystemStatusPanel({ initialStatus }: { initialStatus: SystemStat
                 })}
               </tbody>
             </table>
-          </div>
+          </ScrollRegion>
         </CardContent>
       </Card>
 

@@ -253,7 +253,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
         <p className="text-sm text-muted-foreground">
           Showing {from} to {to} of {totalItems} entries
         </p>
-        <nav aria-label="Pagination" className="flex items-center gap-1">
+        <div role="group" aria-label="Pagination" className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => handlePageChange(page - 1)}
@@ -295,7 +295,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
           >
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
-        </nav>
+        </div>
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
 import { forwardRef } from "react";
+import { ScrollRegion } from "./ScrollRegion";
 import { cn } from "@/shared/utils/cn";
 
 export const Table = forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="w-full overflow-x-auto">
+    <ScrollRegion label="Table (scrolls sideways)" className="w-full">
       <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
-    </div>
+    </ScrollRegion>
   ),
 );
 Table.displayName = "Table";

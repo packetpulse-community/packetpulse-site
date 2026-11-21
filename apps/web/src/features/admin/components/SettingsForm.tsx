@@ -63,19 +63,19 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Site Name</label>
-            <input className={inputClass} {...register("siteName")} />
+            <label htmlFor="setting-siteName" className="text-sm font-medium">Site Name</label>
+            <input id="setting-siteName" className={inputClass} {...register("siteName")} />
             {errors.siteName && <p className="text-sm text-destructive">{errors.siteName.message}</p>}
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Admin Email</label>
-            <input type="email" className={inputClass} {...register("adminEmail")} />
+            <label htmlFor="setting-adminEmail" className="text-sm font-medium">Admin Email</label>
+            <input id="setting-adminEmail" type="email" className={inputClass} {...register("adminEmail")} />
             {errors.adminEmail && <p className="text-sm text-destructive">{errors.adminEmail.message}</p>}
             <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1 sm:col-span-2">
-            <label className="text-sm font-medium">Site Description</label>
-            <textarea rows={2} className={inputClass} {...register("siteDescription")} />
+            <label htmlFor="setting-siteDescription" className="text-sm font-medium">Site Description</label>
+            <textarea id="setting-siteDescription" rows={2} className={inputClass} {...register("siteDescription")} />
             {errors.siteDescription && <p className="text-sm text-destructive">{errors.siteDescription.message}</p>}
             <NotActiveNote />
           </div>
@@ -104,14 +104,14 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
             <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Session Timeout (minutes)</label>
-            <input type="number" className={inputClass} {...register("sessionTimeoutMinutes")} />
+            <label htmlFor="setting-sessionTimeoutMinutes" className="text-sm font-medium">Session Timeout (minutes)</label>
+            <input id="setting-sessionTimeoutMinutes" type="number" className={inputClass} {...register("sessionTimeoutMinutes")} />
             {errors.sessionTimeoutMinutes && <p className="text-sm text-destructive">{errors.sessionTimeoutMinutes.message}</p>}
             <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Max Resources Per User</label>
-            <input type="number" className={inputClass} {...register("maxUserResourcesCount")} />
+            <label htmlFor="setting-maxUserResourcesCount" className="text-sm font-medium">Max Resources Per User</label>
+            <input id="setting-maxUserResourcesCount" type="number" className={inputClass} {...register("maxUserResourcesCount")} />
             {errors.maxUserResourcesCount && <p className="text-sm text-destructive">{errors.maxUserResourcesCount.message}</p>}
             <NotActiveNote />
           </div>
@@ -131,20 +131,20 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
             <p className="text-xs text-muted-foreground">When enabled, only administrators can access the site.</p>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Max Upload Size (MB)</label>
-            <input type="number" className={inputClass} {...register("maxUploadSizeMb")} />
+            <label htmlFor="setting-maxUploadSizeMb" className="text-sm font-medium">Max Upload Size (MB)</label>
+            <input id="setting-maxUploadSizeMb" type="number" className={inputClass} {...register("maxUploadSizeMb")} />
             {errors.maxUploadSizeMb && <p className="text-sm text-destructive">{errors.maxUploadSizeMb.message}</p>}
             <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">API Rate Limit (requests/minute)</label>
-            <input type="number" className={inputClass} {...register("apiRateLimit")} />
+            <label htmlFor="setting-apiRateLimit" className="text-sm font-medium">API Rate Limit (requests/minute)</label>
+            <input id="setting-apiRateLimit" type="number" className={inputClass} {...register("apiRateLimit")} />
             {errors.apiRateLimit && <p className="text-sm text-destructive">{errors.apiRateLimit.message}</p>}
             <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Default Theme</label>
-            <select className={inputClass} {...register("theme")}>
+            <label htmlFor="setting-theme" className="text-sm font-medium">Default Theme</label>
+            <select id="setting-theme" className={inputClass} {...register("theme")}>
               <option value="light">Light</option>
               <option value="dark">Dark</option>
               <option value="system">System Default</option>
@@ -152,8 +152,8 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
             <NotActiveNote />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Log Level</label>
-            <select className={inputClass} {...register("logLevel")}>
+            <label htmlFor="setting-logLevel" className="text-sm font-medium">Log Level</label>
+            <select id="setting-logLevel" className={inputClass} {...register("logLevel")}>
               <option value="error">Error only</option>
               <option value="warn">Warning and Error</option>
               <option value="info">Info, Warning and Error</option>

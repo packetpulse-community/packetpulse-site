@@ -108,6 +108,7 @@ export function ApiDocsExplorer() {
         <Card variant="glass" className="flex flex-col gap-3 p-4">
           <div className="flex flex-wrap gap-2">
             <select
+              aria-label="HTTP method"
               value={method}
               onChange={(e) => setMethod(e.target.value as EndpointEntry["method"])}
               className="rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -121,6 +122,7 @@ export function ApiDocsExplorer() {
               value={path}
               onChange={(e) => setPath(e.target.value)}
               placeholder="/blogs"
+              aria-label="Request path"
               className="min-w-0 flex-1 basis-40 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
             />
             <Button variant="gradient" onClick={sendRequest} disabled={sending}>

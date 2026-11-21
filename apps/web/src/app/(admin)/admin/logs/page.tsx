@@ -1,3 +1,4 @@
+import { ScrollRegion } from "@/shared/ui/primitives/ScrollRegion";
 import { cookies } from "next/headers";
 import { adminServerApi } from "@/features/admin/api/admin.api";
 import { LogsFilters } from "@/features/admin/components/LogsFilters";
@@ -45,7 +46,7 @@ export default async function AdminLogsPage({ searchParams }: AdminLogsPageProps
               <span className="ml-auto text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</span>
             </div>
             <p className="text-sm">{log.message}</p>
-            {log.data ? <pre className="overflow-x-auto text-xs text-muted-foreground">{JSON.stringify(log.data)}</pre> : null}
+            {log.data ? <ScrollRegion as="pre" label="Log data (scrolls sideways)" className="text-xs text-muted-foreground">{JSON.stringify(log.data)}</ScrollRegion> : null}
           </Card>
         ))}
         {logs.length === 0 && (
