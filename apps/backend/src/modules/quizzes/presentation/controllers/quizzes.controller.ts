@@ -6,6 +6,7 @@ import { CertificatesService } from "../../application/services/certificates.ser
 import { CreateQuizDto, QuizListQueryDto, SubmitQuizAttemptDto, UpdateQuizDto } from "../../application/dto/quizzes.dto";
 import { Public, CurrentUser, RequirePermission, PERMISSIONS, SUPER_ADMIN_ROLE } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
+import { RequireFeature } from "../../../feature-flags/require-feature.decorator";
 
 const WRITE_STANDARD = { default: { limit: 100, ttl: 900_000 } };
 
@@ -80,6 +81,7 @@ export class QuizzesController {
 
   @Throttle(WRITE_STANDARD)
   @RequirePermission(PERMISSIONS.QUIZZES_ATTEMPT)
+  @RequireFeature("quizzes.attempts", "Starting a quiz attempt")
   @Post(":id/attempts")
   startAttempt(@Param("id") id: string, @CurrentUser() user: AccessTokenPayload) {
     return this.attempts.start(id, user.sub);

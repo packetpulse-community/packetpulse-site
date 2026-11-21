@@ -13,6 +13,7 @@ import {
 } from "@packetpulse/types";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { frontendUrl } from "../../../../common/config/frontend-url";
+import { FeatureFlagsService } from "../../../feature-flags/feature-flags.service";
 import { EmailTemplate } from "../../infrastructure/email/templates";
 import { EMAIL_QUEUE, emailJobOptions, idempotencyJobId } from "../../infrastructure/queue/queue-config";
 import { localDayStart, quietHoursState, summariseError } from "./notification-policy";
@@ -72,6 +73,7 @@ export class NotificationDispatcher {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly flags: FeatureFlagsService,
     @InjectQueue(EMAIL_QUEUE) private readonly emailQueue: Queue<EmailJobData>,
   ) {}
 
@@ -219,6 +221,10 @@ export class NotificationDispatcher {
   }): Promise<DeliveryDecision> {
     const base = { userId: a.userId, notificationId: a.notificationId, eventType: a.type, channel: "email" as const, critical: a.critical };
     if (!a.address) return this.record({ ...base, status: "skipped", reasonCode: "no_address" });
+    // Kill switch (TASK-047): non-critical email is paused; security and other critical mail still goes.
+    if (!a.critical && !(await this.flags.isEnabled("notifications.email"))) {
+      return this.record({ ...base, status: "skipped", reasonCode: "feature_off" });
+    }
     // Critical events cannot be switched off, whatever is stored.
     const enabled = a.critical ? true : (a.preference ?? defaultChannelEnabled(a.type, "email"));
     if (!enabled) return this.record({ ...base, status: "skipped", reasonCode: "preference_off" });

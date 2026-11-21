@@ -66,6 +66,7 @@ const ROLES = Object.keys(ROLE_MATRIX);
 // on purpose.
 const PUBLIC_ROUTES = new Set([
   "GET /api/site-status",
+  "GET /api/feature-flags",
   "GET /api/health",
   "POST /api/auth/register",
   "POST /api/auth/register-admin",

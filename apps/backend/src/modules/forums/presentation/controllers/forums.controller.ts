@@ -10,6 +10,7 @@ import {
 } from "../../application/dto/forums.dto";
 import { Public, CurrentUser, RequirePermission, PERMISSIONS } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
+import { RequireFeature } from "../../../feature-flags/require-feature.decorator";
 
 const WRITE_STANDARD = { default: { limit: 100, ttl: 900_000 } };
 
@@ -40,6 +41,7 @@ export class ForumsController {
 
   @Throttle(WRITE_STANDARD)
   @RequirePermission(PERMISSIONS.FORUMS_CREATE)
+  @RequireFeature("forums.posting", "Forum posting")
   @Post("threads")
   create(@CurrentUser() user: AccessTokenPayload, @Body() dto: CreateForumThreadDto) {
     return this.threads.create(user.sub, dto);
@@ -88,6 +90,7 @@ export class ForumsController {
 
   @Throttle(WRITE_STANDARD)
   @RequirePermission(PERMISSIONS.FORUMS_CREATE)
+  @RequireFeature("forums.posting", "Forum posting")
   @Post("threads/:id/replies")
   addReply(
     @Param("id") id: string,

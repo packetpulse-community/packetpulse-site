@@ -31,6 +31,7 @@ import { LogsModule } from "./modules/logs";
 import { FilesModule } from "./modules/files";
 import { SkillsModule } from "./modules/skills";
 import { FeatureFlagsModule } from "./modules/feature-flags";
+import { FeatureFlagsModule } from "./modules/feature-flags";
 import { AllExceptionsFilter } from "./common/errors";
 import { ServerTimingModule } from "./common/server-timing";
 

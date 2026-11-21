@@ -21,6 +21,7 @@ import {
   VerifyEmailDto,
 } from "../../application/dto/auth.dto";
 import { AccessTokenPayload } from "../../application/services/token.service";
+import { RequireFeature } from "../../../feature-flags/require-feature.decorator";
 
 // auth-strict tier (plan §4): brute-force/credential-stuffing defense on the
 // endpoints an attacker would actually target.
@@ -39,6 +40,7 @@ export class AuthController {
   @Public()
   @Throttle(AUTH_STRICT)
   @UseGuards(CaptchaGuard)
+  @RequireFeature("registration.open", "Sign-up")
   @Post("register")
   async register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);

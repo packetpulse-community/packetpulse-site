@@ -4,6 +4,7 @@ import { BlogPostsService } from "../../application/services/blog-posts.service"
 import { BlogCommentsService } from "../../application/services/blog-comments.service";
 import { BlogLikesService } from "../../application/services/blog-likes.service";
 import { CreateBlogPostDto, UpdateBlogPostDto, CreateCommentDto, BlogListQueryDto } from "../../application/dto/blogs.dto";
+import { RequireFeature } from "../../../feature-flags/require-feature.decorator";
 import { Public, CurrentUser, RequirePermission, PERMISSIONS, SUPER_ADMIN_ROLE } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
 
@@ -66,6 +67,7 @@ export class BlogsController {
   }
 
   @Throttle(WRITE_STANDARD)
+  @RequireFeature("blogs.comments", "Commenting")
   @Post(":id/comments")
   addComment(
     @Param("id") id: string,

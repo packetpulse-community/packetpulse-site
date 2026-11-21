@@ -4,6 +4,7 @@ import { ResourcesService } from "../../application/services/resources.service";
 import { CreateResourceDto, UpdateResourceDto, ResourceListQueryDto } from "../../application/dto/resources.dto";
 import { CurrentUser, RequirePermission, PERMISSIONS, SUPER_ADMIN_ROLE } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
+import { RequireFeature } from "../../../feature-flags/require-feature.decorator";
 
 const WRITE_STANDARD = { default: { limit: 100, ttl: 900_000 } };
 
@@ -30,6 +31,7 @@ export class ResourcesController {
 
   @Throttle(WRITE_STANDARD)
   @RequirePermission(PERMISSIONS.RESOURCES_CREATE)
+  @RequireFeature("resources.uploads", "Submitting resources")
   @Post()
   create(@CurrentUser() user: AccessTokenPayload, @Body() dto: CreateResourceDto) {
     return this.resources.create(user.sub, user.roles, dto);

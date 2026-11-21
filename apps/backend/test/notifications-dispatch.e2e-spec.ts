@@ -13,6 +13,7 @@ import { EmailTemplate, renderEmail } from "../src/modules/notifications/infrast
 import { EmailProcessor } from "../src/modules/notifications/infrastructure/queue/email.processor";
 import { FanoutProcessor } from "../src/modules/notifications/infrastructure/queue/fanout.processor";
 import { quietHoursState, localDayStart } from "../src/modules/notifications/application/services/notification-policy";
+import { FeatureFlagsService } from "../src/modules/feature-flags/feature-flags.service";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { RealtimeEmitterService } from "../src/common/realtime/realtime-emitter.service";
 
@@ -87,6 +88,7 @@ describe("Notification dispatcher (e2e)", () => {
         NotificationDispatcher,
         EmailProcessor,
         FanoutProcessor,
+        { provide: FeatureFlagsService, useValue: { isEnabled: async () => true } },
         { provide: MailerService, useValue: mailer },
         { provide: RealtimeEmitterService, useValue: { emit: async () => undefined } },
         {
