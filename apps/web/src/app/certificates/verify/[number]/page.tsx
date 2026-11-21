@@ -18,8 +18,8 @@ export default async function VerifyCertificatePage({ params }: { params: Promis
       <Navbar />
       <main className="container flex flex-col items-center gap-6 py-20 text-center">
         {certificate ? (
-          <div className="glass-panel flex flex-col gap-3 rounded-lg p-8">
-            <h1 className="text-2xl font-semibold text-green-400">✅ Certificate Verified</h1>
+          <div className="rounded-grove-card border border-border bg-surface flex flex-col gap-3 p-8">
+            <h1 className="text-2xl font-semibold text-success">✅ Certificate Verified</h1>
             <p className="text-lg">{certificate.quiz.title}</p>
             <p className="text-muted-foreground">
               Issued to {certificate.user.firstName} {certificate.user.lastName}
@@ -29,7 +29,7 @@ export default async function VerifyCertificatePage({ params }: { params: Promis
             </p>
           </div>
         ) : (
-          <div className="glass-panel flex flex-col gap-3 rounded-lg p-8">
+          <div className="rounded-grove-card border border-border bg-surface flex flex-col gap-3 p-8">
             <h1 className="text-2xl font-semibold text-destructive">Certificate Not Found</h1>
             <p className="text-muted-foreground">No certificate matches &ldquo;{number}&rdquo;.</p>
           </div>

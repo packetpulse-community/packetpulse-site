@@ -15,11 +15,11 @@ export const metadata: Metadata = {
 // (shared/api/http-client.ts).
 export default function MaintenancePage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-indigo-900 px-4 py-16">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background text-text px-4 py-16">
       <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">
         <Image src="/logo.png" alt="PacketPulse" width={140} height={54} className="h-14 w-auto" priority />
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/15">
-          <Wrench className="h-8 w-8 text-amber-400" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warning-soft">
+          <Wrench className="h-8 w-8 text-warning" />
         </div>
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold">We&apos;re under maintenance</h1>
