@@ -28,19 +28,19 @@ export interface RouteGroup {
 
 export const ROUTE_GROUPS: readonly RouteGroup[] = [
   { id: "design-system", label: "Design system", prefixes: ["/design-system"], status: "migrated", scope: "page" },
-  { id: "landing", label: "Home (landing)", prefixes: ["/"], status: "legacy", scope: "page" },
-  { id: "marketing", label: "About, contact, privacy, terms", prefixes: ["/about", "/contact", "/privacy", "/terms"], status: "legacy", scope: "page" },
-  { id: "blogs", label: "Blogs (public)", prefixes: ["/blogs"], status: "legacy", scope: "page" },
-  { id: "tools", label: "Tools hub (public)", prefixes: ["/tools"], status: "legacy", scope: "page" },
-  { id: "auth", label: "Sign in, register, recovery", prefixes: ["/login", "/register", "/forgot-password", "/verify-email"], status: "legacy", scope: "page" },
-  { id: "system-pages", label: "Maintenance and session refresh", prefixes: ["/maintenance", "/refresh"], status: "legacy", scope: "page" },
-  { id: "certificate-verify", label: "Certificate verification (public)", prefixes: ["/certificates/verify"], status: "legacy", scope: "page" },
-  { id: "dashboard", label: "Dashboard", prefixes: ["/dashboard"], status: "legacy", scope: "content" },
+  { id: "landing", label: "Home (landing)", prefixes: ["/"], status: "migrated", scope: "page" },
+  { id: "marketing", label: "About, contact, privacy, terms", prefixes: ["/about", "/contact", "/privacy", "/terms"], status: "migrated", scope: "page" },
+  { id: "blogs", label: "Blogs (public)", prefixes: ["/blogs"], status: "migrated", scope: "page" },
+  { id: "tools", label: "Tools hub (public)", prefixes: ["/tools"], status: "migrated", scope: "page" },
+  { id: "auth", label: "Sign in, register, recovery", prefixes: ["/login", "/register", "/forgot-password", "/verify-email"], status: "migrated", scope: "page" },
+  { id: "system-pages", label: "Maintenance and session refresh", prefixes: ["/maintenance", "/refresh"], status: "migrated", scope: "page" },
+  { id: "certificate-verify", label: "Certificate verification (public)", prefixes: ["/certificates/verify"], status: "migrated", scope: "page" },
+  { id: "dashboard", label: "Dashboard", prefixes: ["/dashboard"], status: "migrated", scope: "content" },
   { id: "learning", label: "Quizzes, resources, recordings, certificates", prefixes: ["/quizzes", "/resources", "/recordings", "/certificates"], status: "legacy", scope: "content" },
-  { id: "community", label: "Forums and network tools", prefixes: ["/forums", "/network-tools"], status: "legacy", scope: "content" },
+  { id: "community", label: "Forums and network tools", prefixes: ["/forums", "/network-tools"], status: "migrated", scope: "content" },
   { id: "profile", label: "Profile and skills picker", prefixes: ["/profile"], status: "migrated", scope: "content" },
-  { id: "account", label: "Notifications and settings", prefixes: ["/notifications", "/settings"], status: "legacy", scope: "content" },
-  { id: "admin", label: "Admin", prefixes: ["/admin"], status: "legacy", scope: "content" },
+  { id: "account", label: "Notifications and settings", prefixes: ["/notifications", "/settings"], status: "migrated", scope: "content" },
+  { id: "admin", label: "Admin", prefixes: ["/admin"], status: "migrated", scope: "content" },
 ];
 
 function matches(pathname: string, prefix: string): boolean {
