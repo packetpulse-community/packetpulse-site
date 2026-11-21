@@ -12,16 +12,17 @@ import { FieldTree, type ByteRange } from "./FieldTree";
 import { HexView } from "./HexView";
 import { ModelPanel } from "./ModelPanel";
 import { Narration } from "./Narration";
+import "../styles/packet-lab.css";
 import { PacketTable } from "./PacketTable";
 import { SequenceView } from "./SequenceView";
 import { TopologyView } from "./TopologyView";
 
 function Panel({ title, hint, children, className }: { title: string; hint?: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("glass-panel flex min-w-0 flex-col gap-3 rounded-lg p-4", className)}>
+    <section className={cn("flex min-w-0 flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-sm", className)}>
       <div>
         <h2 className="text-base font-semibold">{title}</h2>
-        {hint && <p className="text-xs text-slate-400">{hint}</p>}
+        {hint && <p className="text-xs text-text-secondary">{hint}</p>}
       </div>
       {children}
     </section>
@@ -30,7 +31,7 @@ function Panel({ title, hint, children, className }: { title: string; hint?: str
 
 function Tabs<T extends string>({ value, onChange, tabs, label }: { value: T; onChange: (v: T) => void; tabs: { id: T; label: string }[]; label: string }) {
   return (
-    <div role="tablist" aria-label={label} className="flex gap-1 rounded-md bg-black/30 p-1">
+    <div role="tablist" aria-label={label} className="flex gap-1 rounded-md bg-surface-subtle p-1">
       {tabs.map((t) => (
         <button
           key={t.id}
@@ -39,8 +40,8 @@ function Tabs<T extends string>({ value, onChange, tabs, label }: { value: T; on
           aria-selected={value === t.id}
           onClick={() => onChange(t.id)}
           className={cn(
-            "rounded px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-300",
-            value === t.id ? "bg-indigo-600 text-white" : "text-slate-300 hover:bg-white/10",
+            "rounded px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-focus",
+            value === t.id ? "bg-primary text-primary-foreground" : "text-text-secondary hover:bg-border",
           )}
         >
           {t.label}
@@ -186,22 +187,22 @@ export function PacketLab({ initialScenario }: { initialScenario: string }) {
   return (
     <div className="flex flex-col gap-4">
       <header className="flex flex-col gap-2">
-        <nav aria-label="Breadcrumb" className="text-sm text-slate-400">
-          <Link href="/tools" className="hover:text-foreground hover:underline">Tools</Link> / <span className="text-slate-200">Packet Lab</span>
+        <nav aria-label="Breadcrumb" className="text-sm text-text-secondary">
+          <Link href="/tools" className="hover:text-foreground hover:underline">Tools</Link> / <span className="text-text">Packet Lab</span>
         </nav>
         <h1 className="text-3xl font-bold tracking-tight">{scenario.title}</h1>
-        <p className="max-w-3xl text-slate-300">{scenario.summary}</p>
-        <p className="font-mono text-sm text-slate-300">
-          <span className="text-slate-500">$ </span>{scenario.command}
+        <p className="max-w-3xl text-text-secondary">{scenario.summary}</p>
+        <p className="font-mono text-sm text-text-secondary">
+          <span className="text-text-secondary">$ </span>{scenario.command}
         </p>
-        <details className="max-w-3xl text-sm text-slate-300">
-          <summary className="cursor-pointer font-medium text-slate-100">What you will learn · and how accurate this is</summary>
+        <details className="max-w-3xl text-sm text-text-secondary">
+          <summary className="cursor-pointer font-medium text-text">What you will learn · and how accurate this is</summary>
           <ul className="mt-2 list-disc pl-5">
             {scenario.learn.map((l) => (
               <li key={l}>{l}</li>
             ))}
           </ul>
-          <p className="mt-3 rounded-md border border-border bg-black/20 p-3 text-xs">
+          <p className="mt-3 rounded-md border border-border bg-surface p-3 text-xs">
             <strong>This is a simulation.</strong> Every frame is built byte by byte from the real header layouts, with real checksums, so you can download the
             capture and open it in Wireshark. Time is model time, not wall-clock time. TCP implements the state machine, MSS segmentation, slow start,
             delayed ACKs and retransmission, but not window scaling or SACK. DNS is one server, not the full recursive hierarchy. No encryption is shown.
@@ -309,7 +310,7 @@ export function PacketLab({ initialScenario }: { initialScenario: string }) {
             <p className="text-sm text-muted-foreground">No packet selected yet. Press Play or Step, then pick a row in the packet list.</p>
           )}
           {selectedDiss && selectedDiss.problems.length > 0 && (
-            <p role="alert" className="rounded-md border border-red-400/60 bg-red-500/10 p-2 text-sm text-red-200">
+            <p role="alert" className="rounded-md border border-danger bg-danger-soft p-2 text-sm text-danger">
               Problems found: {selectedDiss.problems.join("; ")}
             </p>
           )}

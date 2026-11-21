@@ -24,11 +24,11 @@ function foldState(trace: Trace, eventTimes: number[], time: number, deviceId: s
 
 function Table({ title, caption, head, rows }: { title: string; caption: string; head: [string, string]; rows: [string, string][] }) {
   return (
-    <section className="rounded-md border border-border bg-black/20">
+    <section className="rounded-md border border-border bg-surface">
       <h4 className="px-3 pt-2 text-sm font-semibold">{title}</h4>
-      <p className="px-3 pb-1 text-xs text-slate-400">{caption}</p>
+      <p className="px-3 pb-1 text-xs text-text-secondary">{caption}</p>
       <table className="w-full text-left font-mono text-xs">
-        <thead className="text-slate-400">
+        <thead className="text-text-secondary">
           <tr>
             <th scope="col" className="px-3 py-1 font-medium">{head[0]}</th>
             <th scope="col" className="px-3 py-1 font-medium">{head[1]}</th>
@@ -36,10 +36,10 @@ function Table({ title, caption, head, rows }: { title: string; caption: string;
         </thead>
         <tbody>
           {rows.length === 0 ? (
-            <tr><td colSpan={2} className="px-3 py-2 font-sans text-slate-500">Empty so far</td></tr>
+            <tr><td colSpan={2} className="px-3 py-2 font-sans text-text-secondary">Empty so far</td></tr>
           ) : (
             rows.map(([k, v]) => (
-              <tr key={k} className="border-t border-white/5">
+              <tr key={k} className="border-t border-border">
                 <td className="px-3 py-1">{k}</td>
                 <td className="px-3 py-1">{v}</td>
               </tr>
@@ -63,14 +63,14 @@ export function DeviceInspector({ trace, eventTimes, time, deviceId }: Props) {
     <div className="flex flex-col gap-3">
       <div>
         <h3 className="text-base font-semibold">{device.name}</h3>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-text-secondary">
           {device.kind === "host" ? "A host: it can start and end conversations." : device.kind === "switch" ? "A layer 2 switch: it forwards frames by MAC address." : "A router: it forwards packets between networks by IP address."}
         </p>
       </div>
-      <section className="rounded-md border border-border bg-black/20">
+      <section className="rounded-md border border-border bg-surface">
         <h4 className="px-3 pt-2 text-sm font-semibold">Interfaces</h4>
         <table className="w-full text-left font-mono text-xs">
-          <thead className="text-slate-400">
+          <thead className="text-text-secondary">
             <tr>
               <th scope="col" className="px-3 py-1 font-medium">Port</th>
               <th scope="col" className="px-3 py-1 font-medium">MAC</th>
@@ -79,7 +79,7 @@ export function DeviceInspector({ trace, eventTimes, time, deviceId }: Props) {
           </thead>
           <tbody>
             {device.ifaces.map((i) => (
-              <tr key={i.name} className="border-t border-white/5">
+              <tr key={i.name} className="border-t border-border">
                 <td className="px-3 py-1">{i.name}</td>
                 <td className="px-3 py-1">{i.mac}</td>
                 <td className="px-3 py-1">{i.ip ? `${i.ip}/${i.prefix}` : "none (layer 2 only)"}</td>
@@ -87,7 +87,7 @@ export function DeviceInspector({ trace, eventTimes, time, deviceId }: Props) {
             ))}
           </tbody>
         </table>
-        {device.gateway && <p className="px-3 py-2 font-mono text-xs text-slate-300">Default gateway: {device.gateway}{device.dnsServer ? ` · DNS server: ${device.dnsServer}` : ""}</p>}
+        {device.gateway && <p className="px-3 py-2 font-mono text-xs text-text-secondary">Default gateway: {device.gateway}{device.dnsServer ? ` · DNS server: ${device.dnsServer}` : ""}</p>}
       </section>
       {device.kind !== "switch" && <Table title="ARP cache" caption="IP address to MAC address, learned with ARP" head={["IP address", "MAC address"]} rows={list(t.arp)} />}
       {device.kind === "switch" && <Table title="MAC address table" caption="Which port each MAC address was last seen on, learned from source addresses" head={["MAC address", "Port"]} rows={list(t.mac)} />}
