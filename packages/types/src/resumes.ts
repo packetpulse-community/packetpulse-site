@@ -62,9 +62,9 @@ export interface EducationSuggestionData {
 export interface ExperienceSuggestionData {
   title: string | null;
   company: string | null;
-  /** YYYY-MM */
+  /** YYYY-MM, or YYYY when the resume gives no month */
   startDate: string | null;
-  /** YYYY-MM, null when `current` */
+  /** same format; null when `current` */
   endDate: string | null;
   current: boolean;
 }

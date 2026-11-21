@@ -55,7 +55,8 @@ describe("Private files (e2e)", () => {
     return res;
   }
   const resumeBody = (over: object = {}) => ({
-    kind: "resume",
+    // Resumes have their own routes since TASK-024 (resumes.e2e-spec.ts); the pipeline is the same.
+    kind: "certificate",
     originalName: "cv.pdf",
     contentType: "application/pdf",
     sizeBytes: 5 * 1024 * 1024,
@@ -91,7 +92,7 @@ describe("Private files (e2e)", () => {
       await request(app.getHttpServer()).post("/api/files/upload-url").send(resumeBody()).expect(401);
     });
     it("refuses a content type not allowed for the kind", async () => {
-      await upload("owner", resumeBody({ contentType: "image/png" })).then((r) => expect(r.status).toBe(400));
+      await upload("owner", resumeBody({ contentType: "image/gif" })).then((r) => expect(r.status).toBe(400));
       await upload("owner", resumeBody({ contentType: "application/x-msdownload" })).then((r) => expect(r.status).toBe(400));
     });
     it("refuses an oversize file and a bad kind", async () => {

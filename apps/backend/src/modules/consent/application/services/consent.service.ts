@@ -59,6 +59,12 @@ export class ConsentService {
     return new Map(rows.map((r) => [r.purpose, r]));
   }
 
+  /** The member's newest decision on a purpose is "granted" (any policy version). */
+  async isGranted(userId: string, purpose: ConsentPurpose): Promise<boolean> {
+    const latest = await this.prisma.consentRecord.findFirst({ where: { userId, purpose }, orderBy: [{ createdAt: "desc" }, { seq: "desc" }], select: { action: true } });
+    return latest?.action === "granted";
+  }
+
   async policies(): Promise<ConsentPolicyView[]> {
     const current = await this.currentPolicies();
     return CONSENT_PURPOSES.filter((p) => current.has(p)).map((p) => toPolicyView(current.get(p)!));

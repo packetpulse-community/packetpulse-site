@@ -34,6 +34,7 @@ import { ConsentModule } from "./modules/consent";
 import { OnboardingModule } from "./modules/onboarding";
 import { FeatureFlagsModule } from "./modules/feature-flags";
 import { DataRightsModule } from "./modules/data-rights";
+import { ResumesModule } from "./modules/resumes";
 import { AllExceptionsFilter } from "./common/errors";
 import { ServerTimingModule } from "./common/server-timing";
 
@@ -72,6 +73,7 @@ import { ServerTimingModule } from "./common/server-timing";
     OnboardingModule,
     FeatureFlagsModule,
     DataRightsModule,
+    ResumesModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

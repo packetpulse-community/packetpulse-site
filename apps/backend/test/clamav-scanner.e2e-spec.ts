@@ -191,7 +191,7 @@ describe("Upload completion with clamd (e2e)", () => {
     const res = await request(app.getHttpServer())
       .post("/api/files/upload-url")
       .set("Cookie", `accessToken=${token}`)
-      .send({ kind: "resume", originalName: "cv.pdf", contentType: "application/pdf", sizeBytes: bytes.length })
+      .send({ kind: "certificate", originalName: "cv.pdf", contentType: "application/pdf", sizeBytes: bytes.length })
       .expect(201);
     created.push(res.body.file.id);
     await storage.putWithToken(res.body.uploadUrl, bytes);

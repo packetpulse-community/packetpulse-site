@@ -13,6 +13,7 @@ export const FEATURE_FLAG_KEYS = [
   "notifications.email",
   "onboarding.instant_access",
   "data_rights.export",
+  "resumes.upload",
 ] as const;
 export type FeatureFlagKey = (typeof FEATURE_FLAG_KEYS)[number];
 

@@ -88,6 +88,14 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
     changePermission: PERMISSIONS.ADMIN_MANAGE_SETTINGS,
     public: true,
   },
+  {
+    key: "resumes.upload",
+    description:
+      "Members can upload a resume and have it read for suggestions. When off, no new upload or re-read can start; an uploaded resume, its suggestions and deleting it keep working.",
+    defaultValue: true,
+    changePermission: PERMISSIONS.ADMIN_MANAGE_SETTINGS,
+    public: true,
+  },
 ];
 
 export const FLAG_BY_KEY = new Map(FEATURE_FLAGS.map((f) => [f.key, f] as const));

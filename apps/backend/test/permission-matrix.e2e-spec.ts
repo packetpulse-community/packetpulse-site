@@ -166,10 +166,19 @@ const AUTHENTICATED_ONLY: Record<string, string> = {
   "PUT /api/skills/mine": "own skills only; max 25, active taxonomy skills only",
   "GET /api/skills/members/:userId": "any member; filtered by the owner's per-skill visibility (private only for the owner)",
   "POST /api/skills/suggestions": "any member; counts one sighting per member, 5 new names a day",
-  "POST /api/files/upload-url": "any member; creates a pending file owned by the caller",
+  "POST /api/files/upload-url": "any member; creates a pending file owned by the caller (kind resume is refused: use /api/resumes)",
   "POST /api/files/:id/complete": "file owner only (others get 404)",
   "GET /api/files/:id/link": "file owner or admin (others get 404, logged as denied)",
   "DELETE /api/files/:id": "file owner or admin (others get 404, logged as denied)",
+  "GET /api/resumes": "own current resume, its suggestions and earlier versions only",
+  "POST /api/resumes/upload-url": "any member who granted resume_sharing (403 otherwise); PDF or DOCX up to 5 MB; switches resumes.upload and files.uploads",
+  "POST /api/resumes/:id/complete": "resume owner only (others get 404); scans, then queues the background parse",
+  "POST /api/resumes/:id/retry": "resume owner only (others get 404); only after a failed read; switch resumes.upload",
+  "GET /api/resumes/:id/link": "resume owner only (others get 404); 60-second signed link, logged in the file access log",
+  "DELETE /api/resumes/:id": "resume owner only (others get 404); deletes the file and its suggestions",
+  "PUT /api/resumes/suggestions/:suggestionId": "owner of the suggestion only (others get 404); accept or reject one field",
+  "GET /api/resumes/profile-entries": "own accepted education and experience entries only",
+  "DELETE /api/resumes/profile-entries/:kind/:id": "own entry only (others get 404); puts the suggestion back to pending",
 };
 
 function discoverRoutes(app: INestApplication): Route[] {

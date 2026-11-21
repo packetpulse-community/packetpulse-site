@@ -9,6 +9,7 @@ import { createFileScanner } from "./domain/file-scanner.factory";
 // plus ClamAV (clamd over TCP) when CLAMAV_HOST is set.
 @Module({
   controllers: [FilesController],
+  exports: [FilesService],
   providers: [FilesService, SignatureFileScanner, { provide: FileScanner, useFactory: createFileScanner, inject: [SignatureFileScanner] }],
 })
 export class FilesModule {}

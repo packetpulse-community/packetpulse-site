@@ -105,6 +105,15 @@ maintenance mode.
 | `PUT /api/resources/:id` |  | JWT, maintenance, approved, email-verified |  | resource owner or admin |
 | `PUT /api/resources/:id/download` |  | JWT, maintenance, approved, email-verified |  | any member |
 | `PUT /api/resources/:id/like` |  | JWT, maintenance, approved, email-verified |  | any member |
+| `GET /api/resumes` |  | JWT, maintenance, approved, email-verified |  | own current resume, its suggestions and earlier versions only |
+| `POST /api/resumes/upload-url` |  | JWT, maintenance, approved, email-verified |  | any member who granted resume_sharing (403 otherwise); PDF or DOCX up to 5 MB; switches `resumes.upload` and `files.uploads` |
+| `GET /api/resumes/profile-entries` |  | JWT, maintenance, approved, email-verified |  | own accepted education and experience entries only |
+| `DELETE /api/resumes/profile-entries/:kind/:id` |  | JWT, maintenance, approved, email-verified |  | own entry only (others 404); puts the suggestion back to pending |
+| `PUT /api/resumes/suggestions/:suggestionId` |  | JWT, maintenance, approved, email-verified |  | owner of the suggestion only (others 404); accept or reject one field |
+| `POST /api/resumes/:id/complete` |  | JWT, maintenance, approved, email-verified |  | resume owner only (others 404); scans, then queues the background parse |
+| `POST /api/resumes/:id/retry` |  | JWT, maintenance, approved, email-verified |  | resume owner only (others 404); only after a failed read; switch `resumes.upload` |
+| `GET /api/resumes/:id/link` |  | JWT, maintenance, approved, email-verified |  | resume owner only (others 404); 60-second signed link, logged in the file access log |
+| `DELETE /api/resumes/:id` |  | JWT, maintenance, approved, email-verified |  | resume owner only (others 404); deletes the file and its suggestions |
 | `DELETE /api/users/profile` |  | JWT, maintenance, approved, email-verified |  | own account; needs password; since TASK-046 it schedules the deletion (30-day grace) instead of deleting at once |
 | `GET /api/users/profile` |  | JWT, maintenance, approved, email-verified |  | own profile |
 | `PUT /api/users/profile` |  | JWT, maintenance, approved, email-verified |  | own profile |
