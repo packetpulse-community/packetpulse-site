@@ -147,7 +147,8 @@ describe("Resumes (e2e)", () => {
   afterAll(async () => {
     for (const who of Object.keys(ids)) await wipeResumes(who).catch(() => undefined);
     for (const f of await prisma.storedFile.findMany({ where: { ownerId: { in: Object.values(ids) } } })) await storage.delete(f.bucket, f.path);
-    await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } });
+    // An erased member's email no longer carries the prefix, so the ids are used too.
+    await prisma.user.deleteMany({ where: { OR: [{ email: { startsWith: PREFIX } }, { id: { in: Object.values(ids) } }] } });
     await prisma.skill.deleteMany({ where: { nameKey: { startsWith: "zy" }, level: "micro" } });
     await prisma.skill.deleteMany({ where: { nameKey: { startsWith: "zy" }, level: "minor" } });
     await prisma.skill.deleteMany({ where: { nameKey: { startsWith: "zy" } } });
