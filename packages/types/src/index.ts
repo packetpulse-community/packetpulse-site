@@ -13,3 +13,4 @@ export * from "./field-policy";
 export * from "./notifications";
 export * from "./skills";
 export * from "./feature-flags";
+export * from "./consent";

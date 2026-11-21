@@ -1,3 +1,5 @@
+import { PROFILE_PRIVACY_FIELDS } from "./consent";
+
 // Field-level protection (TASK-012, SEC-02, TEST-034).
 //
 // A declarative table of the sensitive fields the platform stores and who may read each
@@ -51,6 +53,9 @@ export interface FieldPolicyViewer {
 
 const ADMINS = ["admin", "super_admin"] as const;
 
+/** The relationship a viewer has to a profile whose owner opened `field` to signed-in members. */
+export const memberVisibleRelationship = (field: string) => `member-visible:${field}`;
+
 export const FIELD_POLICY: readonly FieldPolicyEntry[] = [
   { field: "passwordHash", sensitivity: "credential", roles: [], relationships: [] },
   { field: "tokenHash", sensitivity: "credential", roles: [], relationships: [] },
@@ -62,4 +67,15 @@ export const FIELD_POLICY: readonly FieldPolicyEntry[] = [
   { field: "lastLoginAt", sensitivity: "activity", roles: ADMINS, relationships: [] },
   { field: "approvedById", sensitivity: "approval", roles: ADMINS, relationships: [] },
   { field: "approvedAt", sensitivity: "approval", roles: ADMINS, relationships: ["self"] },
+  // Profile fields the member controls (TASK-025, DEC-015, PRD-052). Private unless the owner
+  // chose "members": the members endpoint supplies the "member-visible:<field>" relationship for
+  // exactly the fields the owner opened up. Staff always read them; nobody else does by default.
+  ...PROFILE_PRIVACY_FIELDS.map(
+    (field): FieldPolicyEntry => ({
+      field,
+      sensitivity: "personal",
+      roles: ADMINS,
+      relationships: ["self", memberVisibleRelationship(field)],
+    }),
+  ),
 ];

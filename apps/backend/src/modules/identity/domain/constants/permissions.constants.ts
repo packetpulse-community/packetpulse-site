@@ -19,6 +19,8 @@ export const PERMISSIONS = {
   ADMIN_MANAGE_SETTINGS: "admin:manage-settings",
   CATEGORIES_MANAGE: "categories:manage",
   SKILLS_MANAGE: "skills:manage",
+  // Held by no role: only the super_admin bypass passes (DEC-015, PRD-044).
+  POLICIES_MANAGE: "policies:manage",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

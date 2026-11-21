@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RegistrationConsentsSchema } from "./consent";
 
 // Single source of truth for new-password strength — the backend validates with
 // PasswordSchema, and the frontend renders PASSWORD_RULES as a live checklist, so
@@ -30,11 +31,16 @@ export const RegisterSchema = z.object({
   password: PasswordSchema,
   whatsappNumber: z.string().optional(),
   professionalExperience: ProfessionalExperienceSchema.optional(),
+  // What the member accepted, by policy version (TASK-025, PRD-010). Replaces the client-only
+  // terms tick: the Terms and the Privacy Policy must be in the list.
+  consents: RegistrationConsentsSchema,
   captchaToken,
 });
 export type RegisterDto = z.infer<typeof RegisterSchema>;
 
 export const RegisterAdminSchema = RegisterSchema.extend({
+  // Admin sign-up predates consent capture; an admin without records is asked at first sign-in.
+  consents: RegistrationConsentsSchema.optional(),
   adminSecureCode: z.string().min(1),
 });
 export type RegisterAdminDto = z.infer<typeof RegisterAdminSchema>;

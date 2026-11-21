@@ -24,6 +24,8 @@ const PERMISSIONS = [
   "admin:manage-settings",
   "categories:manage",
   "skills:manage",
+  // Super admin only (no role is granted it): publishing consent-policy versions.
+  "policies:manage",
 ] as const;
 
 const MEMBER_PERMISSIONS = ["blogs:create", "resources:create", "recordings:create", "forums:create", "quizzes:attempt"] as const;

@@ -89,6 +89,8 @@ model User {
   memberSkills            MemberSkill[]
   skillSuggestions        SkillSuggestion[]
   skillSightings          SkillSuggestionSighting[]
+  consentRecords          ConsentRecord[]
+  profilePrivacy          ProfilePrivacy?
 }
 
 model UserCertification {
@@ -824,6 +826,7 @@ enum AdminActivityAction {
   skill_suggestion_merged
   skill_suggestion_rejected
   skill_suggestion_auto_merged
+  consent_policy_published
 }
 
 model AdminActivityLog {
@@ -1084,4 +1087,83 @@ model MemberSkill {
   @@id([userId, skillId])
   @@index([skillId])
   @@map("member_skills")
+}
+
+// ---------------------------------------------------------------------------
+// Consent and profile privacy (TASK-025, PRD-010, PRD-045, DB-004, API-008)
+// ---------------------------------------------------------------------------
+
+enum ConsentPurpose {
+  terms
+  privacy
+  resume_sharing
+  recruitment_sharing
+}
+
+enum ConsentAction {
+  granted
+  withdrawn
+}
+
+enum ConsentSource {
+  registration
+  consent_centre
+  recapture
+}
+
+// One published version of a policy text. A super admin adds a new version (audited);
+// versions are never edited, so a consent record always points at the exact text shown.
+model ConsentPolicy {
+  id          String         @id @default(uuid())
+  purpose     ConsentPurpose
+  version     Int
+  title       String
+  summary     String
+  effectiveAt DateTime       @default(now()) @map("effective_at")
+  createdById String?        @map("created_by_id")
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  records ConsentRecord[]
+
+  @@unique([purpose, version])
+  @@map("consent_policies")
+}
+
+// Append-only history (a trigger rejects UPDATE): every grant and every withdrawal is a new
+// row. The member's current state is their latest row per purpose. Rows go with the account
+// (cascade) until the erasure workflow (TASK-046) decides what proof must be kept.
+model ConsentRecord {
+  id            String         @id @default(uuid())
+  userId        String         @map("user_id")
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose       ConsentPurpose
+  action        ConsentAction
+  policyVersion Int            @map("policy_version")
+  policy        ConsentPolicy  @relation(fields: [purpose, policyVersion], references: [purpose, version])
+  source        ConsentSource
+  // HMAC of the request IP (never the address itself); optional proof of where it was given.
+  ipHash        String?        @map("ip_hash")
+  createdAt     DateTime       @default(now()) @map("created_at")
+
+  @@index([userId, purpose, createdAt])
+  @@map("consent_records")
+}
+
+// "public" is deliberately absent: no public web profile at launch (PRD-052, OPEN-19).
+enum ProfileVisibility {
+  private
+  members
+}
+
+// One row per member, created when they first change a setting; no row means every field is private.
+model ProfilePrivacy {
+  userId                 String            @id @map("user_id")
+  user                   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio                    ProfileVisibility @default(private)
+  professionalExperience ProfileVisibility @default(private) @map("professional_experience")
+  socialLinks            ProfileVisibility @default(private) @map("social_links")
+  certifications         ProfileVisibility @default(private)
+  updatedAt              DateTime          @updatedAt @map("updated_at")
+
+  @@map("profile_privacy")
 }
