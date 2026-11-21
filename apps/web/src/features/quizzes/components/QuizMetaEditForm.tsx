@@ -57,17 +57,17 @@ export function QuizMetaEditForm({ quiz }: { quiz: QuizForAuthoring }) {
   });
 
   return (
-    <form onSubmit={handleSubmit((values) => mutation.mutate(values))} className="glass-panel flex flex-col gap-4 rounded-lg p-4">
+    <form onSubmit={handleSubmit((values) => mutation.mutate(values))} className="rounded-grove-card border border-border bg-surface text-text flex flex-col gap-4 p-4">
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">Title</label>
         <input className={inputClass} {...register("title")} />
-        {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
+        {errors.title && <p className="text-sm text-danger">{errors.title.message}</p>}
       </div>
 
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">Description</label>
         <textarea rows={3} className={inputClass} {...register("description")} />
-        {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
+        {errors.description && <p className="text-sm text-danger">{errors.description.message}</p>}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -139,7 +139,7 @@ export function QuizMetaEditForm({ quiz }: { quiz: QuizForAuthoring }) {
         Published
       </label>
 
-      {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+      {errors.root && <p className="text-sm text-danger">{errors.root.message}</p>}
 
       <Button type="submit" variant="gradient" className="w-fit" disabled={isSubmitting || mutation.isPending}>
         {mutation.isPending ? "Saving…" : "Save changes"}

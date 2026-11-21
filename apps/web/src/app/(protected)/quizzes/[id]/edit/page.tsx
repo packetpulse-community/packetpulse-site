@@ -18,14 +18,14 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
 
       <QuizMetaEditForm quiz={quiz} />
 
-      <p className="text-sm text-muted-foreground">Questions (read-only)</p>
+      <p className="text-sm text-text-secondary">Questions (read-only)</p>
 
       {quiz.questions.map((question, qIndex) => (
-        <div key={question.id} className="glass-panel flex flex-col gap-2 rounded-lg p-4">
+        <div key={question.id} className="rounded-grove-card border border-border bg-surface text-text flex flex-col gap-2 p-4">
           <p className="font-medium">
             {qIndex + 1}. {question.questionText}
           </p>
-          <ul className="flex flex-col gap-1 pl-4 text-sm text-muted-foreground">
+          <ul className="flex flex-col gap-1 pl-4 text-sm text-text-secondary">
             {question.options.map((option) => (
               <li key={option.id}>
                 {option.isCorrect ? "✅" : "◻️"} {option.optionText}

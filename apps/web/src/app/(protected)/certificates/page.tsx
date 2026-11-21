@@ -13,14 +13,14 @@ export default async function CertificatesPage() {
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2 text-center">
         <h1 className="text-3xl font-semibold">My Certificates</h1>
-        <p className="text-muted-foreground">Certificates you've earned by passing quizzes.</p>
+        <p className="text-text-secondary">Certificates you've earned by passing quizzes.</p>
       </div>
       <div className="flex flex-col gap-3">
         {certificates.map((cert) => (
           <Card key={cert.id} variant="glass" className="flex items-center justify-between p-4">
             <div>
               <p className="font-medium">{cert.quiz.title}</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-text-secondary">
                 {cert.certificateNumber} · issued {new Date(cert.issuedAt).toLocaleDateString()}
               </p>
             </div>

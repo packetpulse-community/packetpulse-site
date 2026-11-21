@@ -9,10 +9,10 @@ export function AttemptHistory({ attempts }: { attempts: QuizAttemptWithCertific
       <h2 className="text-lg font-semibold">Your Past Attempts</h2>
       <ul className="flex flex-col gap-2">
         {attempts.map((attempt) => (
-          <li key={attempt.id} className="glass-panel flex items-center justify-between rounded-md p-3">
+          <li key={attempt.id} className="rounded-grove-card border border-border bg-surface text-text flex items-center justify-between p-3">
             <div>
               <p className="text-sm">{new Date(attempt.startedAt).toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-text-secondary">
                 {attempt.status === "in_progress"
                   ? "In progress"
                   : attempt.status === "expired"

@@ -65,19 +65,19 @@ function CategoryForm({
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">Name</label>
           <input className={inputClass} {...register("name")} />
-          {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+          {errors.name && <p className="text-sm text-danger">{errors.name.message}</p>}
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">Slug</label>
           <input className={inputClass} {...register("slug")} placeholder="e.g. network-automation" />
-          {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
+          {errors.slug && <p className="text-sm text-danger">{errors.slug.message}</p>}
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">Description (optional)</label>
           <textarea rows={2} className={inputClass} {...register("description")} />
         </div>
 
-        {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
+        {errors.root && <p role="alert" className="text-sm text-danger">{errors.root.message}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>
@@ -128,13 +128,13 @@ export function CategoriesTable({ categories }: { categories: Category[] }) {
         </Button>
       </div>
 
-      <Card variant="glass" className="flex flex-col divide-y divide-border p-0">
+      <Card className="flex flex-col divide-y divide-border p-0">
         {categories.map((category, index) => (
           <div key={category.id} className="flex items-center justify-between gap-4 p-4">
             <div className="flex flex-col">
               <span className="font-medium">{category.name}</span>
-              <span className="text-sm text-muted-foreground">/{category.slug}</span>
-              {category.description && <span className="text-sm text-muted-foreground">{category.description}</span>}
+              <span className="text-sm text-text-secondary">/{category.slug}</span>
+              {category.description && <span className="text-sm text-text-secondary">{category.description}</span>}
             </div>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" onClick={() => move(index, -1)} disabled={index === 0} aria-label={`Move ${category.name} up`}>

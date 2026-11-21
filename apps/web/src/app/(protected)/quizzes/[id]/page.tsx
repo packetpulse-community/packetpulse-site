@@ -15,7 +15,7 @@ export default async function QuizDetailPage({ params }: { params: Promise<{ id:
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold">{quiz.title}</h1>
-        <p className="text-muted-foreground">{quiz.description}</p>
+        <p className="text-text-secondary">{quiz.description}</p>
       </header>
 
       <QuizAttempt quiz={quiz} status={mine.status} />

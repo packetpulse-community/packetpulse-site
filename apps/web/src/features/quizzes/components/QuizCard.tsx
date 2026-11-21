@@ -7,8 +7,8 @@ export function QuizCard({ quiz }: { quiz: QuizSummary }) {
   return (
     <Link href={`/quizzes/${quiz.id}`} className={cn(cardVariants({ variant: "glass" }), "flex flex-col gap-2 p-4")}>
       <h2 className="text-lg font-semibold">{quiz.title}</h2>
-      <p className="line-clamp-2 text-sm text-muted-foreground">{quiz.description}</p>
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      <p className="line-clamp-2 text-sm text-text-secondary">{quiz.description}</p>
+      <div className="flex items-center gap-3 text-xs text-text-secondary">
         <span>{quiz.category.name}</span>
         <span>·</span>
         <span>{quiz._count.questions} questions</span>

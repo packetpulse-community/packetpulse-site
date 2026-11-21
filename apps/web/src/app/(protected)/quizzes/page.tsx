@@ -17,7 +17,7 @@ export default async function QuizzesPage() {
     <div className="flex flex-col gap-8">
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-3xl font-semibold">Test Your Knowledge</h1>
-        <p className="text-muted-foreground">
+        <p className="text-text-secondary">
           Take quizzes on networking topics, track your progress, and earn certificates as you go.
         </p>
         {canAuthor && (

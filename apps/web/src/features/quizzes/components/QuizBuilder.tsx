@@ -99,13 +99,13 @@ export function QuizBuilder() {
 
   return (
     <form onSubmit={handleSubmit((dto) => mutation.mutate(dto))} className="flex flex-col gap-6">
-      <div className="glass-panel flex flex-col gap-4 rounded-lg p-4">
+      <div className="rounded-grove-card border border-border bg-surface text-text flex flex-col gap-4 p-4">
         <div className="flex flex-col gap-1">
           <label htmlFor="title" className="text-sm font-medium">
             Title
           </label>
           <input id="title" className={inputClass} {...register("title")} />
-          {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
+          {errors.title && <p className="text-sm text-danger">{errors.title.message}</p>}
         </div>
 
         <div className="flex flex-col gap-1">
@@ -113,7 +113,7 @@ export function QuizBuilder() {
             Description
           </label>
           <textarea id="description" rows={3} className={inputClass} {...register("description")} />
-          {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
+          {errors.description && <p className="text-sm text-danger">{errors.description.message}</p>}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -194,7 +194,7 @@ export function QuizBuilder() {
       </div>
 
       {questionFields.map((field, questionIndex) => (
-        <fieldset key={field.id} className="glass-panel flex flex-col gap-3 rounded-lg p-4">
+        <fieldset key={field.id} className="rounded-grove-card border border-border bg-surface text-text flex flex-col gap-3 p-4">
           <legend className="px-1 font-medium">Question {questionIndex + 1}</legend>
 
           <input
@@ -203,7 +203,7 @@ export function QuizBuilder() {
             {...register(`questions.${questionIndex}.questionText`)}
           />
           {errors.questions?.[questionIndex]?.questionText && (
-            <p className="text-sm text-destructive">{errors.questions[questionIndex]?.questionText?.message}</p>
+            <p className="text-sm text-danger">{errors.questions[questionIndex]?.questionText?.message}</p>
           )}
 
           <div className="flex gap-4">
@@ -254,7 +254,7 @@ export function QuizBuilder() {
         Add question
       </Button>
 
-      {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
+      {errors.root && <p className="text-sm text-danger">{errors.root.message}</p>}
 
       <button type="submit" disabled={isSubmitting || mutation.isPending} className={cn(buttonVariants({ variant: "gradient" }), "w-fit")}>
         {mutation.isPending ? "Creating…" : "Create quiz"}

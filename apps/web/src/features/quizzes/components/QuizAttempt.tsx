@@ -36,13 +36,20 @@ function TimerBadge({ deadlineAt, offsetMs, onExpire }: { deadlineAt: string; of
     return () => clearInterval(interval);
   }, [deadlineAt, offsetMs]);
 
+  const low = remaining <= 30;
+
   return (
     <span
       role="timer"
       aria-label={`Time remaining ${formatClock(remaining)}`}
-      className={cn("rounded-md px-2 py-1 text-sm font-medium", remaining <= 30 ? "text-destructive" : "text-muted-foreground")}
+      className={cn(
+        "rounded-md px-2 py-1 text-sm font-medium tabular-nums",
+        low ? "bg-danger-soft text-danger" : "text-text-secondary",
+      )}
     >
+      {low ? <span aria-hidden="true">⚠ </span> : null}
       {formatClock(remaining)}
+      {low ? <span className="ml-1">left</span> : null}
     </span>
   );
 }
@@ -113,18 +120,21 @@ export function QuizAttempt({ quiz, status }: { quiz: QuizForTaking; status: Qui
 
   if (result) {
     return (
-      <div className="glass-panel flex flex-col gap-4 rounded-lg p-6 text-center">
-        <h2 className="text-2xl font-semibold">{result.passed ? "You passed! 🎉" : "Not quite there"}</h2>
+      <div className="rounded-grove-card border border-border bg-surface text-text flex flex-col gap-4 p-6 text-center">
+        <h2 className={cn("text-2xl font-semibold", result.passed ? "text-success" : "text-danger")}>
+          <span aria-hidden="true">{result.passed ? "✓ " : "✕ "}</span>
+          {result.passed ? "You passed!" : "Not quite there"}
+        </h2>
         <p className="text-lg">Score: {result.scorePct}%</p>
         {result.certificate ? (
           <div className="flex flex-col gap-2">
-            <p className="text-muted-foreground">Certificate issued: {result.certificate.certificateNumber}</p>
-            <Link href="/certificates" className="text-primary underline">
+            <p className="text-text-secondary">Certificate issued: {result.certificate.certificateNumber}</p>
+            <Link href="/certificates" className="text-primary-text underline">
               View my certificates
             </Link>
           </div>
         ) : (
-          <p className="text-muted-foreground">You need {quiz.passingScorePct}% to pass.</p>
+          <p className="text-text-secondary">You need {quiz.passingScorePct}% to pass.</p>
         )}
       </div>
     );
@@ -132,10 +142,10 @@ export function QuizAttempt({ quiz, status }: { quiz: QuizForTaking; status: Qui
 
   if (timeUp && running) {
     return (
-      <div role="alert" className="glass-panel flex flex-col gap-2 rounded-lg p-6">
+      <div role="alert" className="rounded-grove-card border border-border bg-surface text-text flex flex-col gap-2 p-6">
         <h2 className="text-lg font-semibold">Time is up</h2>
-        <p className="text-muted-foreground">{error ?? "The time limit for this attempt has passed, so it can no longer be submitted."}</p>
-        <p className="text-sm text-muted-foreground">This attempt still counts towards your attempt limit.</p>
+        <p className="text-text-secondary">{error ?? "The time limit for this attempt has passed, so it can no longer be submitted."}</p>
+        <p className="text-sm text-text-secondary">This attempt still counts towards your attempt limit.</p>
         <button
           onClick={() => {
             setRunning(null);
@@ -154,8 +164,8 @@ export function QuizAttempt({ quiz, status }: { quiz: QuizForTaking; status: Qui
   if (!running) {
     const blocked = describeBlock(status.blockedReason, status.nextAttemptAt);
     return (
-      <div className="glass-panel flex flex-col gap-4 rounded-lg p-6">
-        <p className="text-muted-foreground">
+      <div className="rounded-grove-card border border-border bg-surface text-text flex flex-col gap-4 p-6">
+        <p className="text-text-secondary">
           {quiz.questions.length} questions · pass at {quiz.passingScorePct}%
           {quiz.timeLimitSeconds ? ` · ${formatClock(quiz.timeLimitSeconds)} time limit` : ""}
         </p>
@@ -166,10 +176,10 @@ export function QuizAttempt({ quiz, status }: { quiz: QuizForTaking; status: Qui
           {status.quizExpiresAt && !status.blockedReason ? ` · closes ${new Date(status.quizExpiresAt).toLocaleString()}` : ""}
         </p>
         {quiz.timeLimitSeconds ? (
-          <p className="text-sm text-muted-foreground">The timer starts when you press Start and cannot be paused. Late answers are not accepted.</p>
+          <p className="text-sm text-text-secondary">The timer starts when you press Start and cannot be paused. Late answers are not accepted.</p>
         ) : null}
         {(blocked || error) && (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-sm text-danger">
             {error ?? blocked}
           </p>
         )}
@@ -193,14 +203,14 @@ export function QuizAttempt({ quiz, status }: { quiz: QuizForTaking; status: Qui
       className="flex flex-col gap-6"
     >
       {running.deadlineAt && (
-        <div className="glass-panel sticky top-2 z-10 flex items-center justify-between rounded-lg p-3">
-          <span className="text-sm text-muted-foreground">Time remaining</span>
+        <div className="rounded-grove-card border border-border bg-surface text-text sticky top-2 z-10 flex items-center justify-between p-3">
+          <span className="text-sm text-text-secondary">Time remaining</span>
           <TimerBadge deadlineAt={running.deadlineAt} offsetMs={running.offsetMs} onExpire={() => setTimeUp(true)} />
         </div>
       )}
 
       {quiz.questions.map((question, qIndex) => (
-        <fieldset key={question.id} className="glass-panel flex flex-col gap-2 rounded-lg p-4">
+        <fieldset key={question.id} className="rounded-grove-card border border-border bg-surface text-text flex flex-col gap-2 p-4">
           <legend className="px-1 font-medium">
             {qIndex + 1}. {question.questionText}
           </legend>
@@ -222,7 +232,7 @@ export function QuizAttempt({ quiz, status }: { quiz: QuizForTaking; status: Qui
       ))}
 
       {error && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-sm text-danger">
           {error}
         </p>
       )}
