@@ -43,7 +43,7 @@ export function BlogFilters({ availableTags = [] }: { availableTags?: string[] }
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="glass-panel flex flex-col gap-3 rounded-lg p-4 sm:flex-row sm:items-center">
+      <div className="rounded-grove-card border border-border bg-surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}

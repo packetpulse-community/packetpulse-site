@@ -36,7 +36,7 @@ export function CommentSection({ postId, initialComments }: { postId: string; in
             e.preventDefault();
             if (content.trim()) mutation.mutate();
           }}
-          className="glass-panel flex gap-2 rounded-lg p-3"
+          className="rounded-grove-card border border-border bg-surface flex gap-2 p-3"
         >
           <input
             value={content}
@@ -49,7 +49,7 @@ export function CommentSection({ postId, initialComments }: { postId: string; in
           </button>
         </form>
       ) : (
-        <div className="glass-panel flex items-center justify-between gap-2 rounded-lg p-3">
+        <div className="rounded-grove-card border border-border bg-surface flex items-center justify-between gap-2 p-3">
           <p className="text-sm text-muted-foreground">Log in to join the discussion.</p>
           <Button variant="glass" size="sm" onClick={() => router.push("/login")}>
             Log in
@@ -59,7 +59,7 @@ export function CommentSection({ postId, initialComments }: { postId: string; in
 
       <ul className="flex flex-col gap-3">
         {initialComments.map((comment) => (
-          <li key={comment.id} className="glass-panel rounded-md p-3">
+          <li key={comment.id} className="rounded-grove-control border border-border bg-surface p-3">
             <p className="text-sm">{comment.content}</p>
             <p className="mt-1 text-xs text-muted-foreground">
               {comment.user.firstName} {comment.user.lastName}

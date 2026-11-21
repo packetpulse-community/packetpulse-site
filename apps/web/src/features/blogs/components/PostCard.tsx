@@ -34,7 +34,7 @@ export function PostCard({ post }: { post: BlogPostSummary }) {
             {new Date(post.postedAt).toLocaleDateString()}
           </span>
         </div>
-        <div className="flex items-center gap-3 border-t border-glass-border pt-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 border-t border-border pt-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <ThumbsUp className="h-3 w-3" />
             {post._count.likes}

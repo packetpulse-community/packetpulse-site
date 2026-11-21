@@ -15,11 +15,11 @@ export function RelatedIllustrations({ images }: { images: BlogImage[] }) {
             href={image.url}
             target="_blank"
             rel="noreferrer"
-            className="glass-panel glass-interactive group flex flex-col overflow-hidden rounded-lg"
+            className="rounded-grove-card border border-border bg-surface group flex flex-col overflow-hidden transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring"
           >
             <div className="relative">
               <img src={image.url} alt={`Figure ${index + 1}`} className="h-48 w-full object-cover" />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/0 text-sm text-white opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
+              <div className="absolute inset-0 flex items-center justify-center bg-transparent text-sm text-grove-on-brand opacity-0 transition group-hover:bg-grove-scrim group-hover:opacity-100">
                 Click to enlarge
               </div>
             </div>
