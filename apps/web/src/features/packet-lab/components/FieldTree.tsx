@@ -23,21 +23,21 @@ function FieldRow({ field, depth, highlight, onHighlight }: { field: Field; dept
       onClick={() => onHighlight(active ? null : { offset: field.offset, length: field.length })}
       aria-pressed={active}
       className={cn(
-        "flex w-full flex-col items-start gap-0.5 rounded px-2 py-1 text-left hover:bg-white/5",
-        active && "bg-amber-400/15 outline outline-1 -outline-offset-1 outline-amber-300",
+        "flex w-full flex-col items-start gap-0.5 rounded px-2 py-1 text-left hover:bg-surface-subtle",
+        active && "bg-warning-soft outline outline-1 -outline-offset-1 outline-warning",
       )}
       style={{ paddingLeft: 8 + depth * 14 }}
     >
       <span className="font-mono text-xs">
-        <span className="text-slate-400">{field.name}: </span>
-        <span className={cn("text-slate-100", field.status === "bad" && "text-red-300", field.status === "ok" && "text-emerald-300")}>
+        <span className="text-text-secondary">{field.name}: </span>
+        <span className={cn("text-text", field.status === "bad" && "text-danger", field.status === "ok" && "text-success")}>
           {field.value}
         </span>
-        <span className="ml-2 text-[11px] text-slate-500">
+        <span className="ml-2 text-[11px] text-text-secondary">
           {field.length} {field.length === 1 ? "byte" : "bytes"} @ {field.offset}
         </span>
       </span>
-      {field.note && <span className="font-sans text-xs text-slate-400">{field.note}</span>}
+      {field.note && <span className="font-sans text-xs text-text-secondary">{field.note}</span>}
     </button>
   );
   if (!hasChildren) return row;
@@ -53,18 +53,18 @@ function FieldRow({ field, depth, highlight, onHighlight }: { field: Field; dept
 
 function LayerBlock({ layer, highlight, onHighlight }: { layer: Layer; highlight: ByteRange | null; onHighlight: Props["onHighlight"] }) {
   return (
-    <details open className="rounded-md border border-border bg-black/20">
+    <details open className="rounded-md border border-border bg-surface">
       <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm font-semibold">
         <span>{layer.name}</span>
-        <span className="flex items-center gap-2 text-[11px] font-normal text-slate-400">
-          <span className="rounded bg-white/10 px-1.5 py-0.5">OSI layer {layer.osi}</span>
+        <span className="flex items-center gap-2 text-[11px] font-normal text-text-secondary">
+          <span className="rounded bg-surface-subtle px-1.5 py-0.5">OSI layer {layer.osi}</span>
           <button
             type="button"
             onClick={(e) => {
               e.preventDefault();
               onHighlight({ offset: layer.offset, length: layer.length });
             }}
-            className="rounded bg-white/10 px-1.5 py-0.5 hover:bg-white/20"
+            className="rounded bg-surface-subtle px-1.5 py-0.5 hover:bg-border"
           >
             {layer.length} bytes: show in hex
           </button>
