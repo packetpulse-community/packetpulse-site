@@ -14,6 +14,7 @@ overrides:
   multer@<2.5.0: ^2.5.0
   proxy-addr@<2.0.8: ^2.0.8
   source-map-js@<1.2.2: ^1.2.2
+  '@napi-rs/canvas': '-'
 
 importers:
 
@@ -91,6 +92,9 @@ importers:
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
       helmet:
         specifier: ^8.0.0
         version: 8.3.0
@@ -115,6 +119,9 @@ importers:
       passport-jwt:
         specifier: ^4.0.1
         version: 4.0.1
+      pdfjs-dist:
+        specifier: 6.4.299
+        version: 6.4.299
       pino-http:
         specifier: ^10.3.0
         version: 10.5.0
@@ -4713,6 +4720,10 @@ packages:
 
   pause@0.0.1:
     resolution: {integrity: sha512-KG8UEiEVkR3wGEb4m5yZkVCzigAD+cVEJck2CzYZO37ZGJfctvVptVO192MwrtPhzONn6go8ylnOdMhKqi4nfg==}
+
+  pdfjs-dist@6.4.299:
+    resolution: {integrity: sha512-AVl138zALtfaAPvADulE0PZThbYzCBS79nL4pOSL/6Sm/4AH5A21BD9VHt97OlCuzJuCpmeZtAtkinisF4Vb1g==}
+    engines: {node: '>=22.13.0 || >=24'}
 
   pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
@@ -10730,6 +10741,8 @@ snapshots:
   pathval@2.0.1: {}
 
   pause@0.0.1: {}
+
+  pdfjs-dist@6.4.299: {}
 
   pg-int8@1.0.1: {}
 
