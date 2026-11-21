@@ -3,6 +3,10 @@ export function describeNotification(type: string, payload: Record<string, unkno
   switch (type) {
     case "forum_reply":
       return `New reply on "${payload.threadTitle ?? "your thread"}"`;
+    case "forum_answer_accepted":
+      return `Your answer was accepted on "${payload.threadTitle ?? "a thread"}"`;
+    case "forum_post_removed":
+      return `A moderator removed your post${payload.reason ? `: ${payload.reason}` : ""}`;
     case "blog_comment":
       return `New comment on "${payload.blogPostTitle ?? "your post"}"`;
     case "approval":
@@ -20,7 +24,7 @@ export function describeNotification(type: string, payload: Record<string, unkno
 
 // Only routes that exist today; undefined = the notification has no page to open.
 export function notificationHref(type: string, payload: Record<string, unknown>): string | undefined {
-  if (type === "forum_reply" && typeof payload.threadId === "string") return `/forums/${payload.threadId}`;
+  if ((type === "forum_reply" || type === "forum_answer_accepted" || type === "forum_post_removed") && typeof payload.threadId === "string") return `/forums/${payload.threadId}`;
   if (type === "certificate_issued") return "/certificates";
   return undefined;
 }

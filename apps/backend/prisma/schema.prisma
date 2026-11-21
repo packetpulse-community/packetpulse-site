@@ -85,13 +85,16 @@ model User {
   forumThreads         ForumThread[]
   forumReplies         ForumReply[]
   forumReplyLikes      ForumReplyLike[]
+  forumReportsMade              ForumReport[]                  @relation("ForumReportReporter")
+  forumReportsResolved          ForumReport[]                  @relation("ForumReportResolver")
+  forumGuidelines               ForumGuidelineVersion[]
+  forumGuidelineAcceptances     ForumGuidelineAcceptance[]
+  forumReputationEvents         ForumReputationEvent[]         @relation("ReputationEarner")
   quizzesCreated       Quiz[]
   quizAttempts         QuizAttempt[]
   certificates         Certificate[]
   notifications        Notification[]
   activityLogActions   AdminActivityLog[]
-
-  @@map("users")
   storedFiles StoredFile[]
   notificationSettings    NotificationSettings?
   notificationPreferences NotificationPreference[]
@@ -102,6 +105,8 @@ model User {
   skillSightings          SkillSuggestionSighting[]
   consentRecords          ConsentRecord[]
   profilePrivacy          ProfilePrivacy?
+
+  @@map("users")
 }
 
 model UserCertification {
@@ -510,8 +515,17 @@ model ForumThread {
   lastReplyAt DateTime @default(now()) @map("last_reply_at")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+  // TASK-026 (PRD-024/025): Learning, Production issue or Expert design; one accepted answer.
+  mode            ForumThreadMode @default(learning)
+  acceptedReplyId String?         @unique @map("accepted_reply_id")
+  acceptedReply   ForumReply?     @relation("ThreadAccepted", fields: [acceptedReplyId], references: [id], onDelete: SetNull)
+  acceptedAt      DateTime?       @map("accepted_at")
+  // Soft removal by a moderator (DB-013): the row stays, the text is hidden, the reason is shown to the author.
+  removedAt       DateTime?       @map("removed_at")
+  removedReason   String?         @map("removed_reason")
 
   replies ForumReply[]
+  reports ForumReport[]
 
   @@unique([categoryId, slug])
   @@index([categoryId, lastReplyAt])
@@ -531,8 +545,12 @@ model ForumReply {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
   editedAt       DateTime? @map("edited_at")
+  removedAt     DateTime?    @map("removed_at")
+  removedReason String?      @map("removed_reason")
 
   likes ForumReplyLike[]
+  acceptedFor ForumThread?     @relation("ThreadAccepted")
+  reports     ForumReport[]
 
   @@index([threadId, createdAt])
   @@map("forum_replies")
@@ -548,6 +566,108 @@ model ForumReplyLike {
   @@id([replyId, userId])
   @@index([userId])
   @@map("forum_reply_likes")
+}
+
+enum ForumThreadMode {
+  learning
+  production
+  expert
+}
+
+enum ForumReportReason {
+  spam
+  off_topic
+  harassment
+  sensitive_data
+  assessment_answers
+  other
+}
+
+enum ForumReportStatus {
+  open
+  dismissed
+  removed
+}
+
+// TASK-026 (PRD-025/028, API-023): a member reports a thread or a reply. One report per reporter
+// per post (the two unique indexes; a null column never collides). Urgent reasons (exposed
+// credentials, harassment) carry the 4-hour target of Document 1 section 10.4.
+model ForumReport {
+  id           String            @id @default(uuid())
+  reporterId   String            @map("reporter_id")
+  reporter     User              @relation("ForumReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  threadId     String?           @map("thread_id")
+  thread       ForumThread?      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  replyId      String?           @map("reply_id")
+  reply        ForumReply?       @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  reason       ForumReportReason
+  details      String?
+  urgent       Boolean           @default(false)
+  status       ForumReportStatus @default(open)
+  resolvedById String?           @map("resolved_by_id")
+  resolvedBy   User?             @relation("ForumReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt   DateTime?         @map("resolved_at")
+  resolution   String?
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  @@unique([reporterId, threadId])
+  @@unique([reporterId, replyId])
+  @@index([status, urgent, createdAt])
+  @@map("forum_reports")
+}
+
+// Guidelines text, one row per published version (DB-030, PRD-054). Never edited in place.
+model ForumGuidelineVersion {
+  id          String   @id @default(uuid())
+  version     Int      @unique
+  body        String
+  createdById String?  @map("created_by_id")
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("forum_guideline_versions")
+}
+
+// Which version a member accepted and when. Kept apart from the consent module: its purposes are
+// privacy consents; these are community rules (DB-030 is its own record).
+model ForumGuidelineAcceptance {
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  version    Int
+  acceptedAt DateTime @default(now()) @map("accepted_at")
+
+  @@id([userId, version])
+  @@map("forum_guideline_acceptances")
+}
+
+enum ForumReputationKind {
+  answer_accepted
+  helpful_vote
+  post_removed
+  reversal
+}
+
+// Append-only ledger (PRD-026). A member's reputation is SUM(points); nothing updates or deletes
+// a row, so the total can always be recomputed. A reversal row points back at the event it
+// cancels (unique: an event is reversed once). contentId has no foreign key on purpose: the
+// ledger must outlive deleted posts.
+model ForumReputationEvent {
+  id          String                @id @default(uuid())
+  userId      String                @map("user_id")
+  user        User                  @relation("ReputationEarner", fields: [userId], references: [id], onDelete: Cascade)
+  kind        ForumReputationKind
+  points      Int
+  contentType String                @map("content_type")
+  contentId   String                @map("content_id")
+  actorId     String?               @map("actor_id")
+  reversesId  String?               @unique @map("reverses_id")
+  reverses    ForumReputationEvent? @relation("Reversal", fields: [reversesId], references: [id])
+  reversedBy  ForumReputationEvent? @relation("Reversal")
+  createdAt   DateTime              @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([contentType, contentId])
+  @@map("forum_reputation_events")
 }
 
 // ---------------------------------------------------------------------------
@@ -696,6 +816,8 @@ enum NotificationType {
   role_change
   certificate_issued
   security_alert
+  forum_answer_accepted
+  forum_post_removed
 }
 
 model Notification {
@@ -865,6 +987,10 @@ enum AdminActivityAction {
   skill_suggestion_rejected
   skill_suggestion_auto_merged
   consent_policy_published
+  forum_report_dismissed
+  forum_report_removed
+  forum_answer_accepted
+  forum_guidelines_published
 }
 
 model AdminActivityLog {

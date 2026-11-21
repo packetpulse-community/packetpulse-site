@@ -19,6 +19,8 @@ export type EmailTemplate =
 // Subject per event type. Fixed strings on purpose (PRD-041 privacy rule: nothing private in a subject).
 const EVENT_SUBJECTS: Record<string, string> = {
   forum_reply: "New reply to your PacketPulse thread",
+  forum_answer_accepted: "Your answer was accepted on PacketPulse",
+  forum_post_removed: "A moderator removed your PacketPulse post",
   blog_comment: "New comment on your PacketPulse post",
   approval: "An update on your PacketPulse account",
   role_change: "Your PacketPulse roles changed",

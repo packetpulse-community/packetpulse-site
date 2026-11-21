@@ -11,6 +11,8 @@ export type NotificationChannel = z.infer<typeof NotificationChannelSchema>;
 
 export const NOTIFICATION_EVENT_TYPES = [
   "forum_reply",
+  "forum_answer_accepted",
+  "forum_post_removed",
   "blog_comment",
   "approval",
   "role_change",
@@ -61,6 +63,22 @@ export const NOTIFICATION_EVENTS: readonly NotificationEventMeta[] = [
     label: "Replies to your forum threads",
     description: "Someone answered a thread you started.",
     channels: { in_app: IN_APP, email: email(false), whatsapp: NO },
+    critical: false,
+    emitted: true,
+  },
+  {
+    type: "forum_answer_accepted",
+    label: "Your answer was accepted",
+    description: "The asker accepted your answer in a forum thread.",
+    channels: { in_app: IN_APP, email: email(false), whatsapp: NO },
+    critical: false,
+    emitted: true,
+  },
+  {
+    type: "forum_post_removed",
+    label: "A moderator removed your post",
+    description: "A moderator removed a thread or reply of yours and gave a reason.",
+    channels: { in_app: IN_APP, email: email(true), whatsapp: NO },
     critical: false,
     emitted: true,
   },
