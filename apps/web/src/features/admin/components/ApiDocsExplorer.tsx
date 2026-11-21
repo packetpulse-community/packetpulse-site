@@ -83,8 +83,8 @@ export function ApiDocsExplorer() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-      <Card variant="glass" className="flex flex-col gap-1 p-3">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <Card variant="glass" className="flex min-w-0 flex-col gap-1 p-3">
         <h2 className="mb-1 px-1 text-sm font-semibold text-muted-foreground">Endpoints</h2>
         {ENDPOINTS.map((entry) => (
           <button
@@ -94,7 +94,7 @@ export function ApiDocsExplorer() {
           >
             <span className="flex items-center gap-2 text-xs">
               <span className={cn("font-mono font-semibold", METHOD_COLOR[entry.method])}>{entry.method}</span>
-              <span className="font-mono">{entry.path}</span>
+              <span className="min-w-0 break-all font-mono">{entry.path}</span>
             </span>
             <span className="text-xs text-muted-foreground">{entry.description}</span>
             <Badge variant="glass" className="w-fit text-[10px]">
@@ -104,9 +104,9 @@ export function ApiDocsExplorer() {
         ))}
       </Card>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-4">
         <Card variant="glass" className="flex flex-col gap-3 p-4">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <select
               value={method}
               onChange={(e) => setMethod(e.target.value as EndpointEntry["method"])}
@@ -121,7 +121,7 @@ export function ApiDocsExplorer() {
               value={path}
               onChange={(e) => setPath(e.target.value)}
               placeholder="/blogs"
-              className="flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
+              className="min-w-0 flex-1 basis-40 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
             />
             <Button variant="gradient" onClick={sendRequest} disabled={sending}>
               {sending ? "Sending…" : "Send"}
