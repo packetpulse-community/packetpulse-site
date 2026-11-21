@@ -221,22 +221,22 @@ describe("Audit coverage of privileged routes (e2e)", () => {
     },
     "PUT /api/forums/threads/:id/lock": async () => {
       const t = await makeThread();
-      await api("put", `/api/forums/threads/${t.id}/lock`, {}).expect(200);
+      await api("put", `/api/forums/threads/${t.id}/lock`, { reason: "Moderator action for the audit test" }).expect(200);
       return { action: "forum_thread_locked", targetId: t.id };
     },
     "PUT /api/forums/threads/:id/unlock": async () => {
       const t = await makeThread();
-      await api("put", `/api/forums/threads/${t.id}/unlock`, {}).expect(200);
+      await api("put", `/api/forums/threads/${t.id}/unlock`, { reason: "Moderator action for the audit test" }).expect(200);
       return { action: "forum_thread_unlocked", targetId: t.id };
     },
     "PUT /api/forums/threads/:id/pin": async () => {
       const t = await makeThread();
-      await api("put", `/api/forums/threads/${t.id}/pin`, {}).expect(200);
+      await api("put", `/api/forums/threads/${t.id}/pin`, { reason: "Moderator action for the audit test" }).expect(200);
       return { action: "forum_thread_pinned", targetId: t.id };
     },
     "PUT /api/forums/threads/:id/unpin": async () => {
       const t = await makeThread();
-      await api("put", `/api/forums/threads/${t.id}/unpin`, {}).expect(200);
+      await api("put", `/api/forums/threads/${t.id}/unpin`, { reason: "Moderator action for the audit test" }).expect(200);
       return { action: "forum_thread_unpinned", targetId: t.id };
     },
     "POST /api/quizzes": async () => {
@@ -281,14 +281,35 @@ describe("Audit coverage of privileged routes (e2e)", () => {
     },
     "DELETE /api/forums/threads/:id": async () => {
       const t = await makeThread();
-      await api("delete", `/api/forums/threads/${t.id}`).expect(200);
+      await api("delete", `/api/forums/threads/${t.id}`, { reason: "Removed for the audit test" }).expect(200);
       return { action: "forum_thread_deleted", targetId: t.id };
     },
     "DELETE /api/forums/threads/:id/replies/:replyId": async () => {
       const t = await makeThread();
       const r = await prisma.forumReply.create({ data: { threadId: t.id, authorId: ownerId, content: "c" } });
-      await api("delete", `/api/forums/threads/${t.id}/replies/${r.id}`).expect(200);
+      await api("delete", `/api/forums/threads/${t.id}/replies/${r.id}`, { reason: "Removed for the audit test" }).expect(200);
       return { action: "forum_reply_deleted", targetId: r.id };
+    },
+    "PUT /api/forums/reports/:id/dismiss": async () => {
+      const t = await makeThread();
+      const reporter = await makeUser("reporter");
+      const rep = await prisma.forumReport.create({ data: { reporterId: reporter.id, threadId: t.id, reason: "spam" } });
+      await api("put", `/api/forums/reports/${rep.id}/dismiss`, { reason: "Not a violation of the rules" }).expect(200);
+      return { action: "forum_report_dismissed", targetId: rep.id };
+    },
+    "PUT /api/forums/reports/:id/remove": async () => {
+      const t = await makeThread();
+      const reporter = await makeUser("reporter");
+      const rep = await prisma.forumReport.create({ data: { reporterId: reporter.id, threadId: t.id, reason: "spam" } });
+      await api("put", `/api/forums/reports/${rep.id}/remove`, { reason: "Advertising, against the rules" }).expect(200);
+      return { action: "forum_report_removed", targetId: t.id };
+    },
+    "POST /api/forums/guidelines": async () => {
+      const res = await api("post", "/api/forums/guidelines", {
+        body: `${TAG} guidelines text that is long enough to be accepted by the schema check`,
+        reason: `${TAG} guidelines change`,
+      }).expect(201);
+      return { action: "forum_guidelines_published", targetId: res.body.version ? (await prisma.forumGuidelineVersion.findUniqueOrThrow({ where: { version: res.body.version } })).id : undefined };
     },
     "POST /api/skills": async () => {
       const res = await api("post", "/api/skills", { name: uniq(), level: "major" }).expect(201);
@@ -379,6 +400,7 @@ describe("Audit coverage of privileged routes (e2e)", () => {
     await prisma.resource.deleteMany({ where: { categoryId } });
     await prisma.recording.deleteMany({ where: { categoryId } });
     await prisma.forumThread.deleteMany({ where: { categoryId } });
+    await prisma.forumGuidelineVersion.deleteMany({ where: { createdById: adminId } });
     await prisma.consentPolicy.deleteMany({ where: { createdById: adminId } });
     await prisma.skillSuggestion.deleteMany({ where: { nameKey: { startsWith: TAG.toLowerCase() } } });
     await prisma.skill.deleteMany({ where: { nameKey: { startsWith: TAG.toLowerCase() } } });

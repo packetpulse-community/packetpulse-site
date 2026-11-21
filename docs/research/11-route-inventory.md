@@ -29,7 +29,7 @@ Throttle tiers are per route and not listed here. "Maint." marks routes that sti
 maintenance mode.
 
 
-## Public (no session needed) — 26 routes
+## Public (no session needed) — 27 routes
 
 | Route | Permission | Guards that apply | Maint. | Ownership / state rule in the service |
 |---|---|---|---|---|
@@ -51,6 +51,7 @@ maintenance mode.
 | `GET /api/forums/categories` |  | maintenance |  |  |
 | `GET /api/forums/threads` |  | maintenance |  |  |
 | `GET /api/forums/threads/:id` |  | maintenance |  |  |
+| `GET /api/forums/guidelines` |  | maintenance |  |  |
 | `GET /api/health` |  | — | yes |  |
 | `POST /api/logs` |  | maintenance |  | throttled 60/min; user id recorded when a token is present |
 | `GET /api/quizzes` |  | maintenance |  | draft quizzes only for their author or admin |
@@ -60,7 +61,7 @@ maintenance mode.
 | `GET /api/recordings/:id` |  | maintenance |  | unapproved recording only for admin |
 | `GET /api/site-status` |  | — | yes |  |
 
-## Signed in, no specific permission — 37 routes
+## Signed in, no specific permission — 44 routes
 
 | Route | Permission | Guards that apply | Maint. | Ownership / state rule in the service |
 |---|---|---|---|---|
@@ -80,6 +81,13 @@ maintenance mode.
 | `DELETE /api/forums/threads/:id` |  | JWT, maintenance, approved, email-verified |  | thread author or moderator |
 | `PUT /api/forums/threads/:id` |  | JWT, maintenance, approved, email-verified |  | thread author or moderator |
 | `DELETE /api/forums/threads/:id/replies/:replyId` |  | JWT, maintenance, approved, email-verified |  | reply author or moderator |
+| `PUT /api/forums/threads/:id/accept/:replyId` |  | JWT, maintenance, approved, email-verified |  | the asker, or a moderator who gives a reason (audited); the reply must belong to the thread and not be removed |
+| `DELETE /api/forums/threads/:id/accept` |  | JWT, maintenance, approved, email-verified |  | the asker, or a moderator who gives a reason (audited) |
+| `POST /api/forums/threads/:id/report` |  | JWT, maintenance, approved, email-verified |  | any member except the author; a reason is required; one report per member per post, 10 a day |
+| `POST /api/forums/replies/:replyId/report` |  | JWT, maintenance, approved, email-verified |  | any member except the author; a reason is required; one report per member per post, 10 a day |
+| `GET /api/forums/guidelines/status` |  | JWT, maintenance, approved, email-verified |  | own acceptance state of the community guidelines |
+| `POST /api/forums/guidelines/accept` |  | JWT, maintenance, approved, email-verified |  | own acceptance only; records the current version and the time |
+| `GET /api/forums/reputation/:userId` |  | JWT, maintenance, approved, email-verified |  | any member; a total, a level and an accepted-answer count, no private fields |
 | `POST /api/network-tools/run` |  | JWT, maintenance, approved, email-verified |  | any member; simulated output only |
 | `GET /api/notifications` |  | JWT, maintenance, approved, email-verified |  | own notifications only |
 | `PUT /api/notifications/:id/read` |  | JWT, maintenance, approved, email-verified |  | own notification only |
@@ -102,7 +110,7 @@ maintenance mode.
 | `PUT /api/users/profile` |  | JWT, maintenance, approved, email-verified |  | own profile |
 | `PUT /api/users/profile/password` |  | JWT, maintenance, approved, email-verified |  | own account; needs current password |
 
-## Permission-gated — 44 routes
+## Permission-gated — 48 routes
 
 | Route | Permission | Guards that apply | Maint. | Ownership / state rule in the service |
 |---|---|---|---|---|
@@ -136,11 +144,15 @@ maintenance mode.
 | `PUT /api/categories/:id` | `categories:manage` | JWT, maintenance, roles, approved, email-verified |  |  |
 | `PUT /api/categories/reorder` | `categories:manage` | JWT, maintenance, roles, approved, email-verified |  |  |
 | `POST /api/forums/threads` | `forums:create` | JWT, maintenance, roles, approved, email-verified |  |  |
-| `PUT /api/forums/threads/:id/lock` | `forums:moderate` | JWT, maintenance, roles, approved, email-verified |  |  |
+| `PUT /api/forums/threads/:id/lock` | `forums:moderate` | JWT, maintenance, roles, approved, email-verified |  | reason required on someone else's thread; audited |
 | `PUT /api/forums/threads/:id/pin` | `forums:moderate` | JWT, maintenance, roles, approved, email-verified |  |  |
 | `POST /api/forums/threads/:id/replies` | `forums:create` | JWT, maintenance, roles, approved, email-verified |  | thread must not be locked (reply to a locked thread is refused) |
 | `PUT /api/forums/threads/:id/unlock` | `forums:moderate` | JWT, maintenance, roles, approved, email-verified |  |  |
 | `PUT /api/forums/threads/:id/unpin` | `forums:moderate` | JWT, maintenance, roles, approved, email-verified |  |  |
+| `GET /api/forums/reports` | `forums:moderate` | JWT, maintenance, roles, approved, email-verified |  |  |
+| `PUT /api/forums/reports/:id/dismiss` | `forums:moderate` | JWT, maintenance, roles, approved, email-verified |  | reason required; audited |
+| `PUT /api/forums/reports/:id/remove` | `forums:moderate` | JWT, maintenance, roles, approved, email-verified |  | reason required; audited; the author is notified |
+| `POST /api/forums/guidelines` | `admin:manage-settings` | JWT, maintenance, roles, approved, email-verified |  | reason required; audited; publishes a new version |
 | `GET /api/logs` | `admin:view-analytics` | JWT, maintenance, roles, approved, email-verified |  |  |
 | `POST /api/quizzes` | `quizzes:author` | JWT, maintenance, roles, approved, email-verified |  |  |
 | `DELETE /api/quizzes/:id` | `quizzes:author` | JWT, maintenance, roles, approved, email-verified |  | quiz owner or admin |
