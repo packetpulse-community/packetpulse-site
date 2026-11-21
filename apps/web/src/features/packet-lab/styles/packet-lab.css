@@ -1,0 +1,46 @@
+/*
+ * Packet Lab protocol hues. Each protocol has a text/stroke colour (--pl-x) and a soft fill (--pl-x-soft),
+ * defined for both modes like the Grove tokens. --pl-x passes 4.5:1 on the surface and on its own soft fill,
+ * and the body text colour passes 4.5:1 on every soft fill (see packet-lab-contrast.test.ts).
+ * Colour is never the only signal: every use also carries the protocol name or a layer label.
+ */
+:root,
+[data-theme="grove"] {
+  --pl-eth: #4a5a66;
+  --pl-eth-soft: #e8edf0;
+  --pl-arp: #8a5300;
+  --pl-arp-soft: #fdf0d5;
+  --pl-ip: #1d62b0;
+  --pl-ip-soft: #e3eefb;
+  --pl-icmp: #0b6f86;
+  --pl-icmp-soft: #e0f4f8;
+  --pl-udp: #55606a;
+  --pl-udp-soft: #eceff1;
+  --pl-tcp: #0b7a6b;
+  --pl-tcp-soft: #dff5f0;
+  --pl-dns: #6a4fc0;
+  --pl-dns-soft: #efeafd;
+  --pl-http: #2a7a2a;
+  --pl-http-soft: #e3f4e0;
+}
+
+.dark,
+[data-theme="grove"].dark,
+.dark [data-theme="grove"]:not([data-mode="light"]) {
+  --pl-eth: #b7c4cc;
+  --pl-eth-soft: #2b3a43;
+  --pl-arp: #f0b84a;
+  --pl-arp-soft: #3d2e0a;
+  --pl-ip: #86b8f2;
+  --pl-ip-soft: #12304d;
+  --pl-icmp: #5cd0e8;
+  --pl-icmp-soft: #0a3a45;
+  --pl-udp: #b4bec6;
+  --pl-udp-soft: #2a3238;
+  --pl-tcp: #5fdcc4;
+  --pl-tcp-soft: #0c3f3a;
+  --pl-dns: #b9a6ff;
+  --pl-dns-soft: #2c2358;
+  --pl-http: #8fdc86;
+  --pl-http-soft: #14391a;
+}
