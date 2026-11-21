@@ -1,19 +1,35 @@
 import type { Dissection } from "@packetpulse/netsim";
 
-// Protocol colours. Colour is never the only signal: every chip also shows the protocol's name.
-export const PROTOCOL_COLOR: Record<string, string> = {
-  ARP: "#f59e0b",
-  ICMP: "#38bdf8",
-  UDP: "#94a3b8",
-  DNS: "#a78bfa",
-  TCP: "#2dd4bf",
-  HTTP: "#4ade80",
-  Ethernet: "#cbd5e1",
+// Protocol colours come from CSS variables (styles/packet-lab.css), so they follow Light and Dark.
+// Colour is never the only signal: every chip, badge and legend entry also shows the protocol's name.
+export type ProtocolKey = "eth" | "arp" | "ip" | "icmp" | "udp" | "tcp" | "dns" | "http";
+
+const PROTOCOL_KEY: Record<string, ProtocolKey> = {
+  ARP: "arp",
+  ICMP: "icmp",
+  UDP: "udp",
+  DNS: "dns",
+  TCP: "tcp",
+  HTTP: "http",
+  Ethernet: "eth",
+  IP: "ip",
 };
 
-export function protocolColor(protocol: string): string {
-  return PROTOCOL_COLOR[protocol] ?? "#cbd5e1";
+// Layer ids from the dissector: the same hues, and a bare "data" continuation uses the HTTP hue.
+const LAYER_KEY: Record<string, ProtocolKey> = { eth: "eth", arp: "arp", ip: "ip", icmp: "icmp", udp: "udp", tcp: "tcp", dns: "dns", http: "http", data: "http" };
+
+export function protocolKey(protocol: string): ProtocolKey {
+  return PROTOCOL_KEY[protocol] ?? "eth";
 }
+
+export function layerKey(layerId: string): ProtocolKey {
+  return LAYER_KEY[layerId] ?? "eth";
+}
+
+export const protocolColor = (protocol: string) => `var(--pl-${protocolKey(protocol)})`;
+export const protocolSoft = (protocol: string) => `var(--pl-${protocolKey(protocol)}-soft)`;
+export const layerColor = (layerId: string) => `var(--pl-${layerKey(layerId)})`;
+export const layerSoft = (layerId: string) => `var(--pl-${layerKey(layerId)}-soft)`;
 
 // A very short label for a packet travelling on the topology diagram.
 export function packetBadge(d: Dissection): string {

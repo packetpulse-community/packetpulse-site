@@ -2,19 +2,9 @@
 
 import type { Dissection } from "@packetpulse/netsim";
 import { cn } from "@/shared/utils/cn";
+import { layerColor, layerSoft } from "../lib/format";
 import type { ByteRange } from "./FieldTree";
 
-const LAYER_TINT: Record<string, string> = {
-  eth: "bg-slate-400/15",
-  arp: "bg-amber-400/15",
-  ip: "bg-sky-400/15",
-  icmp: "bg-cyan-400/15",
-  udp: "bg-violet-400/15",
-  tcp: "bg-teal-400/15",
-  dns: "bg-fuchsia-400/15",
-  http: "bg-emerald-400/15",
-  data: "bg-emerald-400/10",
-};
 
 interface Props {
   bytes: Uint8Array;
@@ -47,16 +37,27 @@ export function HexView({ bytes, dissection, highlight, onHighlight }: Props) {
   const inRange = (o: number) => !!highlight && o >= highlight.offset && o < highlight.offset + highlight.length;
 
   return (
-    <div className="overflow-x-auto rounded-md border border-border bg-black/30 p-2 font-mono text-xs" role="region" aria-label="Raw bytes in hexadecimal and ASCII">
+    <div className="overflow-x-auto rounded-md border border-border bg-surface-subtle p-2 font-mono text-xs" role="region" aria-label="Raw bytes in hexadecimal and ASCII">
       <p className="sr-only">
         {bytes.length} bytes. {highlight ? `Selected bytes ${highlight.offset} to ${highlight.offset + highlight.length - 1}.` : "Select a field in the Fields tab or a byte here to highlight it."}
       </p>
+      <ul className="mb-2 flex flex-wrap gap-1.5 font-sans" aria-label="Layers in this frame, outermost first">
+        {dissection.layers.map((l, i) => (
+          <li
+            key={`${l.id}-${i}`}
+            className="rounded border px-1.5 py-0.5 text-[11px] font-semibold text-text"
+            style={{ backgroundColor: layerSoft(l.id), borderColor: layerColor(l.id) }}
+          >
+            {l.name} · bytes {l.offset}–{l.offset + l.length - 1}
+          </li>
+        ))}
+      </ul>
       <div className="min-w-[660px]">
         {rows.map((start) => {
           const slice = Array.from(bytes.subarray(start, start + 16));
           return (
             <div key={start} className="flex gap-3 leading-6">
-              <span className="w-12 shrink-0 select-none text-slate-500">{start.toString(16).padStart(4, "0")}</span>
+              <span className="w-12 shrink-0 select-none text-text-secondary">{start.toString(16).padStart(4, "0")}</span>
               <span className="flex shrink-0 gap-x-1">
                 {slice.map((b, i) => {
                   const o = start + i;
@@ -69,20 +70,21 @@ export function HexView({ bytes, dissection, highlight, onHighlight }: Props) {
                       aria-label={`byte ${o}: ${hex2(b)}`}
                       onClick={() => onHighlight(fieldAt(o))}
                       className={cn(
-                        "w-5 rounded-sm text-center hover:bg-white/20",
-                        layer ? LAYER_TINT[layer.id] : "",
+                        "w-5 rounded-sm border-b-2 border-transparent text-center text-text hover:bg-surface",
                         i === 7 && "mr-2",
-                        inRange(o) && "bg-amber-300 text-slate-900 hover:bg-amber-300",
+                        inRange(o) && "bg-accent text-accent-foreground hover:bg-accent",
                       )}
+                      style={layer && !inRange(o) ? { backgroundColor: layerSoft(layer.id), borderBottomColor: layerColor(layer.id) } : undefined}
+                      title={layer?.name}
                     >
                       {hex2(b)}
                     </button>
                   );
                 })}
               </span>
-              <span className="w-[9.5rem] shrink-0 whitespace-pre text-slate-300" aria-hidden="true">
+              <span className="w-[9.5rem] shrink-0 whitespace-pre text-text-secondary" aria-hidden="true">
                 {slice.map((b, i) => (
-                  <span key={i} className={cn(inRange(start + i) && "bg-amber-300 text-slate-900")}>{printable(b)}</span>
+                  <span key={i} className={cn(inRange(start + i) && "bg-accent text-accent-foreground")}>{printable(b)}</span>
                 ))}
               </span>
             </div>

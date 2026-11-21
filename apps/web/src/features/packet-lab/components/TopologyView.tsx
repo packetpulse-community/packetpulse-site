@@ -22,13 +22,13 @@ interface Props {
 }
 
 function Glyph({ device, active, selected }: { device: DeviceInfo; active: boolean; selected: boolean }) {
-  const stroke = selected ? "#a5b4fc" : active ? "#818cf8" : "#64748b";
-  const common = { fill: "#0f172a", stroke, strokeWidth: active || selected ? 3 : 2 } as const;
+  const stroke = selected ? "var(--grove-focus)" : active ? "var(--grove-brand-text)" : "var(--grove-control)";
+  const common = { fill: "var(--grove-surface)", stroke, strokeWidth: active || selected ? 3 : 2 } as const;
   if (device.kind === "host") {
     return (
       <g>
         <rect x={-28} y={-22} width={56} height={36} rx={5} {...common} />
-        <rect x={-22} y={-16} width={44} height={24} rx={2} fill="#1e293b" />
+        <rect x={-22} y={-16} width={44} height={24} rx={2} fill="var(--grove-subtle)" />
         <path d="M-12 22 H12 M0 14 V22" stroke={stroke} strokeWidth={3} strokeLinecap="round" />
       </g>
     );
@@ -38,7 +38,7 @@ function Glyph({ device, active, selected }: { device: DeviceInfo; active: boole
       <g>
         <rect x={-38} y={-15} width={76} height={30} rx={6} {...common} />
         {[-24, -8, 8, 24].map((x) => (
-          <rect key={x} x={x - 4} y={-6} width={8} height={10} rx={1.5} fill="#1e293b" stroke="#475569" />
+          <rect key={x} x={x - 4} y={-6} width={8} height={10} rx={1.5} fill="var(--grove-subtle)" stroke="var(--grove-control)" />
         ))}
       </g>
     );
@@ -62,17 +62,18 @@ export function TopologyView({ trace, dissected, hops, time, hopMs, selectedFram
   const selectedInFlight = selected ? inFlight.some((f) => f.id === selected.id) : false;
 
   return (
+    <div className="overflow-x-auto" role="region" aria-label="Network diagram (scrolls sideways on narrow screens)" tabIndex={0}>
     <svg
       viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`}
-      className="h-auto w-full"
+      className="h-auto w-full min-w-[640px]"
       role="group"
       aria-label="Network diagram. PC-A and PC-B connect through switch SW1 to router R1; R1 connects through switch SW2 to the web server and the DNS server."
     >
       {/* broadcast domains */}
-      <rect x={28} y={56} width={410} height={410} rx={18} fill="rgba(99,102,241,0.05)" stroke="#475569" strokeDasharray="6 6" />
-      <text x={44} y={84} fill="#94a3b8" fontSize={14}>LAN 192.168.1.0/24 · one broadcast domain</text>
-      <rect x={585} y={56} width={390} height={410} rx={18} fill="rgba(45,212,191,0.05)" stroke="#475569" strokeDasharray="6 6" />
-      <text x={601} y={84} fill="#94a3b8" fontSize={14}>Servers 10.0.0.0/24 · another broadcast domain</text>
+      <rect x={28} y={56} width={410} height={410} rx={18} style={{ fill: "var(--pl-ip-soft)" }} stroke="var(--grove-control)" strokeDasharray="6 6" />
+      <text x={44} y={84} fill="var(--grove-text-secondary)" fontSize={14}>LAN 192.168.1.0/24 · one broadcast domain</text>
+      <rect x={585} y={56} width={390} height={410} rx={18} style={{ fill: "var(--pl-tcp-soft)" }} stroke="var(--grove-control)" strokeDasharray="6 6" />
+      <text x={601} y={84} fill="var(--grove-text-secondary)" fontSize={14}>Servers 10.0.0.0/24 · another broadcast domain</text>
 
       {/* links */}
       {trace.links.map((l) => {
@@ -81,9 +82,9 @@ export function TopologyView({ trace, dissected, hops, time, hopMs, selectedFram
         const lossy = l.lossPct > 0;
         return (
           <g key={l.id}>
-            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={lossy ? "#f87171" : "#334155"} strokeWidth={4} strokeDasharray={lossy ? "8 6" : undefined} strokeLinecap="round" />
+            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={lossy ? "var(--state-danger)" : "var(--grove-control)"} strokeWidth={4} strokeDasharray={lossy ? "8 6" : undefined} strokeLinecap="round" />
             {lossy && (
-              <text x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 + 36} fill="#fca5a5" fontSize={13} textAnchor="middle">
+              <text x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 + 36} fill="var(--state-danger)" fontSize={13} textAnchor="middle">
                 {l.lossPct}% of frames lost here
               </text>
             )}
@@ -102,7 +103,7 @@ export function TopologyView({ trace, dissected, hops, time, hopMs, selectedFram
         return (
           <g>
             <circle cx={x} cy={y} r={13} fill="none" stroke={color} strokeWidth={2} strokeDasharray="3 3" />
-            <text x={x} y={y - 20} textAnchor="middle" fontSize={13} fill={color} fontWeight={600}>{d ? packetBadge(d) : ""}</text>
+            <text x={x} y={y - 20} textAnchor="middle" fontSize={13} fill={color} fontWeight={600} stroke="var(--grove-surface)" strokeWidth={3} paintOrder="stroke">{d ? packetBadge(d) : ""}</text>
           </g>
         );
       })()}
@@ -122,13 +123,13 @@ export function TopologyView({ trace, dissected, hops, time, hopMs, selectedFram
         const fade = raw > 1 ? Math.max(0, 1 - (raw - 1) * hopMs / 250) : 1;
         return (
           <g key={f.id} opacity={gone ? 0.25 : fade}>
-            <circle cx={x} cy={y} r={11} fill={color} stroke="#0f172a" strokeWidth={2} />
+            <circle cx={x} cy={y} r={11} fill={color} stroke="var(--grove-surface)" strokeWidth={2} />
             {f.id === selectedFrame && <circle cx={x} cy={y} r={17} fill="none" stroke={color} strokeWidth={2} />}
-            <text x={x} y={y - 20} textAnchor="middle" fontSize={13} fill={color} fontWeight={700} stroke="#0b1220" strokeWidth={3} paintOrder="stroke">
+            <text x={x} y={y - 20} textAnchor="middle" fontSize={13} fill={color} fontWeight={700} stroke="var(--grove-surface)" strokeWidth={3} paintOrder="stroke">
               {d ? packetBadge(d) : ""}
             </text>
             {gone && (
-              <text x={x} y={y + 5} textAnchor="middle" fontSize={18} fill="#fecaca" fontWeight={800}>×</text>
+              <text x={x} y={y + 5} textAnchor="middle" fontSize={18} fill="var(--grove-surface)" fontWeight={800}>×</text>
             )}
           </g>
         );
@@ -157,15 +158,16 @@ export function TopologyView({ trace, dissected, hops, time, hopMs, selectedFram
               }
             }}
           >
-            <rect className="focus-ring opacity-0" x={-52} y={-40} width={104} height={104} rx={14} fill="none" stroke="#a5b4fc" strokeWidth={2} />
+            <rect className="focus-ring opacity-0" x={-52} y={-40} width={104} height={104} rx={14} fill="none" stroke="var(--grove-focus)" strokeWidth={2} />
             <Glyph device={d} active={active} selected={selectedDev} />
-            <text y={46} textAnchor="middle" fontSize={15} fontWeight={600} fill="#e2e8f0">{d.name}</text>
+            <text y={46} textAnchor="middle" fontSize={15} fontWeight={600} fill="var(--grove-text)">{d.name}</text>
             {ips.map((ip, i) => (
-              <text key={ip} y={63 + i * 15} textAnchor="middle" fontSize={12} fill="#94a3b8" className="font-mono">{ip}</text>
+              <text key={ip} y={63 + i * 15} textAnchor="middle" fontSize={12} fill="var(--grove-text-secondary)" className="font-mono">{ip}</text>
             ))}
           </g>
         );
       })}
     </svg>
+    </div>
   );
 }

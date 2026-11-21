@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { CapturedPacket, Dissection, Trace } from "@packetpulse/netsim";
 import { cn } from "@/shared/utils/cn";
-import { formatSeconds, protocolColor } from "../lib/format";
+import { formatSeconds, protocolColor, protocolSoft } from "../lib/format";
 
 interface Props {
   trace: Trace;
@@ -53,7 +53,7 @@ export function PacketTable({ trace, rows, dissected, selectedFrame, followLates
         <caption className="sr-only">
           Packets seen so far. Use the up and down arrow keys to move between packets. Selecting a packet shows its headers and bytes.
         </caption>
-        <thead className="sticky top-0 z-10 bg-slate-900 text-slate-300">
+        <thead className="sticky top-0 z-10 bg-surface-subtle text-text-secondary">
           <tr>
             <th scope="col" className="px-2 py-1.5 font-medium">No.</th>
             <th scope="col" className="px-2 py-1.5 font-medium">Time (s)</th>
@@ -83,29 +83,29 @@ export function PacketTable({ trace, rows, dissected, selectedFrame, followLates
                 aria-selected={isSel}
                 onClick={() => onSelect(r.frame.id)}
                 className={cn(
-                  "cursor-pointer border-t border-white/5 hover:bg-white/5",
-                  isSel && "bg-indigo-500/25 outline outline-1 -outline-offset-1 outline-indigo-400",
-                  r.frame.dropped && "text-red-300",
+                  "cursor-pointer border-t border-border hover:bg-surface-subtle",
+                  isSel && "bg-surface-subtle outline outline-2 -outline-offset-2 outline-primary",
+                  r.frame.dropped && "text-danger",
                 )}
               >
-                <td className="px-2 py-1 text-slate-400">{r.no}</td>
-                <td className="px-2 py-1 text-slate-300">{formatSeconds(r.time - first)}</td>
+                <td className="px-2 py-1 text-text-secondary">{r.no}</td>
+                <td className="px-2 py-1 text-text-secondary">{formatSeconds(r.time - first)}</td>
                 {showHop && (
-                  <td className="whitespace-nowrap px-2 py-1 text-slate-400">
+                  <td className="whitespace-nowrap px-2 py-1 text-text-secondary">
                     {deviceName(trace, r.frame.from.device)} → {deviceName(trace, r.frame.to.device)}
                   </td>
                 )}
                 <td className="whitespace-nowrap px-2 py-1">{d?.src}</td>
                 <td className="whitespace-nowrap px-2 py-1">{d?.dst}</td>
                 <td className="px-2 py-1">
-                  <span className="rounded px-1.5 py-0.5 font-semibold" style={{ color, backgroundColor: `${color}22`, border: `1px solid ${color}66` }}>
+                  <span className="rounded px-1.5 py-0.5 font-semibold" style={{ color, backgroundColor: protocolSoft(d?.protocol ?? ""), border: `1px solid ${color}` }}>
                     {d?.protocol}
                   </span>
                 </td>
-                <td className="px-2 py-1 text-slate-300">{r.frame.bytes.length}</td>
+                <td className="px-2 py-1 text-text-secondary">{r.frame.bytes.length}</td>
                 <td className="px-2 py-1">
                   {d?.info}
-                  {r.frame.dropped && <span className="ml-2 rounded bg-red-500/20 px-1 text-red-200">lost: {r.frame.dropped}</span>}
+                  {r.frame.dropped && <span className="ml-2 rounded bg-danger-soft px-1 text-danger">lost: {r.frame.dropped}</span>}
                 </td>
               </tr>
             );
