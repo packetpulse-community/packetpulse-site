@@ -43,8 +43,8 @@ describe("legacy route registry", () => {
   });
 
   it("scopes legacy routes and leaves migrated and unknown ones themed", () => {
-    // Still legacy while the quizzes restyle is unfinished (the group is content-scoped).
-    expect(legacyScopeFor("/quizzes")).toBe("content");
+    // Every group is migrated now; the scope mechanism stays for any future legacy group.
+    expect(legacyScopeFor("/quizzes")).toBeNull();
     // Migrated groups render with the Grove tokens directly.
     expect(legacyScopeFor("/login")).toBeNull();
     expect(legacyScopeFor("/dashboard")).toBeNull();

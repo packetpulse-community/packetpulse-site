@@ -36,7 +36,7 @@ export const ROUTE_GROUPS: readonly RouteGroup[] = [
   { id: "system-pages", label: "Maintenance and session refresh", prefixes: ["/maintenance", "/refresh"], status: "migrated", scope: "page" },
   { id: "certificate-verify", label: "Certificate verification (public)", prefixes: ["/certificates/verify"], status: "migrated", scope: "page" },
   { id: "dashboard", label: "Dashboard", prefixes: ["/dashboard"], status: "migrated", scope: "content" },
-  { id: "learning", label: "Quizzes, resources, recordings, certificates", prefixes: ["/quizzes", "/resources", "/recordings", "/certificates"], status: "legacy", scope: "content" },
+  { id: "learning", label: "Quizzes, resources, recordings, certificates", prefixes: ["/quizzes", "/resources", "/recordings", "/certificates"], status: "migrated", scope: "content" },
   { id: "community", label: "Forums and network tools", prefixes: ["/forums", "/network-tools"], status: "migrated", scope: "content" },
   { id: "profile", label: "Profile and skills picker", prefixes: ["/profile"], status: "migrated", scope: "content" },
   { id: "account", label: "Notifications and settings", prefixes: ["/notifications", "/settings"], status: "migrated", scope: "content" },
