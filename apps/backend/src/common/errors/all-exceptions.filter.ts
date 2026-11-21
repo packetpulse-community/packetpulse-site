@@ -14,6 +14,7 @@ export type ErrorCode =
   | "CONFLICT"
   | "RATE_LIMITED"
   | "MAINTENANCE"
+  | "FEATURE_DISABLED"
   | "BAD_REQUEST"
   | "PAYLOAD_TOO_LARGE"
   | "INTERNAL_ERROR";
@@ -25,6 +26,7 @@ interface ErrorBody {
   fields?: { path: string; message: string }[];
   requestId?: string;
   maintenance?: true;
+  feature?: string;
 }
 
 const GENERIC_INTERNAL = "Something went wrong on our side. Please try again later.";
@@ -156,6 +158,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const code = status === 422 ? "VALIDATION_FAILED" : codeForStatus(status);
     const out: ErrorBody = { statusCode: status, code, message };
+    if (status === 403 && obj.featureDisabled === true) {
+      out.code = "FEATURE_DISABLED";
+      if (typeof obj.feature === "string") out.feature = obj.feature;
+    }
     if (fields) {
       out.fields = fields;
       out.code = "VALIDATION_FAILED";
