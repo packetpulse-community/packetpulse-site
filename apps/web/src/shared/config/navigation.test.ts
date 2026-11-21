@@ -93,7 +93,7 @@ describe("navigationFor", () => {
       expect.arrayContaining([
         "/admin", "/admin/users", "/admin/resources", "/admin/recordings", "/admin/blogs", "/admin/forums",
         "/admin/quizzes", "/admin/categories", "/admin/taxonomy", "/admin/analytics", "/admin/status", "/admin/logs",
-        "/admin/api-docs", "/admin/settings",
+        "/admin/api-docs", "/admin/settings", "/admin/feature-flags",
       ]),
     );
   });

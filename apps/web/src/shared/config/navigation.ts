@@ -13,6 +13,7 @@ import {
   PenSquare,
   ScrollText,
   Settings,
+  ToggleRight,
   ShieldCheck,
   Tag,
   Terminal,
@@ -133,6 +134,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { id: "ops-status", label: "System status", href: "/admin/status", icon: Activity, group: "operations", access: { permission: "admin:view-analytics" }, area: "admin", keywords: ["admin", "health", "uptime"] },
   { id: "ops-logs", label: "Logs", href: "/admin/logs", icon: ScrollText, group: "operations", access: { permission: "admin:view-analytics" }, area: "admin", keywords: ["admin", "audit", "errors"] },
   { id: "ops-api-docs", label: "API docs", href: "/admin/api-docs", icon: Terminal, group: "operations", access: ADMIN_ROLE, area: "admin", keywords: ["admin", "swagger", "openapi"] },
+  { id: "ops-feature-flags", label: "Feature switches", href: "/admin/feature-flags", icon: ToggleRight, group: "operations", access: { permission: "admin:manage-settings" }, area: "admin", keywords: ["admin", "feature", "flags", "switch", "toggle", "kill switch"] },
   { id: "ops-settings", label: "Platform settings", href: "/admin/settings", icon: Settings, group: "operations", access: { permission: "admin:manage-settings" }, area: "admin", keywords: ["admin", "maintenance", "configuration"] },
 
   // TODO(Mentor, Recruiter): once these roles exist, add e.g.

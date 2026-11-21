@@ -52,6 +52,7 @@ export const ROUTE_TITLES: Readonly<Record<string, RouteTitle>> = {
   "/admin/logs": { label: "Logs" },
   "/admin/api-docs": { label: "API docs" },
   "/admin/settings": { label: "Platform settings" },
+  "/admin/feature-flags": { label: "Feature switches" },
 };
 
 // Looks like an identifier rather than a word: a UUID, a long number, a long hex/cuid

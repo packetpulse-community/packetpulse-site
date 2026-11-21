@@ -15,7 +15,7 @@ const FORM_FIELDS = ["adminEmail", "apiRateLimit", "maxUploadSizeMb", "maxUserRe
 
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
-// Only siteName and maintenanceMode are enforced by the backend today (threat T-12);
+// Only siteName, maintenanceMode and registrationEnabled are enforced by the backend today (threat T-12);
 // every other field is stored but changes nothing, so say so next to it.
 function NotActiveNote() {
   return (
@@ -92,7 +92,9 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
               <input type="checkbox" {...register("registrationEnabled")} />
               Enable user registration
             </label>
-            <NotActiveNote />
+            <p className="text-xs text-muted-foreground">
+              Active: when this is off, sign-up is refused. The same switch is on the Feature switches page.
+            </p>
           </div>
           <div className="flex flex-col gap-1">
             <label className="flex items-center gap-2 text-sm">
