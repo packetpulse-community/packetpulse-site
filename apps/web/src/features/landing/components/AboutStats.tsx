@@ -17,10 +17,10 @@ export function AboutStats() {
         <Reveal
           key={stat.label}
           delayMs={index * 100}
-          className="flex flex-col items-center rounded-xl glass-panel glass-interactive p-6 text-center hover:border-indigo-500/50"
+          className="flex flex-col items-center rounded-xl border border-border bg-surface transition-colors hover:bg-surface-subtle p-6 text-center hover:border-primary"
         >
-          <p className="text-3xl font-bold text-indigo-400 sm:text-4xl">{stat.value}</p>
-          <p className="mt-1 text-sm text-gray-300">{stat.label}</p>
+          <p className="text-3xl font-bold text-primary-text sm:text-4xl">{stat.value}</p>
+          <p className="mt-1 text-sm text-text-secondary">{stat.label}</p>
         </Reveal>
       ))}
     </section>

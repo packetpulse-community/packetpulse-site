@@ -18,11 +18,11 @@ export function AboutOffer() {
           <Reveal
             key={offering.title}
             delayMs={index * 100}
-            className="flex flex-col gap-3 rounded-xl glass-panel glass-interactive p-5"
+            className="flex flex-col gap-3 rounded-xl border border-border bg-surface transition-colors hover:bg-surface-subtle p-5"
           >
-            <offering.icon className="h-7 w-7 text-indigo-400" />
+            <offering.icon className="h-7 w-7 text-primary-text" />
             <h3 className="font-semibold">{offering.title}</h3>
-            <p className="text-sm text-gray-300">{offering.description}</p>
+            <p className="text-sm text-text-secondary">{offering.description}</p>
           </Reveal>
         ))}
       </div>

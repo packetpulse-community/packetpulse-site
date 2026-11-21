@@ -22,14 +22,14 @@ const VALUES = [
 export function AboutMission() {
   return (
     <section className="container flex flex-col gap-16 py-20">
-      <Reveal className="mx-auto flex max-w-2xl flex-col gap-4 rounded-xl glass-panel p-8 text-center">
+      <Reveal className="mx-auto flex max-w-2xl flex-col gap-4 rounded-xl border border-border bg-surface p-8 text-center">
         <h2 className="text-3xl font-semibold">Our Mission</h2>
-        <p className="text-gray-300">
+        <p className="text-text-secondary">
           PacketPulse exists to give networking professionals a place to learn from each other, not just from vendor
           documentation. Whatever stage you're at — student, fresher, or a decade deep in the field — there's someone
           here who's already solved the problem you're stuck on.
         </p>
-        <p className="text-gray-300">
+        <p className="text-text-secondary">
           We bring together engineers at every level to troubleshoot, share resources, and keep up with a field that
           changes faster than any single person can track alone.
         </p>
@@ -42,11 +42,11 @@ export function AboutMission() {
             <Reveal
               key={value.title}
               delayMs={index * 100}
-              className="flex flex-col gap-3 rounded-xl glass-panel glass-interactive p-6"
+              className="flex flex-col gap-3 rounded-xl border border-border bg-surface transition-colors hover:bg-surface-subtle p-6"
             >
-              <value.icon className="h-8 w-8 text-indigo-400" />
+              <value.icon className="h-8 w-8 text-primary-text" />
               <h4 className="font-semibold">{value.title}</h4>
-              <p className="text-sm text-gray-300">{value.description}</p>
+              <p className="text-sm text-text-secondary">{value.description}</p>
             </Reveal>
           ))}
         </div>

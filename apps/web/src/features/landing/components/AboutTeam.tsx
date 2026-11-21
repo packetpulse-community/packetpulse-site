@@ -31,7 +31,7 @@ export function AboutTeam() {
       <Reveal>
         <div className="mb-12 flex flex-col items-center gap-2 text-center">
           <h2 className="text-3xl font-semibold">Meet Our Team</h2>
-          <p className="max-w-xl text-gray-300">
+          <p className="max-w-xl text-text-secondary">
             Our dedicated team of professionals is passionate about creating the best platform for network engineers to
             connect, learn, and grow together.
           </p>
@@ -43,14 +43,14 @@ export function AboutTeam() {
           <Reveal
             key={member.name}
             delayMs={(index % 8) * 60}
-            className="flex flex-col gap-1 rounded-xl glass-panel glass-interactive p-4"
+            className="flex flex-col gap-1 rounded-xl border border-border bg-surface transition-colors hover:bg-surface-subtle p-4"
           >
-            <a href={member.linkedin} target="_blank" rel="noreferrer" className="font-semibold hover:text-indigo-400 hover:underline">
+            <a href={member.linkedin} target="_blank" rel="noreferrer" className="font-semibold hover:text-primary-text hover:underline">
               {member.name}
             </a>
-            <p className="text-sm text-gray-300">{member.title}</p>
-            {member.employer ? <p className="text-sm text-gray-300">{member.employer}</p> : null}
-            <p className="text-xs text-indigo-400">{member.experience}</p>
+            <p className="text-sm text-text-secondary">{member.title}</p>
+            {member.employer ? <p className="text-sm text-text-secondary">{member.employer}</p> : null}
+            <p className="text-xs text-primary-text">{member.experience}</p>
           </Reveal>
         ))}
       </div>

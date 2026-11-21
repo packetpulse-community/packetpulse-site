@@ -24,13 +24,13 @@ export default function ContactPage() {
       <main className="container py-20">
         <Reveal className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
           <h1 className="text-4xl font-bold sm:text-5xl">Contact Us</h1>
-          <p className="text-xl text-gray-300">Have questions or suggestions? We'd love to hear from you.</p>
+          <p className="text-xl text-text-secondary">Have questions or suggestions? We'd love to hear from you.</p>
         </Reveal>
 
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-3">
-          <Reveal className="rounded-xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm lg:col-span-1">
-            <h2 className="mb-6 text-2xl font-bold text-indigo-400">Get In Touch</h2>
-            <p className="mb-8 text-gray-300">
+          <Reveal className="rounded-xl border border-border bg-surface p-8 lg:col-span-1">
+            <h2 className="mb-6 text-2xl font-bold text-primary-text">Get In Touch</h2>
+            <p className="mb-8 text-text-secondary">
               We're here to help and answer any questions you might have about PacketPulse. We look forward to
               hearing from you.
             </p>
@@ -38,17 +38,17 @@ export default function ContactPage() {
             <div className="flex flex-col gap-6">
               {CONTACT_DETAILS.map((detail) => (
                 <div key={detail.label} className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg">
-                    <detail.icon className="h-5 w-5 text-white" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary">
+                    <detail.icon className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <div>
                     <h3 className="mb-1 font-semibold">{detail.label}</h3>
                     {detail.href ? (
-                      <a href={detail.href} className="text-indigo-400 hover:underline">
+                      <a href={detail.href} className="text-primary-text hover:underline">
                         {detail.value}
                       </a>
                     ) : (
-                      <p className="text-gray-300">{detail.value}</p>
+                      <p className="text-text-secondary">{detail.value}</p>
                     )}
                   </div>
                 </div>
@@ -56,8 +56,8 @@ export default function ContactPage() {
             </div>
           </Reveal>
 
-          <Reveal delayMs={150} className="rounded-xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm lg:col-span-2">
-            <h2 className="mb-6 text-2xl font-bold text-indigo-400">Send Us a Message</h2>
+          <Reveal delayMs={150} className="rounded-xl border border-border bg-surface p-8 lg:col-span-2">
+            <h2 className="mb-6 text-2xl font-bold text-primary-text">Send Us a Message</h2>
             <ContactForm />
           </Reveal>
         </div>

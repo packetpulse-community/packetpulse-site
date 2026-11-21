@@ -49,8 +49,8 @@ export function ContactForm() {
   }
 
   const inputClass = (hasError: boolean) =>
-    `w-full rounded-md border bg-glass px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-      hasError ? "border-destructive" : "border-glass-border"
+    `w-full rounded-grove-control border bg-surface px-4 py-2.5 text-text placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+      hasError ? "border-danger" : "border-control"
     }`;
 
   return (
@@ -67,7 +67,7 @@ export function ContactForm() {
             placeholder="John Doe"
             className={inputClass(Boolean(errors.name))}
           />
-          {errors.name && <p className="mt-1 text-sm text-destructive">{errors.name}</p>}
+          {errors.name && <p className="mt-1 text-sm text-danger">{errors.name}</p>}
         </div>
 
         <div>
@@ -82,7 +82,7 @@ export function ContactForm() {
             placeholder="john@example.com"
             className={inputClass(Boolean(errors.email))}
           />
-          {errors.email && <p className="mt-1 text-sm text-destructive">{errors.email}</p>}
+          {errors.email && <p className="mt-1 text-sm text-danger">{errors.email}</p>}
         </div>
       </div>
 
@@ -97,7 +97,7 @@ export function ContactForm() {
           placeholder="How can we help you?"
           className={inputClass(Boolean(errors.subject))}
         />
-        {errors.subject && <p className="mt-1 text-sm text-destructive">{errors.subject}</p>}
+        {errors.subject && <p className="mt-1 text-sm text-danger">{errors.subject}</p>}
       </div>
 
       <div>
@@ -112,14 +112,14 @@ export function ContactForm() {
           placeholder="Your message here..."
           className={inputClass(Boolean(errors.message))}
         />
-        {errors.message && <p className="mt-1 text-sm text-destructive">{errors.message}</p>}
+        {errors.message && <p className="mt-1 text-sm text-danger">{errors.message}</p>}
       </div>
 
-      <button type="submit" className={cn(buttonVariants({ variant: "gradient", size: "lg" }), "w-full md:w-auto")}>
+      <button type="submit" className={cn(buttonVariants({ variant: "default", size: "lg" }), "w-full md:w-auto")}>
         Send Message
         <Send className="h-4 w-4" />
       </button>
-      <p className="text-xs text-gray-400">Opens your email client with this message prefilled — there's no in-app inbox yet.</p>
+      <p className="text-xs text-text-secondary">Opens your email client with this message prefilled — there's no in-app inbox yet.</p>
     </form>
   );
 }

@@ -32,29 +32,29 @@ export default function ToolsPage() {
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Tools</h1>
-        <p className="max-w-2xl text-slate-300">Hands-on tools from the PacketPulse community for learning how networks really work.</p>
+        <p className="max-w-2xl text-text-secondary">Hands-on tools from the PacketPulse community for learning how networks really work.</p>
       </header>
       <ul className="grid gap-5 md:grid-cols-2">
         {TOOLS.map(({ href, title, badge, description, points, Icon }) => (
           <li key={href}>
             <Link
               href={href}
-              className="glass-panel glass-interactive flex h-full flex-col gap-4 rounded-xl p-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300"
+              className="border border-border bg-surface transition-colors hover:bg-surface-subtle flex h-full flex-col gap-4 rounded-xl p-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300">
+                <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary-text">
                   <Icon className="h-6 w-6" aria-hidden="true" />
                 </span>
-                <span className="rounded-full border border-border px-3 py-1 text-xs text-slate-300">{badge}</span>
+                <span className="rounded-full border border-border px-3 py-1 text-xs text-text-secondary">{badge}</span>
               </div>
               <h2 className="text-xl font-semibold">{title}</h2>
-              <p className="text-sm text-slate-300">{description}</p>
-              <ul className="list-disc pl-5 text-sm text-slate-300">
+              <p className="text-sm text-text-secondary">{description}</p>
+              <ul className="list-disc pl-5 text-sm text-text-secondary">
                 {points.map((p) => (
                   <li key={p}>{p}</li>
                 ))}
               </ul>
-              <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-indigo-300">
+              <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-primary-text">
                 Open {title} <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </span>
             </Link>
