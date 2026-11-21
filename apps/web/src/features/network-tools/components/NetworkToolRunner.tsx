@@ -88,7 +88,7 @@ export function NetworkToolRunner() {
   });
 
   return (
-    <div className="glass-panel flex flex-col gap-4 rounded-lg p-6">
+    <div className="border border-border bg-surface flex flex-col gap-4 rounded-lg p-6">
       <div className="flex items-center gap-2">
         <h2 className="text-lg font-semibold">Network Tools</h2>
         <Badge variant="glass">Simulated</Badge>
@@ -119,7 +119,7 @@ export function NetworkToolRunner() {
       {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
 
       {result && (
-        <div className="glass-panel rounded-lg p-4">
+        <div className="border border-border bg-surface rounded-lg p-4">
           <ResultView result={result} />
         </div>
       )}

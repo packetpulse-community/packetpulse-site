@@ -65,8 +65,8 @@ export default async function DashboardPage() {
         <h2 className="text-lg font-semibold">Network Tools</h2>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {NETWORK_TOOLS.map((t) => (
-            <Link key={t.tool} href={`/network-tools?tool=${t.tool}`} className="glass-panel glass-interactive flex flex-col items-center gap-2 rounded-lg p-4 text-center">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400">
+            <Link key={t.tool} href={`/network-tools?tool=${t.tool}`} className="border border-border bg-surface transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring flex flex-col items-center gap-2 rounded-lg p-4 text-center">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-subtle text-primary-text">
                 <t.icon className="h-5 w-5" />
               </span>
               <p className="text-sm font-medium">{t.label}</p>
