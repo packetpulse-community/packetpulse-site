@@ -34,10 +34,10 @@ const ENDPOINTS: EndpointEntry[] = [
 ];
 
 const METHOD_COLOR: Record<EndpointEntry["method"], string> = {
-  GET: "text-green-400",
-  POST: "text-blue-400",
-  PUT: "text-yellow-400",
-  DELETE: "text-red-400",
+  GET: "text-success",
+  POST: "text-module-recruitment",
+  PUT: "text-warning",
+  DELETE: "text-danger",
 };
 
 export function ApiDocsExplorer() {
@@ -90,7 +90,7 @@ export function ApiDocsExplorer() {
           <button
             key={`${entry.method}-${entry.path}`}
             onClick={() => selectEndpoint(entry)}
-            className="glass-interactive flex flex-col gap-0.5 rounded-md p-2 text-left"
+            className="flex flex-col gap-0.5 rounded-md border border-transparent p-2 text-left transition-colors hover:border-border hover:bg-surface-subtle"
           >
             <span className="flex items-center gap-2 text-xs">
               <span className={cn("font-mono font-semibold", METHOD_COLOR[entry.method])}>{entry.method}</span>

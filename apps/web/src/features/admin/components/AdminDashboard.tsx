@@ -58,7 +58,7 @@ export function AdminDashboard() {
       <div className="flex flex-col gap-3">
         {!!stats?.pendingApproval && (
           <PendingBanner
-            icon={<UserCheck className="h-4 w-4 text-yellow-500" />}
+            icon={<UserCheck className="h-4 w-4 text-warning" />}
             message={`${stats.pendingApproval} users waiting for approval`}
             href="/admin/users?approved=false"
             cta="Review Now"
@@ -66,7 +66,7 @@ export function AdminDashboard() {
         )}
         {!!stats?.pendingResources && (
           <PendingBanner
-            icon={<FileText className="h-4 w-4 text-yellow-500" />}
+            icon={<FileText className="h-4 w-4 text-warning" />}
             message={`${stats.pendingResources} resources waiting for approval`}
             href="/admin/resources"
             cta="Review Resources"
@@ -74,7 +74,7 @@ export function AdminDashboard() {
         )}
         {!!stats?.pendingBlogs && (
           <PendingBanner
-            icon={<BookOpen className="h-4 w-4 text-yellow-500" />}
+            icon={<BookOpen className="h-4 w-4 text-warning" />}
             message={`${stats.pendingBlogs} blog posts waiting for approval`}
             href="/admin/blogs"
             cta="Review Blogs"
@@ -94,7 +94,7 @@ export function AdminDashboard() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-indigo-500" /> User Growth
+            <BarChart3 className="h-5 w-5 text-primary-text" /> User Growth
           </CardTitle>
         </CardHeader>
         <CardContent>

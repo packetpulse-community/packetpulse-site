@@ -8,7 +8,7 @@ export default function AdminLoading() {
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-32" />
       </div>
-      <div className="glass-panel flex flex-col divide-y divide-border rounded-lg">
+      <div className="border border-border bg-surface flex flex-col divide-y divide-border rounded-lg">
         {Array.from({ length: 8 }, (_, i) => (
           <div key={i} className="flex items-center justify-between gap-4 p-4">
             <div className="flex flex-1 flex-col gap-2">

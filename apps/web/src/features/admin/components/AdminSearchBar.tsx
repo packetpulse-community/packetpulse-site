@@ -19,7 +19,7 @@ export function AdminSearchBar({ basePath, placeholder = "Search…" }: { basePa
   }, [debouncedSearch]);
 
   return (
-    <div className="glass-panel flex flex-col gap-3 rounded-lg p-4">
+    <div className="border border-border bg-surface flex flex-col gap-3 rounded-lg p-4">
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}

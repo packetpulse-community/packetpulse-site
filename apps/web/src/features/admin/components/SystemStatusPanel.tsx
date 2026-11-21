@@ -14,9 +14,9 @@ function formatUptime(seconds: number) {
 }
 
 const STATE_UI: Record<ServiceState, { label: string; badge: "success" | "warning" | "danger" | "secondary"; Icon: typeof CheckCircle2; color: string }> = {
-  operational: { label: "Operational", badge: "success", Icon: CheckCircle2, color: "text-green-500" },
-  degraded: { label: "Slow", badge: "warning", Icon: AlertTriangle, color: "text-yellow-500" },
-  down: { label: "Down", badge: "danger", Icon: XCircle, color: "text-red-500" },
+  operational: { label: "Operational", badge: "success", Icon: CheckCircle2, color: "text-success" },
+  degraded: { label: "Slow", badge: "warning", Icon: AlertTriangle, color: "text-warning" },
+  down: { label: "Down", badge: "danger", Icon: XCircle, color: "text-danger" },
   not_configured: { label: "Not configured", badge: "secondary", Icon: MinusCircle, color: "text-muted-foreground" },
 };
 
@@ -52,7 +52,7 @@ export function SystemStatusPanel({ initialStatus }: { initialStatus: SystemStat
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {allOk ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <AlertTriangle className="h-5 w-5 text-yellow-500" />}
+          {allOk ? <CheckCircle2 className="h-5 w-5 text-success" /> : <AlertTriangle className="h-5 w-5 text-warning" />}
           <p className="font-medium">{allOk ? "All systems operational" : "Some systems need attention"}</p>
         </div>
         <div className="flex items-center gap-3">

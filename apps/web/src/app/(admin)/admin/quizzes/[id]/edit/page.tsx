@@ -22,7 +22,7 @@ export default async function EditAdminQuizPage({ params }: { params: Promise<{ 
       <p className="text-sm text-muted-foreground">Questions (read-only)</p>
 
       {quiz.questions.map((question, qIndex) => (
-        <div key={question.id} className="glass-panel flex flex-col gap-2 rounded-lg p-4">
+        <div key={question.id} className="border border-border bg-surface flex flex-col gap-2 rounded-lg p-4">
           <p className="font-medium">
             {qIndex + 1}. {question.questionText}
           </p>

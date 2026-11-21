@@ -11,14 +11,14 @@ interface PendingBannerProps {
 
 export function PendingBanner({ icon, message, href, cta }: PendingBannerProps) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-yellow-500/40 bg-yellow-500/10 px-4 py-3">
+    <div className="flex items-center justify-between rounded-lg border border-warning/40 bg-warning-soft px-4 py-3">
       <div className="flex items-center gap-3 text-sm text-foreground">
         {icon}
         {message}
       </div>
       <Link
         href={href}
-        className={cn(buttonVariants({ size: "sm" }), "bg-yellow-500 text-white hover:bg-yellow-600")}
+        className={cn(buttonVariants({ size: "sm" }), "bg-warning text-surface hover:bg-warning/90")}
       >
         {cta}
       </Link>

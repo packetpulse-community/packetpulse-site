@@ -17,15 +17,15 @@ export function StatsCard({ title, value, icon: Icon, highlight = false, href }:
     <Card
       className={cn(
         "flex h-full flex-col gap-3 p-4 transition-shadow",
-        highlight ? "border-2 border-yellow-500" : "hover:shadow-md",
-        href && "hover:border-indigo-500/50",
+        highlight ? "border-2 border-warning" : "hover:shadow-md",
+        href && "hover:border-primary/50",
       )}
     >
       <div className="flex items-center gap-3">
         <span
           className={cn(
             "flex h-10 w-10 items-center justify-center rounded-full",
-            highlight ? "bg-yellow-500/15 text-yellow-600" : "bg-indigo-500/10 text-indigo-500",
+            highlight ? "bg-warning-soft text-warning" : "bg-primary/10 text-primary-text",
           )}
         >
           <Icon className="h-5 w-5" />
