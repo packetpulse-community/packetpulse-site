@@ -66,7 +66,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | TASK-023 Onboarding and required details | In progress | Done: resumable onboarding after first sign-in collecting the PRD-003 details, with a route guard that keeps `/login?next=` deep links working. Remaining: owner review of the required-field list |
 | TASK-024 Resume upload and parsing | Open | No resume model |
 | TASK-025 Profile, consent, privacy | In progress | Done: versioned consent records at registration with a member-visible history and re-capture on policy change; profile visibility controls enforced server-side through the field policy; screens on Grove tokens. Migration `20261121150000_consent_privacy`. Remaining: owner-approved policy texts, withdrawal rules per counsel |
-| TASK-026 Community Q&A, guidelines, reputation | In progress | Threads, nested replies, reply likes, moderation. Missing: modes, accepted answer, report, guidelines, reputation |
+| TASK-026 Community Q&A, guidelines, reputation | In progress | Done: thread modes (question and discussion), accepted answer (asker or moderator, one per thread), report flow with a moderator queue API and audit entries, versioned guidelines, append-only reputation ledger shown as text and number; screens on Grove tokens. Migration `20261121190000_community_qa_guidelines_reputation`. Remaining: moderator queue UI (TASK-043), owner review of the points table and guideline text |
 | TASK-027 Skill taxonomy and suggestions | In progress | Done: versioned taxonomy (domains, skills, levels, aliases) with starter seed, suggestion queue, admin management with audit entries, member skill picker on the profile, public read API. Migration `20261121120000_skill_taxonomy`. Remaining: owner review of the starter taxonomy, browser check of the two pages by a person |
 
 ## M4 Learn and practice
@@ -99,7 +99,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | TASK-043 Operations queues and moderation | In progress | Moderator actions on threads, activity log. Missing: reports queue, reasons, appeals by a different admin, service levels |
 | TASK-044 Admin security | Open | No MFA, step-up, break-glass or access review; admin created by a shared secret (S-4) |
 | TASK-045 Analytics events and funnel | Open | No analytics provider found; admin analytics page shows counts |
-| TASK-046 Data rights and retention | In progress | Account deletion exists (and leaves the Supabase login, S-5). Missing: export, grace period, retention schedule |
+| TASK-046 Data rights and retention | In progress | Done: member data export (background job, private file, 24-hour signed link, audit entry), account deletion with a 30-day grace period and password re-entry, scheduled erasure that also removes the Supabase login (fixes S-5) and staff delete-user now erases instead of cascading (D-2), retention schedule as code plus `docs/ops/data-retention.md`, admin read-only request list, settings page. Remaining: counsel review of retention periods and the erase/keep table; a real Supabase-mode run of the login removal (tests use a fake) |
 | TASK-047 Feature switches and policy screens | In progress | Done: typed flag registry, guard, admin and public endpoints with audit entries and reasons, enforcement on forums, quizzes, resources, files, blogs, sign-up and email, an admin Feature switches page; flags are now stored durably in the database (migration `20261121170000_onboarding_email_code_feature_flags`), Redis is only a cache. Remaining: policy screens, owner review of the flag list |
 | TASK-048 Integrations (ClickUp, n8n) | Open | Not started; waits for OPEN-12 scope |
 
@@ -187,4 +187,9 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 
 - Migrations added: `20261121150000_consent_privacy` and `20261121170000_onboarding_email_code_feature_flags` (plus `20261121090000_audit_actions_categories_deletions` and `20261121120000_skill_taxonomy` earlier). All four must be applied to every database before the backend that uses them is deployed.
 - Verified together: backend e2e 341 across 25 suites, web unit tests 370, `next build` 49 pages, migration rehearsal passes.
+
+## Notes from M3 batch 2
+
+- Migrations added: `20261121190000_community_qa_guidelines_reputation` and the data rights migration (see `apps/backend/prisma/migrations`). Apply every migration newer than `20261121120000_skill_taxonomy` to the database before deploying the backend.
+- Verified together: backend e2e 400 across 29 suites, web unit tests 401, `next build` 53 pages, migration rehearsal passes.
 
