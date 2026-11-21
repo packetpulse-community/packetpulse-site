@@ -26,4 +26,10 @@ export abstract class CredentialProvider {
   // Returns a new `passwordHash` to persist locally (docker mode), or nothing when
   // the provider updates the credential itself (Supabase mode).
   abstract updateCredential(userId: string, email: string, newPassword: string): Promise<{ passwordHash?: string }>;
+
+  // Removes the login itself (account erasure, S-5). Must be safe to repeat: deleting a credential
+  // that is already gone is a success, so a retried erasure never gets stuck. Docker mode has
+  // nothing outside our own row to remove (the caller clears passwordHash); Supabase mode deletes
+  // the Supabase Auth user, whose id is our User.id.
+  abstract deleteCredential(userId: string): Promise<void>;
 }

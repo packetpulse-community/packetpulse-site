@@ -10,6 +10,7 @@ import { toPublicUser } from "../../domain/entities/user.entity";
 import { Public } from "../decorators/public.decorator";
 import { CurrentUser } from "../decorators/current-user.decorator";
 import { SkipEmailVerification } from "../decorators/skip-email-verification.decorator";
+import { AllowDeactivated } from "../decorators/allow-deactivated.decorator";
 import { AllowDuringMaintenance } from "../decorators/allow-during-maintenance.decorator";
 import {
   RegisterDto,
@@ -96,6 +97,7 @@ export class AuthController {
   }
 
   @AllowDuringMaintenance()
+  @AllowDeactivated()
   @Post("logout")
   @HttpCode(200)
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -104,6 +106,7 @@ export class AuthController {
     return { success: true };
   }
 
+  @AllowDeactivated()
   @Get("me")
   async me(@CurrentUser() current: AccessTokenPayload) {
     const user = await this.users.findById(current.sub);

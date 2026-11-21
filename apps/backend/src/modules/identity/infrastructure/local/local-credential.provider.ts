@@ -18,4 +18,7 @@ export class LocalCredentialProvider extends CredentialProvider {
   async updateCredential(userId: string, email: string, newPassword: string) {
     return { passwordHash: await bcrypt.hash(newPassword, BCRYPT_COST) };
   }
+
+  // The hash lives on the user row; the erasure job clears it with the rest of the row.
+  async deleteCredential(): Promise<void> {}
 }

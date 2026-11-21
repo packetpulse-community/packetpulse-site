@@ -33,4 +33,12 @@ export class SupabaseCredentialProvider extends CredentialProvider {
     if (error) throw new InternalServerErrorException(`Supabase Auth: failed to update password (${error.message})`);
     return {};
   }
+
+  async deleteCredential(userId: string) {
+    const { error } = await this.supabase.auth.admin.deleteUser(userId);
+    // Already gone (a retry, or removed by hand in the Supabase dashboard): nothing left to do.
+    if (error && !/not.?found/i.test(error.message) && (error as { status?: number }).status !== 404) {
+      throw new InternalServerErrorException(`Supabase Auth: failed to delete user (${error.message})`);
+    }
+  }
 }

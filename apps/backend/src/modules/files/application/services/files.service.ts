@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { FileAccessAction, StoredFile } from "@prisma/client";
 import { extname } from "path";
 import { randomUUID } from "crypto";
-import { CreateUploadUrlDto, FILE_LINK_TTL_SECONDS } from "@packetpulse/types";
+import { CreateUploadUrlDto, FILE_LINK_TTL_SECONDS, FileKind } from "@packetpulse/types";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { StorageProvider } from "../../../../common/storage/storage-provider";
 import { FileScanner, ScannerUnavailableError } from "../../domain/file-scanner";
@@ -48,7 +48,9 @@ export class FilesService {
   // attempt is logged as `denied`.
   private async loadFor(id: string, user: Actor, ip: string | undefined, ownerOnly: boolean) {
     const file = await this.prisma.storedFile.findUnique({ where: { id } });
-    if (!file) throw new NotFoundException("File not found");
+    // Data exports (TASK-046) are handed out only by the data-rights module, which logs and
+    // audits each link; this endpoint pretends they do not exist.
+    if (!file || file.kind === "data_export") throw new NotFoundException("File not found");
     const allowed = ownerOnly ? file.ownerId === user.sub : canOpen(user, file);
     if (!allowed || file.status === "deleted") {
       if (!allowed) await this.log(file.id, user.sub, "denied", ip);
@@ -96,7 +98,7 @@ export class FilesService {
           path: file.path,
           contentType: file.contentType,
           sizeBytes: file.sizeBytes,
-          kind: file.kind,
+          kind: file.kind as FileKind, // data_export never reaches here: loadFor hides it
           head: bytes,
           readAll: () => this.storage.readHead(file.bucket, file.path, file.sizeBytes),
         });

@@ -25,6 +25,8 @@ export const NOTIFICATION_EVENT_TYPES = [
   "assessment_result",
   "badge_expiry",
   "billing",
+  "data_export_ready",
+  "account_deletion",
 ] as const;
 export const NotificationEventTypeSchema = z.enum(NOTIFICATION_EVENT_TYPES);
 export type NotificationEventType = z.infer<typeof NotificationEventTypeSchema>;
@@ -163,6 +165,22 @@ export const NOTIFICATION_EVENTS: readonly NotificationEventMeta[] = [
     channels: { in_app: IN_APP, email: email(true), whatsapp: NO },
     critical: false,
     emitted: false,
+  },
+  {
+    type: "data_export_ready",
+    label: "Your data export is ready",
+    description: "The download you asked for under Settings > Your data is ready (it stays available for 7 days).",
+    channels: { in_app: NO, email: email(true), whatsapp: NO },
+    critical: true,
+    emitted: true,
+  },
+  {
+    type: "account_deletion",
+    label: "Account deletion",
+    description: "Your account deletion was scheduled, cancelled or completed.",
+    channels: { in_app: NO, email: email(true), whatsapp: NO },
+    critical: true,
+    emitted: true,
   },
 ];
 

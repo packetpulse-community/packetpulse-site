@@ -9,6 +9,7 @@ export { Public } from "./presentation/decorators/public.decorator";
 export { AllowDuringMaintenance } from "./presentation/decorators/allow-during-maintenance.decorator";
 export { CurrentUser } from "./presentation/decorators/current-user.decorator";
 export { RequirePermission } from "./presentation/decorators/require-permission.decorator";
+export { AllowDeactivated } from "./presentation/decorators/allow-deactivated.decorator";
 export { SkipApproval } from "./presentation/decorators/skip-approval.decorator";
 export { SkipEmailVerification } from "./presentation/decorators/skip-email-verification.decorator";
 export type { AccessTokenPayload } from "./application/services/token.service";

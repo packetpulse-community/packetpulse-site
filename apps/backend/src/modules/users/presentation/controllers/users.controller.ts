@@ -3,7 +3,7 @@ import { Response } from "express";
 import { UsersService } from "../../application/services/users.service";
 import { ProfilePrivacyService } from "../../application/services/profile-privacy.service";
 import { UpdateProfilePrivacyDto, UpdateProfileDto, ChangePasswordDto, DeleteAccountDto } from "../../application/dto/users.dto";
-import { CurrentUser, SkipApproval, SkipEmailVerification } from "../../../identity";
+import { AllowDeactivated, CurrentUser, SkipApproval, SkipEmailVerification } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
 import { AuthCookieService } from "../../../identity/application/services/auth-cookie.service";
 
@@ -15,6 +15,7 @@ export class UsersController {
     private readonly privacy: ProfilePrivacyService,
   ) {}
 
+  @AllowDeactivated()
   @Get()
   async getProfile(@CurrentUser() current: AccessTokenPayload) {
     return this.users.getProfile(current.sub);

@@ -14,7 +14,9 @@ export type EmailTemplate =
   | { name: "suspicious-refresh-reuse" }
   // Generic event notice (TASK-021): says THAT something happened, never WHAT. No titles, names,
   // resume, compensation or notes: the details are behind sign-in at `link`.
-  | { name: "event-notice"; eventType: string; link: string; settingsLink: string };
+  | { name: "event-notice"; eventType: string; link: string; settingsLink: string }
+  // TASK-046: data-rights confirmations. Dates only, no personal data in the body.
+  | { name: "data-rights-notice"; kind: "export-ready" | "deletion-scheduled" | "deletion-cancelled" | "erased"; link: string; date?: string };
 
 // Subject per event type. Fixed strings on purpose (PRD-041 privacy rule: nothing private in a subject).
 const EVENT_SUBJECTS: Record<string, string> = {
@@ -31,7 +33,35 @@ const EVENT_SUBJECTS: Record<string, string> = {
   assessment_result: "Your assessment result is ready",
   badge_expiry: "A PacketPulse badge is about to expire",
   billing: "A PacketPulse billing notice",
+  data_export_ready: "Your PacketPulse data export is ready",
+  account_deletion: "An update on your PacketPulse account deletion",
 };
+
+
+function renderDataRightsNotice(template: Extract<EmailTemplate, { name: "data-rights-notice" }>): { subject: string; text: string } {
+  switch (template.kind) {
+    case "export-ready":
+      return {
+        subject: "Your PacketPulse data export is ready",
+        text: `The download of your PacketPulse data is ready. Sign in and open this page to get it:\n${template.link}\n\nIt stays available until ${template.date ?? "7 days from now"}. We never put the file in an email.`,
+      };
+    case "deletion-scheduled":
+      return {
+        subject: "Your PacketPulse account is scheduled for deletion",
+        text: `You asked us to delete your PacketPulse account. It is deactivated now and will be erased on ${template.date ?? "the date shown on the page"}.\n\nChanged your mind? Sign in and cancel before then:\n${template.link}\n\nIf this was not you, sign in and cancel, then change your password.`,
+      };
+    case "deletion-cancelled":
+      return {
+        subject: "Your PacketPulse account deletion was cancelled",
+        text: `The deletion of your PacketPulse account was cancelled and your account is active again.\n\nIf this was not you, change your password:\n${template.link}`,
+      };
+    case "erased":
+      return {
+        subject: "Your PacketPulse account was deleted",
+        text: "Your PacketPulse account and personal data were erased as you asked. Posts that others replied to remain without your name. This is the last email we will send to this address.",
+      };
+  }
+}
 
 export function renderEmail(template: EmailTemplate): { subject: string; text: string } {
   switch (template.name) {
@@ -89,6 +119,8 @@ export function renderEmail(template: EmailTemplate): { subject: string; text: s
         subject: EVENT_SUBJECTS[template.eventType] ?? "You have a new PacketPulse notification",
         text: `You have a new notification on PacketPulse. Sign in to read it:\n${template.link}\n\nYou can choose which emails you get, and set quiet hours, here:\n${template.settingsLink}`,
       };
+    case "data-rights-notice":
+      return renderDataRightsNotice(template);
     case "suspicious-refresh-reuse":
       return {
         subject: "Security alert: PacketPulse session revoked",

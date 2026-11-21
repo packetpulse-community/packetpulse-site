@@ -87,6 +87,22 @@ export class EmailQueueService {
     );
   }
 
+  // TASK-046 data-rights confirmations. With a member id they go through the dispatcher (critical
+  // events: preferences and quiet hours cannot suppress them, and the delivery is logged). Without
+  // one (the final "erased" notice, sent after the member's rows are gone) they are enqueued
+  // directly. `key` makes a repeated call send once.
+  async sendDataRightsNotice(
+    to: string,
+    template: Extract<EmailTemplate, { name: "data-rights-notice" }>,
+    opts: { userId?: string; type?: NotificationEventType; key: string },
+  ) {
+    if (this.dispatcher && opts.userId && opts.type) {
+      const decision = await this.dispatcher.dispatchEmail({ userId: opts.userId, type: opts.type, to, template, critical: true });
+      return decision.job;
+    }
+    return this.enqueue(to, template, ["data-rights-notice", opts.key]);
+  }
+
   // Resolves the member by address and lets the dispatcher decide. No dispatcher or no matching
   // member (an address that is not an account) = enqueue directly, as before.
   private async routed(type: NotificationEventType, to: string, template: EmailTemplate) {

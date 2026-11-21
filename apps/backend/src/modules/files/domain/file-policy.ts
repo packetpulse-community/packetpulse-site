@@ -4,6 +4,8 @@ const STAFF_ROLES = ["admin", "super_admin"];
 
 // The single place that decides who may open or delete a stored file. Today: the owner, and
 // admin/super_admin. Recruiters (after the owner forwards a resume) get added here later.
-export function canOpen(user: { sub: string; roles: string[] }, file: Pick<StoredFile, "ownerId">): boolean {
+export function canOpen(user: { sub: string; roles: string[] }, file: Pick<StoredFile, "ownerId" | "kind">): boolean {
+  // A data export (TASK-046) holds everything about one member: staff never open it.
+  if (file.kind === "data_export") return file.ownerId === user.sub;
   return file.ownerId === user.sub || user.roles.some((r) => STAFF_ROLES.includes(r));
 }

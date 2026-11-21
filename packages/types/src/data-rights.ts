@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PaginationQuerySchema } from "./common";
 
 // Data rights (TASK-046, PRD-045, SCR-038, API-009, DB-028, TEST-041): export my data, delete my
 // account after a grace period, and the retention schedule. Document 1 section 10.7 gives the
@@ -36,6 +37,13 @@ export const RequestErasureSchema = z.object({
   password: z.string().min(1, "Enter your password to confirm").max(200),
 });
 export type RequestErasureDto = z.infer<typeof RequestErasureSchema>;
+
+export const AdminDataRequestListQuerySchema = PaginationQuerySchema.extend({
+  kind: z.enum(DATA_REQUEST_KINDS).optional(),
+  // "open" (default) = not finished; "all" also lists finished ones.
+  scope: z.enum(["open", "all"]).default("open"),
+});
+export type AdminDataRequestListQuery = z.infer<typeof AdminDataRequestListQuerySchema>;
 
 /** One request as the member sees it. */
 export interface DataRequestView {
@@ -102,7 +110,7 @@ export const ERASURE_RULES: readonly ErasureRule[] = [
   { key: "unanswered-threads", data: "Forum threads that nobody else replied to", outcome: "deleted", reason: "No one depends on them." },
   { key: "drafts", data: "Unpublished blog posts", outcome: "deleted", reason: "Never shown to anyone." },
   { key: "content", data: "Published blog posts and comments, resources, recordings, forum replies and threads others replied to", outcome: "anonymised", reason: "Others depend on them (Document 1 section 10.7); your name is removed and shown as \"Deleted member\"." },
-  { key: "certificates", data: "Certificates you earned and the attempt behind each", outcome: "anonymised", reason: "A certificate number must keep verifying for whoever relied on it; the verifier shows no name." },
+  { key: "certificates", data: "Certificates you earned and the attempt behind each", outcome: "anonymised", reason: "A certificate number must keep verifying for whoever relied on it; the verifier shows \"Deleted member\" instead of your name." },
   { key: "consent", data: "Consent history (what you agreed to and when)", outcome: "kept", reason: "Proof that consent was lawful; kept 3 years after erasure, then deleted." },
   { key: "reputation", data: "Reputation ledger entries", outcome: "kept", reason: "Append-only; no personal data, attached to the tombstone." },
   { key: "audit", data: "Audit log entries about your account and staff actions on it", outcome: "kept", reason: "The audit log is append-only and kept at least 3 years." },
