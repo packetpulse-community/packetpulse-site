@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import type Redis from "ioredis";
 import type { AdminFeatureFlag, FeatureFlagKey, PublicFeatureFlags } from "@packetpulse/types";
@@ -8,10 +8,15 @@ import { FEATURE_FLAGS, FLAG_BY_KEY, type FeatureFlagDefinition } from "./featur
 import { featureDisabledException } from "./feature-disabled.exception";
 
 const SETTINGS_ID = "default";
-// Overrides for every flag without its own SiteSettings column live in one Redis hash.
-// INTERIM: the durable home is a feature_flags table (see the TASK-047 hand-over note); the
-// store is the only thing that changes when it lands.
+// Durable home: the feature_flags table (a row only for a switch someone changed). Redis is an
+// optional shared cache of those rows (FLAG_CACHE_KEY) and nothing more: flushing it, or losing
+// it, changes no flag. FLAG_HASH is the old interim store; its entries are imported once at start
+// (importLegacyRedisFlags) and the hash is then deleted.
 export const FLAG_HASH = "packetpulse:feature-flags";
+export const FLAG_CACHE_KEY = "packetpulse:feature-flags:cache:v2";
+const SHARED_CACHE_TTL_SECONDS = 60;
+
+type StoredFlag = { key: string; enabled: boolean; updatedBy: string | null; updatedAt: string };
 // Read on hot paths (every forum post, every email decision), so cached in-process; a change
 // invalidates this replica at once and others within the TTL, like the maintenance flag.
 const CACHE_TTL_MS = 5_000;
@@ -25,7 +30,7 @@ interface Resolved {
 }
 
 @Injectable()
-export class FeatureFlagsService {
+export class FeatureFlagsService implements OnModuleInit {
   private readonly logger = new Logger(FeatureFlagsService.name);
   private cache: { values: Map<FeatureFlagKey, Resolved>; expiresAt: number } | null = null;
 
@@ -33,6 +38,40 @@ export class FeatureFlagsService {
     private readonly prisma: PrismaService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
+
+  async onModuleInit() {
+    await this.importLegacyRedisFlags();
+  }
+
+  /**
+   * One-time move of the TASK-047 interim Redis overrides into the table. A row already in the
+   * table wins (it is newer than anything in the old hash); the hash is deleted only after the
+   * rows are in, so a failure here loses nothing and is retried at the next start.
+   */
+  async importLegacyRedisFlags(): Promise<number> {
+    try {
+      const legacy = await this.redis.hgetall(FLAG_HASH);
+      const rows: { key: string; enabled: boolean; updatedBy: string | null }[] = [];
+      for (const def of FEATURE_FLAGS) {
+        if (def.siteSetting || !legacy[def.key]) continue;
+        try {
+          const parsed = JSON.parse(legacy[def.key]!) as { enabled?: unknown; by?: unknown };
+          if (typeof parsed.enabled === "boolean") {
+            rows.push({ key: def.key, enabled: parsed.enabled, updatedBy: typeof parsed.by === "string" ? parsed.by : null });
+          }
+        } catch {
+          // an unreadable entry is dropped with the hash, as it was ignored before
+        }
+      }
+      if (rows.length > 0) await this.prisma.featureFlag.createMany({ data: rows, skipDuplicates: true });
+      if (Object.keys(legacy).length > 0) await this.redis.del(FLAG_HASH);
+      if (rows.length > 0) this.invalidate();
+      return rows.length;
+    } catch (err) {
+      this.logger.warn(`Legacy feature flags not imported (will retry at next start): ${(err as Error).message}`);
+      return 0;
+    }
+  }
 
   /** Current value of one flag. Unknown stores fail open to the default, never to "off". */
   async isEnabled(key: FeatureFlagKey): Promise<boolean> {
@@ -78,29 +117,49 @@ export class FeatureFlagsService {
 
   /** Writes one flag; the caller (admin service) audits it first, so a failed audit blocks the change. */
   async write(def: FeatureFlagDefinition, enabled: boolean, actorId: string, tx?: Prisma.TransactionClient): Promise<void> {
+    const db = tx ?? this.prisma;
     if (def.siteSetting) {
-      const db = tx ?? this.prisma;
       await db.siteSettings.upsert({
         where: { id: SETTINGS_ID },
         update: { [def.siteSetting]: enabled },
         create: { id: SETTINGS_ID, [def.siteSetting]: enabled },
       });
     } else {
-      await this.redis.hset(FLAG_HASH, def.key, JSON.stringify({ enabled, at: new Date().toISOString(), by: actorId }));
+      await db.featureFlag.upsert({
+        where: { key: def.key },
+        update: { enabled, updatedBy: actorId },
+        create: { key: def.key, enabled, updatedBy: actorId },
+      });
     }
     this.invalidate();
   }
 
+  /** Drops this replica's copy at once and the shared Redis copy best-effort. Call after a commit. */
   invalidate() {
     this.cache = null;
+    this.redis.del(FLAG_CACHE_KEY).catch(() => undefined);
+  }
+
+  /** Rows from the shared cache, else from the table (then cached). Redis trouble never changes the answer. */
+  private async loadStored(): Promise<Map<string, StoredFlag>> {
+    try {
+      const cached = await this.redis.get(FLAG_CACHE_KEY);
+      if (cached) return new Map((JSON.parse(cached) as StoredFlag[]).map((r) => [r.key, r]));
+    } catch (err) {
+      this.logger.warn(`Feature flag cache unreadable, reading the database: ${(err as Error).message}`);
+    }
+    const rows = await this.prisma.featureFlag.findMany();
+    const stored: StoredFlag[] = rows.map((r) => ({ key: r.key, enabled: r.enabled, updatedBy: r.updatedBy, updatedAt: r.updatedAt.toISOString() }));
+    this.redis.set(FLAG_CACHE_KEY, JSON.stringify(stored), "EX", SHARED_CACHE_TTL_SECONDS).catch(() => undefined);
+    return new Map(stored.map((r) => [r.key, r]));
   }
 
   private async resolveAll(): Promise<Map<FeatureFlagKey, Resolved>> {
     if (this.cache && this.cache.expiresAt > Date.now()) return this.cache.values;
 
-    let overrides: Record<string, string> = {};
+    let stored = new Map<string, StoredFlag>();
     try {
-      overrides = await this.redis.hgetall(FLAG_HASH);
+      stored = await this.loadStored();
     } catch (err) {
       this.logger.warn(`Feature flag store unreachable, using defaults: ${(err as Error).message}`);
     }
@@ -127,22 +186,14 @@ export class FeatureFlagsService {
         });
         continue;
       }
-      const raw = overrides[def.key];
-      let parsed: { enabled?: unknown; at?: unknown; by?: unknown } | null = null;
-      if (raw) {
-        try {
-          parsed = JSON.parse(raw);
-        } catch {
-          parsed = null;
-        }
-      }
-      if (parsed && typeof parsed.enabled === "boolean") {
+      const row = stored.get(def.key);
+      if (row) {
         values.set(def.key, {
-          enabled: parsed.enabled,
-          overridden: parsed.enabled !== def.defaultValue,
+          enabled: row.enabled,
+          overridden: row.enabled !== def.defaultValue,
           source: "override",
-          updatedAt: typeof parsed.at === "string" ? parsed.at : null,
-          updatedBy: typeof parsed.by === "string" ? parsed.by : null,
+          updatedAt: row.updatedAt,
+          updatedBy: row.updatedBy,
         });
       } else {
         values.set(def.key, { enabled: def.defaultValue, overridden: false, source: "default", updatedAt: null, updatedBy: null });

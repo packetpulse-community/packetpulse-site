@@ -72,6 +72,14 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
     changePermission: PERMISSIONS.ADMIN_MANAGE_SETTINGS,
     public: false,
   },
+  {
+    key: "onboarding.instant_access",
+    description:
+      "DEC-035 switch. Off (default): a new member waits for admin approval, and the email code is sent when an admin approves. On: the email code is sent at sign-up and a member who verifies it is approved at once.",
+    defaultValue: false,
+    changePermission: PERMISSIONS.ADMIN_MANAGE_SETTINGS,
+    public: false,
+  },
 ];
 
 export const FLAG_BY_KEY = new Map(FEATURE_FLAGS.map((f) => [f.key, f] as const));

@@ -6,7 +6,7 @@ import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { TokenService } from "../src/modules/identity/application/services/token.service";
 import { toPublicUser, userWithRolesInclude } from "../src/modules/identity";
-import { FeatureFlagsService, FLAG_HASH } from "../src/modules/feature-flags/feature-flags.service";
+import { FeatureFlagsService, FLAG_CACHE_KEY, FLAG_HASH } from "../src/modules/feature-flags/feature-flags.service";
 import { NotificationDispatcher } from "../src/modules/notifications/application/services/notification-dispatcher.service";
 import { FEATURE_FLAG_KEYS } from "@packetpulse/types";
 import { FEATURE_FLAGS } from "../src/modules/feature-flags";
@@ -30,7 +30,8 @@ describe("Feature switches (e2e)", () => {
 
   const put = (key: string, body: object) => admin.put(`/api/admin/feature-flags/${key}`).send(body);
   async function reset() {
-    await redis.del(FLAG_HASH);
+    await redis.del(FLAG_HASH, FLAG_CACHE_KEY);
+    await prisma.featureFlag.deleteMany();
     await prisma.siteSettings.upsert({ where: { id: "default" }, update: { registrationEnabled: true }, create: { id: "default" } });
     flags.invalidate();
   }
@@ -81,9 +82,10 @@ describe("Feature switches (e2e)", () => {
     await app.close();
   });
 
-  it("keeps the registry and the shared key list in step, with every default on", () => {
+  it("keeps the registry and the shared key list in step, with every default keeping today's behaviour", () => {
     expect(FEATURE_FLAGS.map((f) => f.key).sort()).toEqual([...FEATURE_FLAG_KEYS].sort());
-    expect(FEATURE_FLAGS.every((f) => f.defaultValue === true)).toBe(true);
+    // Every switch defaults to today's behaviour: features on, and the DEC-035 instant-access switch off.
+    expect(FEATURE_FLAGS.filter((f) => f.key !== "onboarding.instant_access").every((f) => f.defaultValue === true)).toBe(true);
   });
 
   describe("public read endpoint", () => {
@@ -214,12 +216,41 @@ describe("Feature switches (e2e)", () => {
       }
     });
 
-    it("falls back to the defaults when the override store is unreachable", async () => {
+    it("keeps flags in the database: a Redis flush changes nothing", async () => {
       await put("forums.posting", { enabled: false, reason: REASON }).expect(200);
-      const spy = jest.spyOn(redis, "hgetall").mockRejectedValueOnce(new Error("down"));
+      expect(await prisma.featureFlag.findUnique({ where: { key: "forums.posting" } })).toMatchObject({ enabled: false });
+      await redis.flushdb();
       flags.invalidate();
-      expect(await flags.isEnabled("forums.posting")).toBe(true);
-      spy.mockRestore();
+      expect(await flags.isEnabled("forums.posting")).toBe(false);
+      const row = (await admin.get("/api/admin/feature-flags").expect(200)).body.find((f: { key: string }) => f.key === "forums.posting");
+      expect(row).toMatchObject({ enabled: false, overridden: true, source: "override" });
+    });
+
+    it("still answers from the database when Redis is unreachable", async () => {
+      await put("forums.posting", { enabled: false, reason: REASON }).expect(200);
+      const get = jest.spyOn(redis, "get").mockRejectedValue(new Error("down"));
+      const set = jest.spyOn(redis, "set").mockRejectedValue(new Error("down"));
+      flags.invalidate();
+      expect(await flags.isEnabled("forums.posting")).toBe(false);
+      get.mockRestore();
+      set.mockRestore();
+    });
+
+    it("imports the old interim Redis hash into the table once, without overwriting newer rows", async () => {
+      const entry = (enabled: boolean) => JSON.stringify({ enabled, at: new Date().toISOString(), by: "legacy-admin" });
+      await redis.hset(FLAG_HASH, "quizzes.attempts", entry(false), "resources.uploads", entry(false), "junk.key", entry(false));
+      await prisma.featureFlag.create({ data: { key: "resources.uploads", enabled: true, updatedBy: "newer" } });
+      expect(await flags.importLegacyRedisFlags()).toBe(2);
+      expect(await redis.exists(FLAG_HASH)).toBe(0);
+      expect(await prisma.featureFlag.findUnique({ where: { key: "quizzes.attempts" } })).toMatchObject({ enabled: false, updatedBy: "legacy-admin" });
+      expect(await prisma.featureFlag.findUnique({ where: { key: "resources.uploads" } })).toMatchObject({ enabled: true, updatedBy: "newer" });
+      expect(await prisma.featureFlag.findUnique({ where: { key: "junk.key" } })).toBeNull();
+      flags.invalidate();
+      expect(await flags.isEnabled("quizzes.attempts")).toBe(false);
+    });
+
+    it("defaults onboarding.instant_access to off (DEC-035: approval kept)", async () => {
+      expect(await flags.isEnabled("onboarding.instant_access")).toBe(false);
     });
   });
 });

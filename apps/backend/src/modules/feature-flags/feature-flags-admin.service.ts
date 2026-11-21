@@ -38,6 +38,7 @@ export class FeatureFlagsAdminService {
       }
       await this.flags.write(def, dto.enabled, actorId, tx);
     });
+    this.flags.invalidate(); // after the commit, so no reader re-caches the old value in between
     return (await this.flags.listAdmin()).find((f) => f.key === def.key)!;
   }
 }
