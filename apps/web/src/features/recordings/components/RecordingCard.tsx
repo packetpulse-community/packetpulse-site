@@ -14,15 +14,15 @@ function formatDuration(seconds: number) {
 export function RecordingCard({ recording }: { recording: RecordingSummary }) {
   return (
     <Link href={`/recordings/${recording.id}`} className={cn(cardVariants({ variant: "glass" }), "flex flex-col overflow-hidden")}>
-      <div className="relative h-40 w-full overflow-hidden bg-slate-900">
+      <div className="relative h-40 w-full overflow-hidden bg-surface-subtle">
         {recording.thumbnailUrl ? (
           <img src={recording.thumbnailUrl} alt={recording.title} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-900/60 to-purple-900/60">
-            <PlayCircle className="h-10 w-10 text-white/60" />
+          <div className="flex h-full w-full items-center justify-center bg-surface-subtle">
+            <PlayCircle className="h-10 w-10 text-primary-text" />
           </div>
         )}
-        <span className="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-xs text-white">
+        <span className="absolute bottom-2 right-2 rounded bg-surface/90 px-1.5 py-0.5 text-xs text-text">
           {formatDuration(recording.durationSeconds)}
         </span>
       </div>

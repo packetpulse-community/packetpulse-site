@@ -39,7 +39,7 @@ export function VideoPlayer({ src, poster }: { src: string; poster?: string }) {
   }
 
   return (
-    <div className="glass-panel flex flex-col gap-3 rounded-lg p-3">
+    <div className="border border-border bg-surface flex flex-col gap-3 rounded-lg p-3">
       <video
         ref={videoRef}
         src={src}
