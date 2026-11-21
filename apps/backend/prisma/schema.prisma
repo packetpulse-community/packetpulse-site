@@ -103,6 +103,10 @@ model User {
   notifications        Notification[]
   activityLogActions   AdminActivityLog[]
   storedFiles StoredFile[]
+  resumes          Resume[]
+  resumeSuggestions ResumeSuggestion[]
+  memberEducation  MemberEducation[]
+  memberExperience MemberExperience[]
   notificationSettings    NotificationSettings?
   notificationPreferences NotificationPreference[]
   notificationDeliveries  NotificationDelivery[]
@@ -1119,6 +1123,7 @@ model StoredFile {
   scanResult   String?          @map("scan_result")
   createdAt    DateTime         @default(now()) @map("created_at")
   dataRequest  DataRequest?
+  resume       Resume?
 
   @@index([ownerId])
   @@index([status, createdAt])
@@ -1409,4 +1414,114 @@ model DataRequest {
   @@index([status, expiresAt])
   @@index([userId, requestedAt])
   @@map("data_requests")
+}
+
+// ---------------------------------------------------------------------------------------------
+// TASK-024 resume upload and parsing (PRD-007, PRD-046, DB-005, API-007, TEST-004). A resume is a
+// private StoredFile (kind resume) plus background-parsed suggestions the member accepts or
+// rejects one by one. One CURRENT resume per member (activeSlot, same pattern as data requests),
+// older versions kept for history up to RESUME_MAX_VERSIONS.
+// ---------------------------------------------------------------------------------------------
+
+enum ResumeStatus {
+  awaiting_upload
+  parsing
+  ready
+  failed
+  rejected
+}
+
+enum ResumeSuggestionKind {
+  skill
+  education
+  experience
+}
+
+enum ResumeSuggestionStatus {
+  pending
+  accepted
+  rejected
+}
+
+model Resume {
+  id             String       @id @default(uuid())
+  userId         String       @map("user_id")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileId         String       @unique @map("file_id")
+  file           StoredFile   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  // 1, 2, 3 ... per member; shown as "Version 3".
+  version        Int
+  status         ResumeStatus @default(awaiting_upload)
+  // "current" for the member's one current resume, NULL for history (NULLs never collide).
+  activeSlot     String?      @map("active_slot")
+  // A parse failure code from RESUME_FAILURE_CODES (status failed or rejected).
+  failureCode    String?      @map("failure_code")
+  // Bumped each time parsing is (re)queued; part of the job id, so a retry is a new job and a
+  // repeated enqueue of the same run is ignored.
+  parseRun       Int          @default(0) @map("parse_run")
+  parseStartedAt DateTime?    @map("parse_started_at")
+  parsedAt       DateTime?    @map("parsed_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  suggestions ResumeSuggestion[]
+
+  @@unique([userId, version])
+  @@unique([userId, activeSlot])
+  @@index([status, updatedAt])
+  @@map("resumes")
+}
+
+// A value the parser found. `data` is one of the shapes in packages/types/src/resumes.ts, chosen by
+// `kind`. `fingerprint` is a hash of kind + data, so running the job twice never doubles a row.
+model ResumeSuggestion {
+  id          String                 @id @default(uuid())
+  resumeId    String                 @map("resume_id")
+  resume      Resume                 @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  userId      String                 @map("user_id")
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        ResumeSuggestionKind
+  data        Json
+  fingerprint String
+  status      ResumeSuggestionStatus @default(pending)
+  decidedAt   DateTime?              @map("decided_at")
+  createdAt   DateTime               @default(now()) @map("created_at")
+
+  @@unique([resumeId, fingerprint])
+  @@index([userId])
+  @@map("resume_suggestions")
+}
+
+// Profile entries the member accepted from a resume suggestion. Nothing else writes them yet.
+model MemberEducation {
+  id                 String   @id @default(uuid())
+  userId             String   @map("user_id")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution        String?
+  qualification      String?
+  startYear          Int?     @map("start_year")
+  endYear            Int?     @map("end_year")
+  // The suggestion that created it: accepting twice never adds a second row.
+  sourceSuggestionId String?  @unique @map("source_suggestion_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("member_education")
+}
+
+model MemberExperience {
+  id                 String   @id @default(uuid())
+  userId             String   @map("user_id")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title              String?
+  company            String?
+  // YYYY-MM
+  startDate          String?  @map("start_date")
+  endDate            String?  @map("end_date")
+  current            Boolean  @default(false)
+  sourceSuggestionId String?  @unique @map("source_suggestion_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("member_experience")
 }

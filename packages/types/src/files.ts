@@ -12,11 +12,11 @@ export type FileKind = z.infer<typeof FileKindSchema>;
 export const FileStatusSchema = z.enum(["pending", "available", "rejected", "deleted"]);
 export type FileStatus = z.infer<typeof FileStatusSchema>;
 
-// Allowed content types per kind. Resumes: PDF, DOC, DOCX. Certificates and evidence: PDF and images.
+// Allowed content types per kind. Resumes: PDF and DOCX (TASK-024: legacy DOC is not accepted).
+// Certificates and evidence: PDF and images.
 export const FILE_CONTENT_TYPES: Record<FileKind, readonly string[]> = {
   resume: [
     "application/pdf",
-    "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ],
   certificate: ["application/pdf", "image/png", "image/jpeg", "image/webp"],

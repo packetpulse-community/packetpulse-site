@@ -17,3 +17,4 @@ export * from "./consent";
 export * from "./onboarding";
 export * from "./whatsapp";
 export * from "./data-rights";
+export * from "./resumes";
