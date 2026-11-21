@@ -7,6 +7,8 @@ import { CredentialProvider } from "../../domain/providers/credential-provider";
 import { PrismaService } from "../../../../prisma/prisma.service";
 import { TokenService } from "./token.service";
 import { EmailVerificationService } from "./email-verification.service";
+import { EmailCodeService } from "./email-code.service";
+import { FeatureFlagsService } from "../../../feature-flags/feature-flags.service";
 import { EmailQueueService } from "../../../notifications";
 import { toPublicUser, PublicUser } from "../../domain/entities/user.entity";
 import { SUPER_ADMIN_ROLE } from "../../domain/constants/permissions.constants";
@@ -42,6 +44,8 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly activityLog: AdminActivityLogService,
     private readonly consent: ConsentService,
+    private readonly emailCodes: EmailCodeService,
+    private readonly flags: FeatureFlagsService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
@@ -77,11 +81,25 @@ export class AuthService {
       roleNames: ["member"],
       isApproved: false,
       emailVerified: false,
+      // PRD-004: the "I am 18 or older" tick, stored with its time. The date of birth is asked in onboarding.
+      ageConfirmedAt: new Date(),
     });
     // Consent is recorded with the account (TASK-025, PRD-010): the terms tick is no longer client-only.
     await this.consent.recordRegistration(user.id, dto.consents, ctx.ip);
 
-    return toPublicUser(user);
+    // DEC-035 switch (default off = today's behaviour: nothing is sent until an admin approves).
+    // On: the 6-digit code goes out now, and verifying it approves the account.
+    let emailCodeSent = false;
+    if (await this.flags.isEnabled("onboarding.instant_access")) {
+      try {
+        await this.emailCodes.assertCanSend(user.email);
+        await this.emailCodes.issueAndEmail(user.id, user.email);
+        emailCodeSent = true;
+      } catch {
+        // The account exists; the member can ask for a code from the verify screen.
+      }
+    }
+    return { ...toPublicUser(user), emailCodeSent };
   }
 
   // Admin self-registration gated by a shared secret (kept from the old app's
@@ -110,6 +128,7 @@ export class AuthService {
       roleNames: ["admin"],
       isApproved: true,
       emailVerified: true,
+      onboardingCompletedAt: new Date(), // admins skip member onboarding
     });
 
     // Admin sign-up may omit consents; an admin without records is asked at first sign-in.
@@ -168,23 +187,31 @@ export class AuthService {
     // Maintenance mode: only admins may start a session (MaintenanceGuard blocks
     // everyone else's requests; this stops a non-admin getting a session at all).
     if (!isAdmin && (await this.siteStatus.isMaintenance())) throw maintenanceException();
+    // Under instant access (DEC-035 switch) verification comes first and earns approval, so an
+    // unverified member is sent to the code screen rather than told to wait for an admin.
+    const instant = await this.flags.isEnabled("onboarding.instant_access");
+    if (!isAdmin && instant && !user.emailVerified) await this.refuseUnverified(user);
     if (!isAdmin && !user.isApproved) {
       throw new ForbiddenException(
         "Your account is pending admin approval. You'll receive an email to verify your address once it's approved.",
       );
     }
-    if (!isAdmin && !user.emailVerified) {
-      // Approved but never clicked (or let expire) the link from the approval
-      // email — re-send rather than leave them stuck. The login route's strict
-      // throttle bounds how often this can fire.
-      await this.emailVerification.send(user.id, user.email, "reminder");
-      throw new ForbiddenException(
-        "Please verify your email before signing in. We've sent a new verification link to your inbox.",
-      );
-    }
+    if (!isAdmin && !user.emailVerified) await this.refuseUnverified(user);
 
     await this.users.markLastLogin(user.id);
     return publicUser;
+  }
+
+  // Approved (or instant-access) but not verified: send a fresh code and link, then refuse with a
+  // reason the web app turns into the code screen. The login route's strict throttle bounds how
+  // often this can fire.
+  private async refuseUnverified(user: { id: string; email: string }): Promise<never> {
+    await this.emailVerification.send(user.id, user.email, "reminder");
+    throw new ForbiddenException({
+      statusCode: 403,
+      message: "Please verify your email before signing in. We've sent a 6-digit code to your inbox.",
+      reason: "EMAIL_NOT_VERIFIED",
+    });
   }
 
   async issueSession(userId: string, meta: { userAgent?: string; ipAddress?: string }) {
@@ -309,10 +336,37 @@ export class AuthService {
     });
     if (!record) throw new BadRequestException("Invalid or expired verification token");
 
-    await this.prisma.emailVerification.update({ where: { id: record.id }, data: { consumedAt: new Date() } });
-    await this.users.markEmailVerified(record.userId);
+    // Claimed by one conditional update so a link works once even under parallel requests.
+    const claimed = await this.prisma.emailVerification.updateMany({
+      where: { id: record.id, consumedAt: null },
+      data: { consumedAt: new Date() },
+    });
+    if (claimed.count !== 1) throw new BadRequestException("Invalid or expired verification token");
+    await this.completeVerification(record.userId);
+  }
 
-    const user = await this.users.findById(record.userId);
-    if (user) await this.emailQueue.sendWelcomeEmail(user.email, user.firstName);
+  /** PRD-001 / API-002: the 6-digit code. Every failure is the same 400; repeated misses lock the address. */
+  async verifyEmailCode(email: string, code: string) {
+    const userId = await this.emailCodes.consume(email, code);
+    await this.completeVerification(userId);
+  }
+
+  /** Resend: always answers the same for any address; the cooldown and hourly cap apply to every address alike. */
+  async resendEmailCode(email: string) {
+    const instant = await this.flags.isEnabled("onboarding.instant_access");
+    // Without instant access an unapproved account gets nothing: its first code goes out on approval.
+    await this.emailCodes.resend(email, async (user) => instant || user.isApproved);
+  }
+
+  // Shared by the link and the code. Under instant access (DEC-035 switch) a verified address is
+  // also approved; otherwise approval stays with the admins exactly as before.
+  private async completeVerification(userId: string) {
+    await this.users.markEmailVerified(userId);
+    const user = await this.users.findById(userId);
+    if (!user) return;
+    if (!user.isApproved && (await this.flags.isEnabled("onboarding.instant_access"))) {
+      await this.users.setApproval(user.id, true, null);
+    }
+    await this.emailQueue.sendWelcomeEmail(user.email, user.firstName);
   }
 }

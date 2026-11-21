@@ -29,14 +29,19 @@ export class EmailQueueService {
     @Optional() private readonly dispatcher?: NotificationDispatcher,
   ) {}
 
-  sendVerificationEmail(to: string, token: string) {
-    return this.enqueue(to, { name: "verification", link: this.verificationLink(token) }, ["verification", token]);
+  sendVerificationEmail(to: string, token: string, code?: string) {
+    return this.enqueue(to, { name: "verification", link: this.verificationLink(token), code }, ["verification", token]);
+  }
+
+  // The 6-digit code on its own (PRD-001), for registration under instant access and for resends.
+  sendEmailCode(to: string, code: string) {
+    return this.enqueue(to, { name: "email-code", code }, ["email-code", to.toLowerCase(), code]);
   }
 
   // Sent once, when an admin approves a new member — approval notice and the
   // email-verification link in a single message.
-  sendApprovedVerificationEmail(to: string, token: string) {
-    return this.enqueue(to, { name: "approved-verify", link: this.verificationLink(token) }, ["approved-verify", token]);
+  sendApprovedVerificationEmail(to: string, token: string, code?: string) {
+    return this.enqueue(to, { name: "approved-verify", link: this.verificationLink(token), code }, ["approved-verify", token]);
   }
 
   sendWelcomeEmail(to: string, firstName: string) {

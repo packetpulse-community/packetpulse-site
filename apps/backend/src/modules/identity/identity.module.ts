@@ -6,6 +6,7 @@ import { AuthController } from "./presentation/controllers/auth.controller";
 import { AuthService } from "./application/services/auth.service";
 import { AuthCookieService } from "./application/services/auth-cookie.service";
 import { TokenService } from "./application/services/token.service";
+import { EmailCodeService } from "./application/services/email-code.service";
 import { EmailVerificationService } from "./application/services/email-verification.service";
 import { AdminActivityLogService } from "../admin/application/services/admin-activity-log.service";
 import { CaptchaModule } from "../../common/captcha";
@@ -48,6 +49,7 @@ import { MaintenanceGuard } from "./presentation/guards/maintenance.guard";
     AuthCookieService,
     TokenService,
     EmailVerificationService,
+    EmailCodeService,
     { provide: UserRepository, useClass: UserPrismaRepository },
     {
       provide: CredentialProvider,

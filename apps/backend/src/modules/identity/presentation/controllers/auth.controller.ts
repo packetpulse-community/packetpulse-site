@@ -19,6 +19,8 @@ import {
   VerifyOtpDto,
   ResetPasswordDto,
   VerifyEmailDto,
+  VerifyEmailCodeDto,
+  ResendEmailCodeDto,
 } from "../../application/dto/auth.dto";
 import { AccessTokenPayload } from "../../application/services/token.service";
 import { RequireFeature } from "../../../feature-flags/require-feature.decorator";
@@ -149,6 +151,28 @@ export class AuthController {
   @HttpCode(200)
   async verifyEmail(@Body() dto: VerifyEmailDto) {
     await this.auth.verifyEmail(dto.token);
+    return { success: true };
+  }
+
+  // PRD-001 / API-002: the 6-digit code, public because an unverified member cannot sign in yet.
+  // Wrong guesses are counted per address (5 then a 15-minute lock) on top of the per-IP throttle.
+  @Public()
+  @Throttle(AUTH_STRICT)
+  @Post("verify-email-code")
+  @HttpCode(200)
+  async verifyEmailCode(@Body() dto: VerifyEmailCodeDto) {
+    await this.auth.verifyEmailCode(dto.email, dto.code);
+    return { success: true };
+  }
+
+  // Always { success: true } for any address; see AuthService.resendEmailCode.
+  @Public()
+  @Throttle(AUTH_STRICT)
+  @UseGuards(CaptchaGuard)
+  @Post("resend-email-code")
+  @HttpCode(200)
+  async resendEmailCode(@Body() dto: ResendEmailCodeDto) {
+    await this.auth.resendEmailCode(dto.email);
     return { success: true };
   }
 

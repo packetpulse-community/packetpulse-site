@@ -46,6 +46,8 @@ export type RegisterDto = z.infer<typeof RegisterSchema>;
 export const RegisterAdminSchema = RegisterSchema.extend({
   // Admin sign-up predates consent capture; an admin without records is asked at first sign-in.
   consents: RegistrationConsentsSchema.optional(),
+  // Same reason: admins are created through the secret code, not the public form.
+  ageConfirmed: z.literal(true).optional(),
   adminSecureCode: z.string().min(1),
 });
 export type RegisterAdminDto = z.infer<typeof RegisterAdminSchema>;

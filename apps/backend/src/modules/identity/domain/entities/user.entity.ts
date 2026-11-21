@@ -18,6 +18,8 @@ export function toPublicUser(user: UserWithRoles) {
     bio: user.bio,
     isApproved: user.isApproved,
     emailVerified: user.emailVerified,
+    // TASK-023: false until the required details are in; the web app routes such members to onboarding.
+    onboardingComplete: user.onboardingCompletedAt !== null,
     roles: user.roles.map((r) => r.role.name),
     permissions: [...new Set(user.roles.flatMap((r) => r.role.permissions.map((p) => p.permission.key)))],
   };

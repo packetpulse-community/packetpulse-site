@@ -27,6 +27,7 @@ interface ErrorBody {
   requestId?: string;
   maintenance?: true;
   feature?: string;
+  reason?: "EMAIL_NOT_VERIFIED";
 }
 
 const GENERIC_INTERNAL = "Something went wrong on our side. Please try again later.";
@@ -162,6 +163,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       out.code = "FEATURE_DISABLED";
       if (typeof obj.feature === "string") out.feature = obj.feature;
     }
+    if (status === 403 && obj.reason === "EMAIL_NOT_VERIFIED") out.reason = "EMAIL_NOT_VERIFIED";
     if (fields) {
       out.fields = fields;
       out.code = "VALIDATION_FAILED";

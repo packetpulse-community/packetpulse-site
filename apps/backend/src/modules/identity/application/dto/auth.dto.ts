@@ -7,6 +7,8 @@ import {
   VerifyOtpSchema,
   ResetPasswordSchema,
   VerifyEmailSchema,
+  VerifyEmailCodeSchema,
+  ResendEmailCodeSchema,
 } from "@packetpulse/types";
 
 // Wraps the shared Zod schemas (single source of truth, also used by the frontend
@@ -18,3 +20,5 @@ export class ForgotPasswordDto extends createZodDto(ForgotPasswordSchema) {}
 export class VerifyOtpDto extends createZodDto(VerifyOtpSchema) {}
 export class ResetPasswordDto extends createZodDto(ResetPasswordSchema) {}
 export class VerifyEmailDto extends createZodDto(VerifyEmailSchema) {}
+export class VerifyEmailCodeDto extends createZodDto(VerifyEmailCodeSchema) {}
+export class ResendEmailCodeDto extends createZodDto(ResendEmailCodeSchema) {}

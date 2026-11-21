@@ -2,8 +2,9 @@
 // goal here is real delivery of the six touchpoints the old app never had (plan §4),
 // not visual polish.
 export type EmailTemplate =
-  | { name: "verification"; link: string }
-  | { name: "approved-verify"; link: string }
+  | { name: "verification"; link: string; code?: string }
+  | { name: "approved-verify"; link: string; code?: string }
+  | { name: "email-code"; code: string }
   | { name: "welcome"; firstName: string; loginLink: string }
   | { name: "password-reset-otp"; otp: string }
   | { name: "approval"; approved: boolean }
@@ -35,12 +36,17 @@ export function renderEmail(template: EmailTemplate): { subject: string; text: s
     case "verification":
       return {
         subject: "Verify your PacketPulse email",
-        text: `Verify your email by clicking this link: ${template.link} (expires in 24h).`,
+        text: `${template.code ? `Your PacketPulse verification code is ${template.code}. It expires in 10 minutes.\n\nOr verify by` : "Verify your email by"} clicking this link: ${template.link} (the link expires in 24h).`,
       };
     case "approved-verify":
       return {
         subject: "Your PacketPulse account is approved — verify your email",
-        text: `Good news — an admin has approved your PacketPulse account.\n\nTo activate it, verify your email address by opening this link:\n${template.link}\n\nThe link expires in 24 hours. If it expires, just sign in and we'll send you a fresh one.`,
+        text: `Good news — an admin has approved your PacketPulse account.\n\n${template.code ? `To activate it, enter this code on the sign-in page: ${template.code}\nThe code expires in 10 minutes.\n\nOr verify your email address by opening this link:\n` : "To activate it, verify your email address by opening this link:\n"}${template.link}\n\nThe link expires in 24 hours. If either expires, just sign in and we'll send you a fresh one.`,
+      };
+    case "email-code":
+      return {
+        subject: "Your PacketPulse verification code",
+        text: `Your PacketPulse verification code is ${template.code}.\n\nIt expires in 10 minutes. If you did not create an account, ignore this email.`,
       };
     case "welcome":
       return {

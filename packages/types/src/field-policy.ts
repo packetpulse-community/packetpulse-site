@@ -67,6 +67,10 @@ export const FIELD_POLICY: readonly FieldPolicyEntry[] = [
   { field: "lastLoginAt", sensitivity: "activity", roles: ADMINS, relationships: [] },
   { field: "approvedById", sensitivity: "approval", roles: ADMINS, relationships: [] },
   { field: "approvedAt", sensitivity: "approval", roles: ADMINS, relationships: ["self"] },
+  // Date of birth (PRD-003, PRD-004, SEC-02): staff and the owner only, never a company even after
+  // forwarding (DEC-015: "date of birth stays hidden"). `deny` wins over the role list.
+  { field: "dateOfBirth", sensitivity: "personal", roles: ADMINS, relationships: ["self"], deny: ["recruiter", "company"] },
+  { field: "ageConfirmedAt", sensitivity: "personal", roles: ADMINS, relationships: ["self"] },
   // Profile fields the member controls (TASK-025, DEC-015, PRD-052). Private unless the owner
   // chose "members": the members endpoint supplies the "member-visible:<field>" relationship for
   // exactly the fields the owner opened up. Staff always read them; nobody else does by default.

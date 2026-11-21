@@ -21,6 +21,9 @@ export abstract class UserRepository {
     roleNames: string[];
     isApproved: boolean;
     emailVerified: boolean;
+    ageConfirmedAt?: Date;
+    // Set for accounts that skip onboarding (admins); new members leave it null until they finish it.
+    onboardingCompletedAt?: Date;
   }): Promise<UserWithRoles>;
   abstract updatePasswordHash(userId: string, passwordHash: string): Promise<void>;
   abstract markEmailVerified(userId: string): Promise<void>;

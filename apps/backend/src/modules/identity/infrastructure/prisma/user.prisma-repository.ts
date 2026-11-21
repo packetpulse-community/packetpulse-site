@@ -11,13 +11,17 @@ export class UserPrismaRepository extends UserRepository {
   }
 
   findByEmail(email: string) {
+    // findFirst, not findUnique: Prisma 5.22's query engine panics ("Option::unwrap() on None") when
+    // two identical findUnique calls with relationLoadStrategy "join" run at the same moment (two
+    // parallel verifies or sign-ins for one address). findFirst on a unique column is the same query
+    // without the batching path that panics.
     // "join": one SQL statement for user + roles + permissions instead of five round trips (this runs
     // on every sign-in and every /auth/me, i.e. on every protected page load).
-    return this.prisma.user.findUnique({ where: { email }, include: userWithRolesInclude, relationLoadStrategy: "join" });
+    return this.prisma.user.findFirst({ where: { email }, include: userWithRolesInclude, relationLoadStrategy: "join" });
   }
 
   findById(id: string) {
-    return this.prisma.user.findUnique({ where: { id }, include: userWithRolesInclude, relationLoadStrategy: "join" });
+    return this.prisma.user.findFirst({ where: { id }, include: userWithRolesInclude, relationLoadStrategy: "join" });
   }
 
   async create(data: {
@@ -31,6 +35,8 @@ export class UserPrismaRepository extends UserRepository {
     roleNames: string[];
     isApproved: boolean;
     emailVerified: boolean;
+    ageConfirmedAt?: Date;
+    onboardingCompletedAt?: Date;
   }) {
     return this.prisma.user.create({
       data: {
@@ -43,6 +49,8 @@ export class UserPrismaRepository extends UserRepository {
         professionalExperience: data.professionalExperience,
         isApproved: data.isApproved,
         emailVerified: data.emailVerified,
+        ageConfirmedAt: data.ageConfirmedAt,
+        onboardingCompletedAt: data.onboardingCompletedAt,
         roles: {
           create: data.roleNames.map((name) => ({
             role: { connect: { name } },

@@ -50,4 +50,7 @@ export interface ApiErrorBody {
   maintenance?: true;
   // Only on FEATURE_DISABLED: the switch that blocked the call.
   feature?: string;
+  // Only on a few 403s the web app must tell apart from a plain "not allowed" (e.g.
+  // EMAIL_NOT_VERIFIED on sign-in, so it can offer the code screen).
+  reason?: "EMAIL_NOT_VERIFIED";
 }
