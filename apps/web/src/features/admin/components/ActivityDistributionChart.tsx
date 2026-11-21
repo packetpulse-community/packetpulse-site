@@ -1,11 +1,12 @@
 import type { AdminActivityAction } from "@packetpulse/types";
 import { EmptyState } from "@/shared/ui/primitives/EmptyState";
+import { buildActivitySegments } from "./activity-chart-logic";
 
 interface ActivityDistributionChartProps {
   data: { action: AdminActivityAction; count: number }[];
 }
 
-const ACTION_LABELS: Record<AdminActivityAction, string> = {
+const ACTION_LABELS: Partial<Record<AdminActivityAction, string>> = {
   user_approved: "User approvals",
   user_unapproved: "User unapprovals",
   user_roles_changed: "Role changes",
@@ -42,6 +43,8 @@ const SEGMENT_CLASSES = [
   { stroke: "stroke-danger", swatch: "bg-danger" },
   { stroke: "stroke-info", swatch: "bg-info" },
 ];
+// The folded "Other" segment is neutral so it never reads as one of the named colours.
+const OTHER_CLASS = { stroke: "stroke-text-secondary", swatch: "bg-text-secondary" };
 
 const SEGMENT_GAP = 2;
 
@@ -49,7 +52,8 @@ const RADIUS = 60;
 const STROKE_WIDTH = 24;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-function segmentClass(i: number) {
+function segmentClass(i: number, isOther: boolean) {
+  if (isOther) return OTHER_CLASS;
   return SEGMENT_CLASSES[i % SEGMENT_CLASSES.length] ?? SEGMENT_CLASSES[0]!;
 }
 
@@ -58,7 +62,8 @@ function segmentClass(i: number) {
 // never sent and always rendered 4 hardcoded placeholder-colored quadrants with no
 // labels or real data behind them (confirmed via code audit).
 export function ActivityDistributionChart({ data }: ActivityDistributionChartProps) {
-  const total = data.reduce((sum, d) => sum + d.count, 0);
+  const segments = buildActivitySegments(data, ACTION_LABELS);
+  const total = segments.reduce((sum, d) => sum + d.count, 0);
 
   if (total === 0) {
     return (
@@ -76,16 +81,16 @@ export function ActivityDistributionChart({ data }: ActivityDistributionChartPro
   return (
     <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:justify-center">
       <svg viewBox="0 0 160 160" className="h-40 w-40 shrink-0 -rotate-90" role="img" aria-label="Admin activity by action type; see the list beside the chart for the values">
-        {data.map((segment, i) => {
+        {segments.map((segment, i) => {
           const fraction = segment.count / total;
           const full = fraction * CIRCUMFERENCE;
-          const dash = Math.max(full - (data.length > 1 ? SEGMENT_GAP : 0), 0.5);
+          const dash = Math.max(full - (segments.length > 1 ? SEGMENT_GAP : 0), 0.5);
           const offset = cumulative;
           cumulative += full;
-          const { stroke } = segmentClass(i);
+          const { stroke } = segmentClass(i, segment.isOther);
           return (
             <circle
-              key={segment.action}
+              key={segment.key}
               cx="80"
               cy="80"
               r={RADIUS}
@@ -95,16 +100,16 @@ export function ActivityDistributionChart({ data }: ActivityDistributionChartPro
               strokeDasharray={`${dash} ${CIRCUMFERENCE - dash}`}
               strokeDashoffset={-offset}
             >
-              <title>{`${ACTION_LABELS[segment.action]}: ${segment.count}`}</title>
+              <title>{`${segment.label}: ${segment.count}`}</title>
             </circle>
           );
         })}
       </svg>
       <ul className="flex flex-col gap-2 text-sm">
-        {data.map((segment, i) => (
-          <li key={segment.action} className="flex items-center gap-2">
-            <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${segmentClass(i).swatch}`} />
-            <span className="text-text">{ACTION_LABELS[segment.action]}</span>
+        {segments.map((segment, i) => (
+          <li key={segment.key} className="flex items-center gap-2">
+            <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${segmentClass(i, segment.isOther).swatch}`} />
+            <span className="text-text">{segment.label}</span>
             <span className="text-text-secondary">
               {segment.count} ({Math.round((segment.count / total) * 100)}%)
             </span>

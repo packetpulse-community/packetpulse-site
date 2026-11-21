@@ -9,6 +9,7 @@ import {
 } from "@/shared/ui/primitives/DataTable";
 import { adminClientApi, type AdminActivityLogEntry } from "../api/admin.api";
 import { ErrorState } from "@/shared/ui/primitives/ErrorState";
+import { humaniseAction } from "./activity-chart-logic";
 
 const ACTION_LABELS: Record<AdminActivityAction, string> = {
   user_approved: "Approved user",
@@ -76,7 +77,7 @@ export function RecentActivityTable() {
       header: "Action",
       sortable: false,
       render: (value) =>
-        ACTION_LABELS[value as AdminActivityAction] ?? String(value),
+        ACTION_LABELS[value as AdminActivityAction] ?? humaniseAction(String(value)),
     },
     {
       field: "details",
