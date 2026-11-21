@@ -43,9 +43,12 @@ describe("legacy route registry", () => {
   });
 
   it("scopes legacy routes and leaves migrated and unknown ones themed", () => {
-    expect(legacyScopeFor("/login")).toBe("page");
-    expect(legacyScopeFor("/dashboard")).toBe("content");
-    expect(legacyScopeFor("/admin/users")).toBe("content");
+    // Still legacy while the quizzes restyle is unfinished (the group is content-scoped).
+    expect(legacyScopeFor("/quizzes")).toBe("content");
+    // Migrated groups render with the Grove tokens directly.
+    expect(legacyScopeFor("/login")).toBeNull();
+    expect(legacyScopeFor("/dashboard")).toBeNull();
+    expect(legacyScopeFor("/admin/users")).toBeNull();
     expect(legacyScopeFor("/design-system")).toBeNull();
     expect(legacyScopeFor("/no-such-page")).toBeNull();
     expect(legacyScopeFor(null)).toBeNull();
