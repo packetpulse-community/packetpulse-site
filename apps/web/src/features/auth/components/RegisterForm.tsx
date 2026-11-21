@@ -73,15 +73,22 @@ export function RegisterForm() {
     },
   });
 
-  function onSubmit(values: RegisterFormValues) {
+  // Shows the consent error beside any other field errors, so one click reveals everything missing.
+  function consentsComplete(focus: boolean): boolean {
     const list = policies.data ?? [];
     const missing = missingRequired(list, ticks);
-    if (list.length === 0 || missing.length > 0) {
-      setConsentError(list.length === 0 ? "We could not load the terms. Reload the page and try again." : missingRequiredMessage(missing));
-      document.getElementById(`consent-${missing[0] ?? "terms"}`)?.focus();
-      return;
+    if (list.length > 0 && missing.length === 0) {
+      setConsentError("");
+      return true;
     }
-    setConsentError("");
+    setConsentError(list.length === 0 ? "We could not load the terms. Reload the page and try again." : missingRequiredMessage(missing));
+    if (focus) document.getElementById(`consent-${missing[0] ?? "terms"}`)?.focus();
+    return false;
+  }
+
+  function onSubmit(values: RegisterFormValues) {
+    const list = policies.data ?? [];
+    if (!consentsComplete(true)) return;
     mutation.mutate({
       firstName: values.firstName,
       lastName: values.lastName,
@@ -106,7 +113,7 @@ export function RegisterForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onSubmit, () => void consentsComplete(false))} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1">
             <label htmlFor="firstName" className="text-sm font-medium">
