@@ -33,12 +33,14 @@ function message(err: unknown, fallback: string) {
 interface Props {
   taxonomy: Skill[];
   initial: MemberSkill[];
+  /** Called with the saved selection (the onboarding flow uses it to re-check what is missing). */
+  onSaved?: (rows: MemberSkill[]) => void;
 }
 
 // Member skill picker: search the taxonomy (names and aliases), tick up to 25 skills, choose who
 // sees each one, save. Every skill is "Self declared" until evidence exists (PRD-012) and the
 // label says so. A name that is not in the taxonomy goes to the suggestion queue instead.
-export function SkillPicker({ taxonomy, initial }: Props) {
+export function SkillPicker({ taxonomy, initial, onSaved }: Props) {
   const [selected, setSelected] = useState<Map<string, SkillVisibility>>(
     () => new Map(initial.map((s) => [s.skillId, s.visibility])),
   );
@@ -59,6 +61,7 @@ export function SkillPicker({ taxonomy, initial }: Props) {
       setSelected(next);
       setSaved(serialise(next));
       toast.success("Skills saved");
+      onSaved?.(rows);
     },
     onError: (err) => toast.error(message(err, "Could not save your skills")),
   });

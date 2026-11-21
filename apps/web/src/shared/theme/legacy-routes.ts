@@ -32,7 +32,7 @@ export const ROUTE_GROUPS: readonly RouteGroup[] = [
   { id: "marketing", label: "About, contact, privacy, terms", prefixes: ["/about", "/contact", "/privacy", "/terms"], status: "migrated", scope: "page" },
   { id: "blogs", label: "Blogs (public)", prefixes: ["/blogs"], status: "migrated", scope: "page" },
   { id: "tools", label: "Tools hub (public)", prefixes: ["/tools"], status: "migrated", scope: "page" },
-  { id: "auth", label: "Sign in, register, recovery", prefixes: ["/login", "/register", "/forgot-password", "/verify-email"], status: "migrated", scope: "page" },
+  { id: "auth", label: "Sign in, register, recovery, onboarding", prefixes: ["/login", "/register", "/forgot-password", "/verify-email", "/onboarding"], status: "migrated", scope: "page" },
   { id: "system-pages", label: "Maintenance and session refresh", prefixes: ["/maintenance", "/refresh"], status: "migrated", scope: "page" },
   { id: "certificate-verify", label: "Certificate verification (public)", prefixes: ["/certificates/verify"], status: "migrated", scope: "page" },
   { id: "dashboard", label: "Dashboard", prefixes: ["/dashboard"], status: "migrated", scope: "content" },
