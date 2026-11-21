@@ -29,7 +29,7 @@ Throttle tiers are per route and not listed here. "Maint." marks routes that sti
 maintenance mode.
 
 
-## Public (no session needed) — 24 routes
+## Public (no session needed) — 26 routes
 
 | Route | Permission | Guards that apply | Maint. | Ownership / state rule in the service |
 |---|---|---|---|---|
@@ -38,8 +38,10 @@ maintenance mode.
 | `POST /api/auth/refresh` |  | — | yes |  |
 | `POST /api/auth/register` |  | maintenance |  |  |
 | `POST /api/auth/register-admin` |  | maintenance |  | needs ADMIN_SECURE_CODE (secret in env) |
+| `POST /api/auth/resend-email-code` |  | maintenance |  | same 200 for any address; 60 s cooldown and 5 per hour per address, bot check when enabled (TASK-022) |
 | `POST /api/auth/resetpassword` |  | maintenance |  |  |
 | `POST /api/auth/verify-email` |  | maintenance |  |  |
+| `POST /api/auth/verify-email-code` |  | maintenance |  | 6-digit code, 10 min; same 400 for every failure; 5 misses lock the address 15 min (TASK-022) |
 | `POST /api/auth/verifyotp` |  | maintenance |  |  |
 | `GET /api/blogs` |  | maintenance |  | unapproved/unpublished posts only for admin |
 | `GET /api/blogs/:id` |  | maintenance |  | unapproved/unpublished post only for its author or admin |
@@ -58,13 +60,16 @@ maintenance mode.
 | `GET /api/recordings/:id` |  | maintenance |  | unapproved recording only for admin |
 | `GET /api/site-status` |  | — | yes |  |
 
-## Signed in, no specific permission — 34 routes
+## Signed in, no specific permission — 37 routes
 
 | Route | Permission | Guards that apply | Maint. | Ownership / state rule in the service |
 |---|---|---|---|---|
 | `POST /api/auth/logout` |  | JWT, maintenance, approved, email-verified | yes | own session |
 | `GET /api/auth/me` |  | JWT, maintenance, approved, email-verified |  | own profile |
 | `POST /api/auth/resend-verification` |  | JWT, maintenance, approved |  | own account; email-verification exempt |
+| `GET /api/onboarding` |  | JWT, maintenance, approved, email-verified |  | own onboarding status only (own date of birth included) |
+| `POST /api/onboarding/complete` |  | JWT, maintenance, approved, email-verified |  | own account; refused with the list of missing items |
+| `PUT /api/onboarding` |  | JWT, maintenance, approved, email-verified |  | own details; date of birth must be 18 or older; blank WhatsApp clears it |
 | `DELETE /api/blogs/:id` |  | JWT, maintenance, approved, email-verified |  | post author or admin |
 | `PUT /api/blogs/:id` |  | JWT, maintenance, approved, email-verified |  | post author or admin |
 | `POST /api/blogs/:id/comments` |  | JWT, maintenance, approved, email-verified |  | any member |
