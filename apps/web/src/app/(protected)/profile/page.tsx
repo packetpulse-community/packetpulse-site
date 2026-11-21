@@ -8,6 +8,8 @@ import { ChangePasswordForm } from "@/features/profile/components/ChangePassword
 import { DangerZoneCard } from "@/features/profile/components/DangerZoneCard";
 import { buttonVariants } from "@/shared/ui/primitives/Button";
 import { skillsServerApi } from "@/features/skills/api/skills.api";
+import { forumsServerApi } from "@/features/forums/api/forums.api";
+import { ReputationLine } from "@/features/forums/components/ReputationLine";
 import { SkillPicker } from "@/features/skills/components/SkillPicker";
 
 export default async function ProfilePage() {
@@ -16,6 +18,7 @@ export default async function ProfilePage() {
   const cookieHeader = (await cookies()).toString();
   // Skills need an approved, verified account; the profile page itself is open to everyone, so a
   // refusal here just hides the skills card instead of failing the page.
+  const reputation = await forumsServerApi.reputation(user.id, cookieHeader).catch(() => null);
   const skills = await Promise.all([skillsServerApi.taxonomy(), skillsServerApi.mine(cookieHeader)]).catch(() => null);
 
   return (
@@ -34,6 +37,23 @@ export default async function ProfilePage() {
           <EditProfileForm user={user} />
         </CardContent>
       </Card>
+
+      {reputation && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Community reputation</CardTitle>
+            <CardDescription>Earned from accepted and helpful answers in the forums, not from how much you post.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold" data-testid="profile-reputation">
+              {reputation.points} points · {reputation.level}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <ReputationLine reputation={reputation} />
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {skills && (
       <Card>

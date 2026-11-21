@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { forumsServerApi } from "@/features/forums/api/forums.api";
 import { AdminForumsTable } from "@/features/admin/components/AdminForumsTable";
 import { AdminSearchBar } from "@/features/admin/components/AdminSearchBar";
@@ -24,7 +25,16 @@ export default async function AdminForumsPage({ searchParams }: AdminForumsPageP
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold">Forums</h1>
-        <p className="text-muted-foreground">Manage all forum threads — pin, lock, edit, or remove.</p>
+        <p className="text-muted-foreground">Manage all forum threads — pin, lock, edit, or remove. Each action needs a reason.</p>
+        <p className="mt-1 text-sm">
+          <Link href="/admin/forums/reports" className="underline">
+            Reported posts
+          </Link>{" "}
+          ·{" "}
+          <Link href="/forums/guidelines" className="underline">
+            Community guidelines
+          </Link>
+        </p>
       </div>
 
       <AdminSearchBar basePath="/admin/forums" placeholder="Search threads…" />

@@ -2,48 +2,31 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card } from "@/shared/ui/primitives/Card";
 import { Badge } from "@/shared/ui/primitives/Badge";
 import { Button } from "@/shared/ui/primitives/Button";
-import { Dialog } from "@/shared/ui/primitives/Dialog";
 import { forumsClientApi, type ForumThreadSummary } from "@/features/forums/api/forums.api";
+import { ReasonDialog } from "@/features/forums/components/ReasonDialog";
 import { ForumThreadEditForm } from "./ForumThreadEditForm";
 import { EmptyState } from "@/shared/ui/primitives/EmptyState";
 
 export function AdminForumsTable({ threads }: { threads: ForumThreadSummary[] }) {
   const router = useRouter();
   const [editing, setEditing] = useState<ForumThreadSummary | null>(null);
-  const [deleting, setDeleting] = useState<ForumThreadSummary | null>(null);
+  
+  // Pin, lock and delete on someone else's thread need a written reason (PRD-028, audited).
+  const [acting, setActing] = useState<{ thread: ForumThreadSummary; action: "pin" | "lock" | "delete" } | null>(null);
 
-  const pinMutation = useMutation({
-    mutationFn: (t: ForumThreadSummary) => (t.isPinned ? forumsClientApi.unpinThread(t.id) : forumsClientApi.pinThread(t.id)),
-    onSuccess: (_, t) => {
-      toast.success(t.isPinned ? "Thread unpinned" : "Thread pinned");
-      router.refresh();
-    },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update thread"),
-  });
-
-  const lockMutation = useMutation({
-    mutationFn: (t: ForumThreadSummary) => (t.isLocked ? forumsClientApi.unlockThread(t.id) : forumsClientApi.lockThread(t.id)),
-    onSuccess: (_, t) => {
-      toast.success(t.isLocked ? "Thread unlocked" : "Thread locked");
-      router.refresh();
-    },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update thread"),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => forumsClientApi.deleteThread(id),
-    onSuccess: () => {
-      toast.success("Thread deleted");
-      router.refresh();
-      setDeleting(null);
-    },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete thread"),
-  });
+  async function decide(reason: string) {
+    if (!acting) return;
+    const { thread: t, action } = acting;
+    if (action === "pin") await (t.isPinned ? forumsClientApi.unpinThread(t.id, reason) : forumsClientApi.pinThread(t.id, reason));
+    if (action === "lock") await (t.isLocked ? forumsClientApi.unlockThread(t.id, reason) : forumsClientApi.lockThread(t.id, reason));
+    if (action === "delete") await forumsClientApi.deleteThread(t.id, reason);
+    toast.success(action === "delete" ? "Thread removed. The author was told why." : "Saved");
+    router.refresh();
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -61,16 +44,16 @@ export function AdminForumsTable({ threads }: { threads: ForumThreadSummary[] })
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="glass" size="sm" onClick={() => pinMutation.mutate(thread)} disabled={pinMutation.isPending}>
+              <Button variant="glass" size="sm" onClick={() => setActing({ thread, action: "pin" })}>
                 {thread.isPinned ? "Unpin" : "Pin"}
               </Button>
-              <Button variant="glass" size="sm" onClick={() => lockMutation.mutate(thread)} disabled={lockMutation.isPending}>
+              <Button variant="glass" size="sm" onClick={() => setActing({ thread, action: "lock" })}>
                 {thread.isLocked ? "Unlock" : "Lock"}
               </Button>
               <Button variant="glass" size="sm" onClick={() => setEditing(thread)}>
                 Edit
               </Button>
-              <Button variant="destructive" size="sm" onClick={() => setDeleting(thread)}>
+              <Button variant="destructive" size="sm" onClick={() => setActing({ thread, action: "delete" })}>
                 Delete
               </Button>
             </div>
@@ -87,19 +70,17 @@ export function AdminForumsTable({ threads }: { threads: ForumThreadSummary[] })
 
       {editing && <ForumThreadEditForm thread={editing} open={true} onClose={() => setEditing(null)} />}
 
-      <Dialog open={!!deleting} onClose={() => setDeleting(null)} title="Delete thread" description="This action cannot be undone.">
-        <p className="text-sm text-muted-foreground">
-          Delete <span className="font-medium text-foreground">{deleting?.title}</span> and all its replies?
-        </p>
-        <div className="mt-6 flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setDeleting(null)} disabled={deleteMutation.isPending}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={() => deleting && deleteMutation.mutate(deleting.id)} disabled={deleteMutation.isPending}>
-            {deleteMutation.isPending ? "Deleting…" : "Delete"}
-          </Button>
-        </div>
-      </Dialog>
+      {acting && (
+        <ReasonDialog
+          open
+          onClose={() => setActing(null)}
+          title={acting.action === "delete" ? "Remove thread" : acting.action === "pin" ? (acting.thread.isPinned ? "Unpin thread" : "Pin thread") : acting.thread.isLocked ? "Unlock thread" : "Lock thread"}
+          description={acting.action === "delete" ? `Remove "${acting.thread.title}". Its author is told the reason and loses the reputation it earned.` : "The reason goes to the audit log."}
+          confirmLabel={acting.action === "delete" ? "Remove" : "Confirm"}
+          destructive={acting.action === "delete"}
+          onConfirm={decide}
+        />
+      )}
     </div>
   );
 }
