@@ -95,9 +95,7 @@ export function ActivityDistributionChart({ data }: ActivityDistributionChartPro
               strokeDasharray={`${dash} ${CIRCUMFERENCE - dash}`}
               strokeDashoffset={-offset}
             >
-              <title>
-                {ACTION_LABELS[segment.action]}: {segment.count}
-              </title>
+              <title>{`${ACTION_LABELS[segment.action]}: ${segment.count}`}</title>
             </circle>
           );
         })}
