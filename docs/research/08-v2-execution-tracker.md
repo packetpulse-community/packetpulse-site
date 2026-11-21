@@ -11,14 +11,14 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | M0 Audit and baseline | 6 | 5 | 0 | 1 |
 | M1 Foundation | 11 | 11 | 0 | 0 |
 | M2 Design system and shell | 4 | 4 | 0 | 0 |
-| M3 Identity, profile, community | 6 | 5 | 1 | 0 |
+| M3 Identity, profile, community | 6 | 6 | 0 | 0 |
 | M4 Learn and practice | 4 | 1 | 3 | 0 |
 | M5 Prove and verify | 3 | 1 | 2 | 0 |
 | M6 Careers | 8 | 0 | 8 | 0 |
 | M7 Operations | 6 | 3 | 3 | 0 |
 | M8 Release | 6 | 1 | 5 | 0 |
 | M9 Improve | 2 | 0 | 2 | 0 |
-| **Total** | **56** | **31** | **24** | **1** |
+| **Total** | **56** | **32** | **23** | **1** |
 
 **Next in Document 4 order:** close M0 (TASK-001, 002, 006 need your approval or a second reviewer; TASK-003 and 005 are doable now; TASK-004 is blocked on hosting access), then start M1 with TASK-008 (permission engine), which almost everything else depends on.
 
@@ -64,7 +64,7 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 | --- | --- | --- |
 | TASK-022 Registration and email code | In progress | Done (backend and web): a 6-digit email code (hashed at rest, 10-minute expiry, attempt lockout, resend cooldown, single use) next to the existing link; 18+ attestation (PRD-004) and WhatsApp number normalisation (PRD-006, E.164). The admin-approval gate is unchanged (DEC-035 undecided); instant onboarding is one feature switch away. Remaining: owner decision DEC-035, a real email-provider test |
 | TASK-023 Onboarding and required details | In progress | Done: resumable onboarding after first sign-in collecting the PRD-003 details, with a route guard that keeps `/login?next=` deep links working. Remaining: owner review of the required-field list |
-| TASK-024 Resume upload and parsing | Open | No resume model |
+| TASK-024 Resume upload and parsing | In progress | Done: resume upload through the private file pipeline (PDF and DOCX, one current resume with versions, private by default, consent required); isolated background parsing that produces suggestions the member accepts or rejects field by field (nothing auto-applied); included in the data export and erased with the account; screens on Grove tokens with axe tests; `docs/ops` parsing notes; pdfjs-dist and fflate pinned, audit gate still passes. Remaining: a real Supabase-mode upload run, a browser walk-through by a person, owner review of the file limits |
 | TASK-025 Profile, consent, privacy | In progress | Done: versioned consent records at registration with a member-visible history and re-capture on policy change; profile visibility controls enforced server-side through the field policy; screens on Grove tokens. Migration `20261121150000_consent_privacy`. Remaining: owner-approved policy texts, withdrawal rules per counsel |
 | TASK-026 Community Q&A, guidelines, reputation | In progress | Done: thread modes (question and discussion), accepted answer (asker or moderator, one per thread), report flow with a moderator queue API and audit entries, versioned guidelines, append-only reputation ledger shown as text and number; screens on Grove tokens. Migration `20261121190000_community_qa_guidelines_reputation`. Remaining: moderator queue UI (TASK-043), owner review of the points table and guideline text |
 | TASK-027 Skill taxonomy and suggestions | In progress | Done: versioned taxonomy (domains, skills, levels, aliases) with starter seed, suggestion queue, admin management with audit entries, member skill picker on the profile, public read API. Migration `20261121120000_skill_taxonomy`. Remaining: owner review of the starter taxonomy, browser check of the two pages by a person |
@@ -192,4 +192,10 @@ Evidence is from the repository at the head of `feat/2.0-stabilise`. Paths and f
 
 - Migrations added: `20261121190000_community_qa_guidelines_reputation` and the data rights migration (see `apps/backend/prisma/migrations`). Apply every migration newer than `20261121120000_skill_taxonomy` to the database before deploying the backend.
 - Verified together: backend e2e 400 across 29 suites, web unit tests 401, `next build` 53 pages, migration rehearsal passes.
+
+## Notes from M3 batch 3
+
+- Migrations added: the data rights migration (`20261121210000_data_rights`) and the resume migration. Apply every migration newer than `20261121120000_skill_taxonomy` to the database before deploying the backend.
+- Verified together: backend e2e 453 across 31 suites, web unit tests 443, `next build` 54 pages, migration rehearsal passes, dependency audit gate passes (0 critical, 2 high allowlisted).
+- **Policy review pack for the core admins:** [Doc 14](14-policy-review-pack.md). Their answers unblock DEC-035 and several M3 and M7 tasks.
 
