@@ -5,6 +5,7 @@ import request from "supertest";
 import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { SiteStatusService } from "../src/common/site-status/site-status.service";
+import { acceptedConsents } from "./helpers/consents";
 
 describe("Maintenance mode & members-only resources e2e", () => {
   let app: INestApplication;
@@ -36,11 +37,11 @@ describe("Maintenance mode & members-only resources e2e", () => {
     await prisma.user.deleteMany({ where: { email: { in: [adminEmail, memberEmail] } } });
     await request(app.getHttpServer())
       .post("/api/auth/register-admin")
-      .send({ firstName: "Maint", lastName: "Admin", email: adminEmail, password, adminSecureCode: process.env.ADMIN_SECURE_CODE })
+      .send({ firstName: "Maint", lastName: "Admin", email: adminEmail, password, adminSecureCode: process.env.ADMIN_SECURE_CODE, consents: await acceptedConsents(prisma) })
       .expect(201);
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Maint", lastName: "Member", email: memberEmail, password })
+      .send({ firstName: "Maint", lastName: "Member", email: memberEmail, password, consents: await acceptedConsents(prisma) })
       .expect(201);
     await prisma.user.update({ where: { email: memberEmail }, data: { isApproved: true, emailVerified: true } });
   });

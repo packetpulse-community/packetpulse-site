@@ -16,6 +16,7 @@ import { CredentialProvider } from "./domain/providers/credential-provider";
 import { LocalCredentialProvider } from "./infrastructure/local/local-credential.provider";
 import { SupabaseCredentialProvider } from "./infrastructure/supabase/supabase-credential.provider";
 import { SUPABASE_CLIENT } from "../../common/supabase/supabase-client.provider";
+import { ConsentModule } from "../consent/consent.module";
 import { JwtStrategy } from "./presentation/strategies/jwt.strategy";
 import { JwtAuthGuard } from "./presentation/guards/jwt-auth.guard";
 import { RolesGuard } from "./presentation/guards/roles.guard";
@@ -27,6 +28,7 @@ import { MaintenanceGuard } from "./presentation/guards/maintenance.guard";
   imports: [
     PassportModule,
     NotificationsModule,
+    ConsentModule,
     CaptchaModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

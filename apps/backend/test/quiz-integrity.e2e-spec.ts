@@ -6,6 +6,7 @@ import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { QuizzesService } from "../src/modules/quizzes/application/services/quizzes.service";
 import { SUBMIT_GRACE_MS } from "../src/modules/quizzes/application/services/quiz-attempts.service";
+import { acceptedConsents } from "./helpers/consents";
 
 // TASK-032 / S-7 / S-9 / D-1: attempt cap, retake gap, server-side deadline, quiz expiry,
 // and certificates that outlive the quiz that issued them.
@@ -23,7 +24,7 @@ describe("Quiz integrity (e2e)", () => {
   async function login(email: string) {
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Qi", lastName: "Test", email, password: PASSWORD })
+      .send({ firstName: "Qi", lastName: "Test", email, password: PASSWORD, consents: await acceptedConsents(prisma) })
       .expect(201);
     await prisma.user.update({ where: { email }, data: { isApproved: true, emailVerified: true } });
     const agent = request.agent(app.getHttpServer());

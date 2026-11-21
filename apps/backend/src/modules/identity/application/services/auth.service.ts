@@ -14,6 +14,7 @@ import { SiteStatusService } from "../../../../common/site-status/site-status.se
 import { maintenanceException } from "../../../../common/site-status/maintenance.constants";
 import { RegisterDto, RegisterAdminDto, LoginDto } from "../dto/auth.dto";
 import { AdminActivityLogService } from "../../../admin/application/services/admin-activity-log.service";
+import { ConsentService } from "../../../consent/application/services/consent.service";
 import { REDIS_CLIENT } from "../../../../common/redis/redis.constants";
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
@@ -40,12 +41,16 @@ export class AuthService {
     private readonly siteStatus: SiteStatusService,
     private readonly config: ConfigService,
     private readonly activityLog: AdminActivityLogService,
+    private readonly consent: ConsentService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, ctx: { ip?: string } = {}) {
     const existing = await this.users.findByEmail(dto.email);
     if (existing) throw new ConflictException("An account with this email already exists");
+    // The versions the member accepted must be the ones now in force; checked before any account
+    // exists so a stale form never creates an account without a matching consent record.
+    await this.consent.assertCurrent(dto.consents);
 
     // autoConfirm: true regardless of role — Supabase mode's own "email confirmed"
     // flag is a login gate at the Supabase Auth layer, separate from and unrelated
@@ -73,6 +78,8 @@ export class AuthService {
       isApproved: false,
       emailVerified: false,
     });
+    // Consent is recorded with the account (TASK-025, PRD-010): the terms tick is no longer client-only.
+    await this.consent.recordRegistration(user.id, dto.consents, ctx.ip);
 
     return toPublicUser(user);
   }
@@ -83,12 +90,13 @@ export class AuthService {
   // silently accepting an empty secret (plan §11). Admins are auto-approved and
   // auto-verified on creation — made explicit here, not an implicit hook side
   // effect (plan §4).
-  async registerAdmin(dto: RegisterAdminDto) {
+  async registerAdmin(dto: RegisterAdminDto, ctx: { ip?: string } = {}) {
     const expected = this.config.get<string>("ADMIN_SECURE_CODE");
     if (dto.adminSecureCode !== expected) throw new UnauthorizedException("Invalid admin registration code");
 
     const existing = await this.users.findByEmail(dto.email);
     if (existing) throw new ConflictException("An account with this email already exists");
+    if (dto.consents) await this.consent.assertCurrent(dto.consents);
 
     const credential = await this.credentials.createCredential(dto.email, dto.password, { autoConfirm: true });
     const user = await this.users.create({
@@ -103,6 +111,9 @@ export class AuthService {
       isApproved: true,
       emailVerified: true,
     });
+
+    // Admin sign-up may omit consents; an admin without records is asked at first sign-in.
+    if (dto.consents) await this.consent.recordRegistration(user.id, dto.consents, ctx.ip);
 
     // Nobody else authorised this account, so record it in the audit log (TASK-015).
     await this.activityLog.logAdminRegistered(user.id, user.email);

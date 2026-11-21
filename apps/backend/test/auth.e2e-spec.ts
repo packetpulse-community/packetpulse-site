@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
+import { acceptedConsents } from "./helpers/consents";
 
 // Regression coverage for the specific bugs found in the old Express/Mongoose backend
 // during the migration audit (plan §3) — these are the "non-negotiable gates" before
@@ -32,7 +33,7 @@ describe("Auth e2e (identity module regressions)", () => {
   it("registers a new member as unapproved and unverified", async () => {
     const res = await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "E2E", lastName: "Regression", email: testEmail, password: "Passw0rd!23" })
+      .send({ firstName: "E2E", lastName: "Regression", email: testEmail, password: "Passw0rd!23", consents: await acceptedConsents(prisma) })
       .expect(201);
 
     expect(res.body.isApproved).toBe(false);
@@ -80,7 +81,7 @@ describe("Auth e2e (identity module regressions)", () => {
 
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Un", lastName: "Approved", email: unapprovedEmail, password: "Passw0rd!23" })
+      .send({ firstName: "Un", lastName: "Approved", email: unapprovedEmail, password: "Passw0rd!23", consents: await acceptedConsents(prisma) })
       .expect(201);
     await prisma.user.update({ where: { email: unapprovedEmail }, data: { isApproved: true, emailVerified: true } });
 
@@ -157,7 +158,7 @@ describe("Auth e2e (approval-gated email verification)", () => {
     await prisma.user.deleteMany({ where: { email: pendingEmail } });
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Pend", lastName: "Ing", email: pendingEmail, password: "Passw0rd!23" })
+      .send({ firstName: "Pend", lastName: "Ing", email: pendingEmail, password: "Passw0rd!23", consents: await acceptedConsents(prisma) })
       .expect(201);
 
     const res = await request(app.getHttpServer())
@@ -176,7 +177,7 @@ describe("Auth e2e (approval-gated email verification)", () => {
     await prisma.user.deleteMany({ where: { email: unverifiedEmail } });
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Un", lastName: "Verified", email: unverifiedEmail, password: "Passw0rd!23" })
+      .send({ firstName: "Un", lastName: "Verified", email: unverifiedEmail, password: "Passw0rd!23", consents: await acceptedConsents(prisma) })
       .expect(201);
     const user = await prisma.user.update({ where: { email: unverifiedEmail }, data: { isApproved: true } });
 

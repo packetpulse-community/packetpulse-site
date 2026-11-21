@@ -11,6 +11,7 @@ import { PrismaService } from "../src/prisma/prisma.service";
 import { SiteStatusService } from "../src/common/site-status/site-status.service";
 import { Public } from "../src/modules/identity";
 import { REDIS_CLIENT } from "../src/common/redis/redis.constants";
+import { acceptedConsents } from "./helpers/consents";
 
 const SECRET = "SECRET_INTERNAL_DETAIL postgres://user:pw@db/secret";
 
@@ -81,7 +82,7 @@ describe("Error format e2e (TEST-011 / SEC-07)", () => {
     await prisma.user.deleteMany({ where: { email: { in: emails } } });
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Err", lastName: "Member", email: memberEmail, password })
+      .send({ firstName: "Err", lastName: "Member", email: memberEmail, password, consents: await acceptedConsents(prisma) })
       .expect(201);
     await prisma.user.update({ where: { email: memberEmail }, data: { isApproved: true, emailVerified: true } });
   });
@@ -137,7 +138,7 @@ describe("Error format e2e (TEST-011 / SEC-07)", () => {
   it("registering the same email twice -> CONFLICT", async () => {
     const res = await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Err", lastName: "Member", email: memberEmail, password })
+      .send({ firstName: "Err", lastName: "Member", email: memberEmail, password, consents: await acceptedConsents(prisma) })
       .expect(409);
     expectShape(res.body, 409, "CONFLICT");
   });

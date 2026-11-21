@@ -42,15 +42,15 @@ export class AuthController {
   @UseGuards(CaptchaGuard)
   @RequireFeature("registration.open", "Sign-up")
   @Post("register")
-  async register(@Body() dto: RegisterDto) {
-    return this.auth.register(dto);
+  async register(@Body() dto: RegisterDto, @Req() req: Request) {
+    return this.auth.register(dto, { ip: req.ip });
   }
 
   @Public()
   @Throttle(AUTH_STRICT)
   @Post("register-admin")
-  async registerAdmin(@Body() dto: RegisterAdminDto) {
-    return this.auth.registerAdmin(dto);
+  async registerAdmin(@Body() dto: RegisterAdminDto, @Req() req: Request) {
+    return this.auth.registerAdmin(dto, { ip: req.ip });
   }
 
   @Public()

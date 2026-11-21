@@ -9,6 +9,7 @@ import { PrismaService } from "../src/prisma/prisma.service";
 import { AuthService } from "../src/modules/identity/application/services/auth.service";
 import { TokenService } from "../src/modules/identity/application/services/token.service";
 import { REDIS_CLIENT } from "../src/common/redis/redis.constants";
+import { acceptedConsents } from "./helpers/consents";
 
 // Regression tests for the defects found in the code review (docs/research/04, findings
 // S-1, S-2 and S-3). Each test describes the behaviour we require; they were written to
@@ -47,7 +48,7 @@ describe("Security regressions (e2e)", () => {
   async function registerAndActivate(email: string) {
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Sec", lastName: "Test", email, password: PASSWORD })
+      .send({ firstName: "Sec", lastName: "Test", email, password: PASSWORD, consents: await acceptedConsents(prisma) })
       .expect(201);
     await prisma.user.update({ where: { email }, data: { isApproved: true, emailVerified: true } });
     const agent = request.agent(app.getHttpServer());
