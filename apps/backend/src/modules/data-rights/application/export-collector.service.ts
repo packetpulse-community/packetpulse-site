@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../prisma/prisma.service";
+import { StorageProvider } from "../../../common/storage/storage-provider";
 
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
@@ -25,7 +26,10 @@ function ownPayload(value: unknown): unknown {
 // others wrote in the same thread is not included.
 @Injectable()
 export class ExportCollectorService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageProvider,
+  ) {}
 
   async collect(userId: string, now: Date): Promise<{ name: string; data: Buffer }[] | null> {
     const user = await this.prisma.user.findUnique({
@@ -78,6 +82,10 @@ export class ExportCollectorService {
       sessions,
       requests,
       audit,
+      resumes,
+      resumeSuggestions,
+      education,
+      experience,
     ] = await Promise.all([
       this.prisma.consentRecord.findMany({ where: { userId }, orderBy: { seq: "asc" }, select: { purpose: true, action: true, policyVersion: true, source: true, createdAt: true } }),
       this.prisma.memberSkill.findMany({ where: { userId }, select: { visibility: true, createdAt: true, skill: { select: { name: true } } } }),
@@ -115,7 +123,47 @@ export class ExportCollectorService {
       this.prisma.dataRequest.findMany({ where: { userId }, orderBy: { requestedAt: "asc" }, select: { kind: true, status: true, requestedAt: true, scheduledFor: true, completedAt: true, cancelledAt: true } }),
       // What staff and the system did to this account: action and time only (no staff notes).
       this.prisma.adminActivityLog.findMany({ where: { targetType: "user", targetId: userId }, orderBy: { createdAt: "asc" }, select: { action: true, createdAt: true } }),
+      // Resumes (TASK-024): every stored version, the suggestions read from it and what was accepted.
+      this.prisma.resume.findMany({
+        where: { userId, status: { not: "awaiting_upload" } },
+        orderBy: { version: "asc" },
+        select: { id: true, version: true, status: true, activeSlot: true, failureCode: true, parsedAt: true, createdAt: true, file: { select: { originalName: true, contentType: true, sizeBytes: true, status: true, bucket: true, path: true } } },
+      }),
+      this.prisma.resumeSuggestion.findMany({ where: { userId }, orderBy: { createdAt: "asc" }, select: { resumeId: true, kind: true, data: true, status: true, decidedAt: true } }),
+      this.prisma.memberEducation.findMany({ where: { userId }, orderBy: { createdAt: "asc" }, select: { institution: true, qualification: true, startYear: true, endYear: true, createdAt: true } }),
+      this.prisma.memberExperience.findMany({ where: { userId }, orderBy: { createdAt: "asc" }, select: { title: true, company: true, startDate: true, endDate: true, current: true, createdAt: true } }),
     ]);
+
+    // The resume files themselves (the member's own documents). One that cannot be read is listed
+    // as not included rather than failing the whole export.
+    const resumeFiles: { name: string; data: Buffer }[] = [];
+    const resumeRows: unknown[] = [];
+    for (const r of resumes) {
+      const safe = r.file.originalName.normalize("NFKD").replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^[._]+/, "").slice(0, 60) || "resume";
+      const name = `resume/v${r.version}-${safe}`;
+      let included = false;
+      if (r.file.status === "available") {
+        try {
+          resumeFiles.push({ name, data: await this.storage.readHead(r.file.bucket, r.file.path, r.file.sizeBytes) });
+          included = true;
+        } catch {
+          included = false;
+        }
+      }
+      resumeRows.push({
+        version: r.version,
+        current: r.activeSlot === "current",
+        status: r.status,
+        failureCode: r.failureCode,
+        originalName: r.file.originalName,
+        contentType: r.file.contentType,
+        sizeBytes: r.file.sizeBytes,
+        uploadedAt: iso(r.createdAt),
+        parsedAt: iso(r.parsedAt),
+        fileInArchive: included ? name : null,
+        suggestions: resumeSuggestions.filter((x) => x.resumeId === r.id).map((x) => ({ kind: x.kind, data: x.data, decision: x.status, decidedAt: iso(x.decidedAt) })),
+      });
+    }
 
     const json = (value: unknown) => Buffer.from(JSON.stringify(value, null, 2), "utf8");
     const readme = [
@@ -130,7 +178,9 @@ export class ExportCollectorService {
       "content.json        blog posts and comments, resources and recordings you added",
       "learning.json       quiz attempts, answers and the certificates you earned",
       "notifications.json  notifications sent to you, your preferences, quiet hours and WhatsApp settings",
-      "files.json          details of files you uploaded (names and sizes; the files themselves are not included)",
+      "files.json          details of files you uploaded (names and sizes)",
+      "resumes.json        every stored version of your resume, what was read from it and which suggestions you accepted or rejected",
+      "resume/             the resume files themselves, one per stored version",
       "sessions.json       your sign-in sessions (time, device, IP address); tokens are never included",
       "requests.json       your data requests and what staff or the system did to your account",
       "",
@@ -197,6 +247,8 @@ export class ExportCollectorService {
         }),
       },
       { name: "files.json", data: json(files) },
+      { name: "resumes.json", data: json({ resumes: resumeRows, acceptedEducation: education.map((e) => ({ ...e, createdAt: iso(e.createdAt) })), acceptedExperience: experience.map((e) => ({ ...e, createdAt: iso(e.createdAt) })) }) },
+      ...resumeFiles,
       { name: "sessions.json", data: json(sessions) },
       { name: "requests.json", data: json({ dataRequests: requests, accountHistory: audit }) },
     ];

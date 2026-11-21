@@ -207,6 +207,11 @@ export class AccountErasureService {
           // Threads nobody else replied to; the rest stay as the tombstone's.
           await tx.forumThread.deleteMany({ where: { authorId: userId, replies: { none: { authorId: { not: userId } } } } });
           await tx.blogPost.deleteMany({ where: { authorId: userId, isPublished: false } });
+          // Resumes (TASK-024): suggestions go with their resume; accepted entries are profile data.
+          await tx.resumeSuggestion.deleteMany({ where: own });
+          await tx.resume.deleteMany({ where: own });
+          await tx.memberEducation.deleteMany({ where: own });
+          await tx.memberExperience.deleteMany({ where: own });
           await tx.storedFile.deleteMany({ where: { ownerId: userId } });
           await tx.clientLog.updateMany({ where: own, data: { userId: null, ip: null } });
           await tx.user.update({

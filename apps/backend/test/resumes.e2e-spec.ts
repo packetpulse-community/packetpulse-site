@@ -12,6 +12,8 @@ import { StorageProvider } from "../src/common/storage/storage-provider";
 import { LocalStorageProvider } from "../src/common/storage/local-storage.provider";
 import { FeatureFlagsService } from "../src/modules/feature-flags/feature-flags.service";
 import { FLAG_BY_KEY } from "../src/modules/feature-flags/feature-flag.registry";
+import { AccountErasureService } from "../src/modules/data-rights/application/account-erasure.service";
+import { readZip } from "./helpers/zip-reader";
 import { ResumeParseService } from "../src/modules/resumes/application/resume-parse.service";
 import { DOCX_TYPE, PDF_TYPE, makeDocx, makePdf, makeZipBombDocx } from "./helpers/resume-fixtures";
 
@@ -123,7 +125,7 @@ describe("Resumes (e2e)", () => {
     storage = app.get(StorageProvider) as LocalStorageProvider;
     parser = app.get(ResumeParseService);
     flags = app.get(FeatureFlagsService);
-    await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } });
+    await prisma.user.deleteMany({ where: { OR: [{ email: { startsWith: PREFIX } }, { id: { in: Object.values(ids) } }] } }); // an erased member's email no longer has the prefix
     await prisma.skill.deleteMany({ where: { nameKey: { startsWith: "zy" }, level: "micro" } });
     await prisma.skill.deleteMany({ where: { nameKey: { startsWith: "zy" }, level: "minor" } });
     await prisma.skill.deleteMany({ where: { nameKey: { startsWith: "zy" } } });
@@ -139,6 +141,7 @@ describe("Resumes (e2e)", () => {
     await mkUser("other", "member");
     await mkUser("noconsent", "member", false);
     await mkUser("admin", "admin");
+    await mkUser("leaver", "member");
   });
 
   afterAll(async () => {
@@ -567,6 +570,67 @@ describe("Resumes (e2e)", () => {
       expect((await prisma.resumeSuggestion.findUniqueOrThrow({ where: { id: net.id } })).status).toBe("pending");
       await prisma.memberSkill.deleteMany({ where: { userId: ids.owner } });
       await prisma.skill.deleteMany({ where: { id: { in: filler.map((s) => s.id) } } });
+    });
+  });
+
+  describe("data rights (TASK-046 integration)", () => {
+    let leaverResume: { id: string; fileId: string };
+    let leaverPath: { bucket: string; path: string };
+
+    beforeAll(async () => {
+      await wipeResumes("owner");
+      const first = await upload("leaver", makePdf(RESUME_LINES), "Leaver CV (final).pdf");
+      leaverResume = first.done!.body;
+      const { overview: o } = await settled("leaver", leaverResume.id);
+      await http().put(`/api/resumes/suggestions/${suggestion(o, "skill", (d) => d.name === "Zyrouting").id}`).set(as("leaver")).send({ decision: "accept" }).expect(200);
+      await http().put(`/api/resumes/suggestions/${suggestion(o, "education").id}`).set(as("leaver")).send({ decision: "accept" }).expect(200);
+      await http().put(`/api/resumes/suggestions/${suggestion(o, "skill", (d) => d.name === "Zynet").id}`).set(as("leaver")).send({ decision: "reject" }).expect(200);
+      const second = await upload("leaver", makeDocx(["Second version", "SKILLS", "Zybgp"]), "v2.docx", DOCX_TYPE);
+      await settled("leaver", second.done!.body.id);
+      const file = await prisma.storedFile.findUniqueOrThrow({ where: { id: leaverResume.fileId } });
+      leaverPath = { bucket: file.bucket, path: file.path };
+      // Someone else's resume must stay out of this member's export.
+      await upload("owner", makePdf(["OWNER-SECRET-RESUME", "SKILLS", "Zyrouting"]), "owner-secret.pdf");
+    });
+
+    it("the member export carries every stored resume version, the suggestions with their decisions, and what was accepted", async () => {
+      await http().post("/api/data-rights/export").set(as("leaver")).expect(201);
+      await waitFor(async () => {
+        const o = await http().get("/api/data-rights").set(as("leaver"));
+        return o.body.export?.status === "ready";
+      });
+      const link = await http().post("/api/data-rights/export/link").set(as("leaver")).expect(200);
+      const zip = readZip(await storage.readWithToken(link.body.url));
+      const names = Object.keys(zip).sort();
+      expect(names).toEqual(expect.arrayContaining(["resumes.json", "resume/v1-Leaver_CV_final_.pdf", "resume/v2-v2.docx"]));
+      expect(zip["resume/v1-Leaver_CV_final_.pdf"]!.subarray(0, 5).toString()).toBe("%PDF-");
+      const data = JSON.parse(zip["resumes.json"]!.toString());
+      expect(data.resumes.map((r: { version: number }) => r.version)).toEqual([1, 2]);
+      expect(data.resumes[1].current).toBe(true);
+      const v1 = data.resumes[0];
+      expect(v1.suggestions.find((x: { data: { name?: string } }) => x.data.name === "Zyrouting").decision).toBe("accepted");
+      expect(v1.suggestions.find((x: { data: { name?: string } }) => x.data.name === "Zynet").decision).toBe("rejected");
+      expect(data.acceptedEducation).toHaveLength(1);
+      expect(zip["README.txt"]!.toString()).toContain("resumes.json");
+      // Nothing of the other member's resume.
+      expect(Buffer.concat(Object.values(zip)).toString("latin1")).not.toContain("OWNER-SECRET-RESUME");
+    });
+
+    it("account erasure removes the resumes, their files, the suggestions and the accepted entries, and leaves other members alone", async () => {
+      const ownerBefore = await prisma.resume.count({ where: { userId: ids.owner } });
+      expect(ownerBefore).toBe(1);
+      expect((await storage.headObject(leaverPath.bucket, leaverPath.path)).exists).toBe(true);
+      expect(await app.get(AccountErasureService).eraseNow(ids.leaver!)).toBe("erased");
+      expect(await prisma.resume.count({ where: { userId: ids.leaver } })).toBe(0);
+      expect(await prisma.resumeSuggestion.count({ where: { userId: ids.leaver } })).toBe(0);
+      expect(await prisma.memberEducation.count({ where: { userId: ids.leaver } })).toBe(0);
+      expect(await prisma.memberExperience.count({ where: { userId: ids.leaver } })).toBe(0);
+      expect(await prisma.memberSkill.count({ where: { userId: ids.leaver } })).toBe(0);
+      expect(await prisma.storedFile.count({ where: { ownerId: ids.leaver } })).toBe(0);
+      expect((await storage.headObject(leaverPath.bucket, leaverPath.path)).exists).toBe(false);
+      // The access log is append-only and keeps its rows, without any file content.
+      expect(await prisma.fileAccessLog.count({ where: { fileId: leaverResume.fileId } })).toBeGreaterThan(0);
+      expect(await prisma.resume.count({ where: { userId: ids.owner } })).toBe(ownerBefore);
     });
   });
 });

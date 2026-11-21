@@ -222,7 +222,7 @@ describe("Data export (e2e)", () => {
     it("contains the member's own data and never another member's", () => {
       const files = readZip(zipBytes);
       expect(Object.keys(files).sort()).toEqual(
-        ["README.txt", "account.json", "community.json", "consents.json", "content.json", "files.json", "learning.json", "notifications.json", "requests.json", "sessions.json", "skills.json"].sort(),
+        ["README.txt", "account.json", "community.json", "consents.json", "content.json", "files.json", "learning.json", "notifications.json", "requests.json", "resumes.json", "sessions.json", "skills.json"].sort(),
       );
       const account = JSON.parse(files["account.json"].toString());
       expect(account).toMatchObject({ email: `${PREFIX}alice@example.com`, bio: "ALICE-BIO", careerGoals: "ALICE-GOALS", whatsappNumber: "+919800000001" });

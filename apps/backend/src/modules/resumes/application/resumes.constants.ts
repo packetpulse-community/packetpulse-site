@@ -11,7 +11,7 @@ export const PARSE_MAX_ATTEMPTS = 3;
 export const PARSE_RECLAIM_AFTER_MS = 5 * 60 * 1000;
 /** Re-queues by the sweep before a stuck resume is marked failed. */
 export const MAX_PARSE_RUNS = 5;
-/** An upload that was never completed is abandoned after this long. Default, not in the docs. */
+/** An upload that was never completed is abandoned after this long (RETENTION_RULES abandoned_resume_uploads). Default, not in the docs. */
 export const ABANDONED_UPLOAD_AFTER_MS = 24 * 60 * 60 * 1000;
 
 export interface ResumeJob {

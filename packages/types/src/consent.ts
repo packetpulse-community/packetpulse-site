@@ -45,7 +45,7 @@ export const CONSENT_PURPOSE_META: Record<ConsentPurpose, ConsentPurposeMeta> = 
   resume_sharing: {
     purpose: "resume_sharing",
     label: "Share my resume with PacketPulse reviewers",
-    description: "Lets the PacketPulse screening team read the resume you upload. Not used yet: your choice is recorded so it is honoured when resumes launch.",
+    description: "Needed before you can upload a resume. Lets the PacketPulse screening team open the resume you upload; nobody else can. You can withdraw it at any time: you keep your resume, and the team can no longer open it.",
     required: false,
     withdrawable: true,
     documentPath: null,

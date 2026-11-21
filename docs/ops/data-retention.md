@@ -28,7 +28,7 @@ All member routes work for pending, unverified and deactivated accounts (`@SkipA
 | Deletion grace period | 30 days (Doc 3 SCR-038) | 30 days | `ERASURE_GRACE_DAYS` |
 | How long an export is available | "The link works for 7 days" (Doc 3 SCR-038) | the file is kept 7 days after it is ready | `EXPORT_AVAILABLE_DAYS` |
 | Signed download link lifetime | not stated | 300 seconds, a new one per click (the member is signed in; the email only points at the page) | `EXPORT_LINK_TTL_SECONDS` |
-| Export format | not stated | one zip of JSON files plus a README | `export-collector.service.ts` |
+| Export format | not stated | one zip of JSON files plus a README; since TASK-024 also `resumes.json` and a `resume/` folder with every stored resume version (the member's own documents) | `export-collector.service.ts` |
 | Erasure SLA | "within 30 days of a request" (Doc 1 s10.7) | the grace period is the 30 days; the job runs within the hour after it ends | sweep, hourly |
 | Job retries | not stated | export 3 attempts, erasure 5, then the request is marked failed / left scheduled for the next sweep | `EXPORT_MAX_ATTEMPTS` |
 | Re-authentication for deletion | "password or a code" | password (a code needs the step-up work in TASK-044) | `RequestErasureSchema` |
@@ -51,6 +51,7 @@ to it, which is what stops the old cascade (D-2) and keeps the append-only table
 | Notification preferences, quiet hours, WhatsApp number and profile visibility settings | deleted | Personal settings. |
 | In-app notifications and delivery records | deleted | Only meaningful to you. |
 | Skills on your profile | deleted | Part of your profile. |
+| Your resume (every stored version), what was read from it, and the education and experience entries you accepted from it | deleted | Personal documents and profile details; the files are removed from storage with your other private files (TASK-024). |
 | Uploaded private files (resumes, evidence) and earlier data exports | deleted | Files are removed from storage; the access log entries stay (see below). |
 | Likes on posts, replies, resources and recordings, recordings you joined, and the community guidelines you accepted | deleted | Personal activity. |
 | Quiz attempts and answers that did not earn a certificate | deleted | Your learning history. |
@@ -92,6 +93,8 @@ Applied by `RetentionService.run(now)` (hourly sweep, or on demand). `now` is a 
 | Prepared data exports | 7 days after the export being ready | yes | Document 3 SCR-038: 7 days |
 | Consent history of an erased account | 3 years after erasure | yes | Document 1 s10.7: account life plus 3 years |
 | Finished export and erasure requests | 3 years after completion | yes | Default chosen: same 3 years as consent proof |
+| Resumes (newest 5 versions) and the suggestions read from them | until the member deletes them or the account is erased; replacing a resume deletes the oldest version beyond five | no | Default chosen (TASK-024): see `docs/ops/resume-parsing.md` |
+| Resume uploads that were started but never completed | 1 day after the upload started | yes (by the resume sweep every 10 minutes, not by the retention job) | Default chosen (TASK-024) |
 | Erased-account tombstones (no personal data) | no automatic limit | no | Content and certificates point at them; removed only with that content |
 | Audit log (admin activity log) | no automatic limit | no | Document 1 s10.7: at least 3 years; append-only, never purged by code |
 | Private-file access log | no automatic limit | no | Append-only (database trigger) |
