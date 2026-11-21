@@ -30,18 +30,20 @@ const ACTION_LABELS: Record<AdminActivityAction, string> = {
   admin_registered: "Admin sign-ups",
 };
 
-// Segment colors from the design system's real palette (indigo/cyan/yellow/
-// green/red/purple), not CSS-variable tokens — matching how the reference
-// project itself colors things.
+// Segment colours come from the Grove tokens (module and state colours), which have separate
+// light and dark values. Colour is never the only cue: every segment has a text legend with its
+// count and share, a native <title> tooltip and a thin surface-coloured gap between segments.
 const SEGMENT_CLASSES = [
-  { stroke: "stroke-indigo-500", swatch: "bg-indigo-500" },
-  { stroke: "stroke-cyan-400", swatch: "bg-cyan-400" },
-  { stroke: "stroke-yellow-500", swatch: "bg-yellow-500" },
-  { stroke: "stroke-green-500", swatch: "bg-green-500" },
-  { stroke: "stroke-red-500", swatch: "bg-red-500" },
-  { stroke: "stroke-purple-500", swatch: "bg-purple-500" },
-  { stroke: "stroke-blue-400", swatch: "bg-blue-400" },
+  { stroke: "stroke-module-community", swatch: "bg-module-community" },
+  { stroke: "stroke-module-learning", swatch: "bg-module-learning" },
+  { stroke: "stroke-module-recruitment", swatch: "bg-module-recruitment" },
+  { stroke: "stroke-module-payments", swatch: "bg-module-payments" },
+  { stroke: "stroke-warning", swatch: "bg-warning" },
+  { stroke: "stroke-danger", swatch: "bg-danger" },
+  { stroke: "stroke-info", swatch: "bg-info" },
 ];
+
+const SEGMENT_GAP = 2;
 
 const RADIUS = 60;
 const STROKE_WIDTH = 24;
@@ -73,12 +75,13 @@ export function ActivityDistributionChart({ data }: ActivityDistributionChartPro
 
   return (
     <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:justify-center">
-      <svg viewBox="0 0 160 160" className="h-40 w-40 -rotate-90">
+      <svg viewBox="0 0 160 160" className="h-40 w-40 shrink-0 -rotate-90" role="img" aria-label="Admin activity by action type; see the list beside the chart for the values">
         {data.map((segment, i) => {
           const fraction = segment.count / total;
-          const dash = fraction * CIRCUMFERENCE;
+          const full = fraction * CIRCUMFERENCE;
+          const dash = Math.max(full - (data.length > 1 ? SEGMENT_GAP : 0), 0.5);
           const offset = cumulative;
-          cumulative += dash;
+          cumulative += full;
           const { stroke } = segmentClass(i);
           return (
             <circle
@@ -102,9 +105,11 @@ export function ActivityDistributionChart({ data }: ActivityDistributionChartPro
       <ul className="flex flex-col gap-2 text-sm">
         {data.map((segment, i) => (
           <li key={segment.action} className="flex items-center gap-2">
-            <span className={`h-2.5 w-2.5 rounded-full ${segmentClass(i).swatch}`} />
-            <span className="text-foreground">{ACTION_LABELS[segment.action]}</span>
-            <span className="text-muted-foreground">({segment.count})</span>
+            <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${segmentClass(i).swatch}`} />
+            <span className="text-text">{ACTION_LABELS[segment.action]}</span>
+            <span className="text-text-secondary">
+              {segment.count} ({Math.round((segment.count / total) * 100)}%)
+            </span>
           </li>
         ))}
       </ul>
