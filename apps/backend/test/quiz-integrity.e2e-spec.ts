@@ -24,7 +24,7 @@ describe("Quiz integrity (e2e)", () => {
   async function login(email: string) {
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Qi", lastName: "Test", email, password: PASSWORD, consents: await acceptedConsents(prisma) })
+      .send({ firstName: "Qi", lastName: "Test", email, password: PASSWORD, ageConfirmed: true, consents: await acceptedConsents(prisma) })
       .expect(201);
     await prisma.user.update({ where: { email }, data: { isApproved: true, emailVerified: true } });
     const agent = request.agent(app.getHttpServer());

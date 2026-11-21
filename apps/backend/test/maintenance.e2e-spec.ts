@@ -37,11 +37,11 @@ describe("Maintenance mode & members-only resources e2e", () => {
     await prisma.user.deleteMany({ where: { email: { in: [adminEmail, memberEmail] } } });
     await request(app.getHttpServer())
       .post("/api/auth/register-admin")
-      .send({ firstName: "Maint", lastName: "Admin", email: adminEmail, password, adminSecureCode: process.env.ADMIN_SECURE_CODE, consents: await acceptedConsents(prisma) })
+      .send({ firstName: "Maint", lastName: "Admin", email: adminEmail, password, adminSecureCode: process.env.ADMIN_SECURE_CODE, ageConfirmed: true, consents: await acceptedConsents(prisma) })
       .expect(201);
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Maint", lastName: "Member", email: memberEmail, password, consents: await acceptedConsents(prisma) })
+      .send({ firstName: "Maint", lastName: "Member", email: memberEmail, password, ageConfirmed: true, consents: await acceptedConsents(prisma) })
       .expect(201);
     await prisma.user.update({ where: { email: memberEmail }, data: { isApproved: true, emailVerified: true } });
   });

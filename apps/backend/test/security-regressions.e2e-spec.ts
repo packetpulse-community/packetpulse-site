@@ -48,7 +48,7 @@ describe("Security regressions (e2e)", () => {
   async function registerAndActivate(email: string) {
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Sec", lastName: "Test", email, password: PASSWORD, consents: await acceptedConsents(prisma) })
+      .send({ firstName: "Sec", lastName: "Test", email, password: PASSWORD, ageConfirmed: true, consents: await acceptedConsents(prisma) })
       .expect(201);
     await prisma.user.update({ where: { email }, data: { isApproved: true, emailVerified: true } });
     const agent = request.agent(app.getHttpServer());

@@ -90,7 +90,7 @@ describe("Consent and profile privacy (e2e)", () => {
 
   describe("registration records consent", () => {
     const email = `${PREFIX}registered@example.com`;
-    const body = (extra: Record<string, unknown> = {}) => ({ firstName: "Reg", lastName: "Istered", email, password: PASSWORD, ...extra });
+    const body = (extra: Record<string, unknown> = {}) => ({ firstName: "Reg", lastName: "Istered", email, password: PASSWORD, ageConfirmed: true, ...extra });
 
     it("serves the current policies publicly", async () => {
       const res = await request(app.getHttpServer()).get("/api/consent/policies").expect(200);
@@ -257,7 +257,7 @@ describe("Consent and profile privacy (e2e)", () => {
       const old = (await acceptedConsents(prisma)).map((c) => (c.purpose === "terms" ? { ...c, policyVersion: before } : c));
       await request(app.getHttpServer())
         .post("/api/auth/register")
-        .send({ firstName: "Old", lastName: "Form", email: `${PREFIX}oldform@example.com`, password: PASSWORD, consents: old })
+        .send({ firstName: "Old", lastName: "Form", email: `${PREFIX}oldform@example.com`, password: PASSWORD, ageConfirmed: true, consents: old })
         .expect(409);
 
       // Re-accepting the new version clears the flag and records a "recapture".

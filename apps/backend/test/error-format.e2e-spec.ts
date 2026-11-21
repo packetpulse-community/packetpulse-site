@@ -82,7 +82,7 @@ describe("Error format e2e (TEST-011 / SEC-07)", () => {
     await prisma.user.deleteMany({ where: { email: { in: emails } } });
     await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Err", lastName: "Member", email: memberEmail, password, consents: await acceptedConsents(prisma) })
+      .send({ firstName: "Err", lastName: "Member", email: memberEmail, password, ageConfirmed: true, consents: await acceptedConsents(prisma) })
       .expect(201);
     await prisma.user.update({ where: { email: memberEmail }, data: { isApproved: true, emailVerified: true } });
   });
@@ -138,7 +138,7 @@ describe("Error format e2e (TEST-011 / SEC-07)", () => {
   it("registering the same email twice -> CONFLICT", async () => {
     const res = await request(app.getHttpServer())
       .post("/api/auth/register")
-      .send({ firstName: "Err", lastName: "Member", email: memberEmail, password, consents: await acceptedConsents(prisma) })
+      .send({ firstName: "Err", lastName: "Member", email: memberEmail, password, ageConfirmed: true, consents: await acceptedConsents(prisma) })
       .expect(409);
     expectShape(res.body, 409, "CONFLICT");
   });

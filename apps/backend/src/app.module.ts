@@ -31,6 +31,7 @@ import { LogsModule } from "./modules/logs";
 import { FilesModule } from "./modules/files";
 import { SkillsModule } from "./modules/skills";
 import { ConsentModule } from "./modules/consent";
+import { OnboardingModule } from "./modules/onboarding";
 import { FeatureFlagsModule } from "./modules/feature-flags";
 import { AllExceptionsFilter } from "./common/errors";
 import { ServerTimingModule } from "./common/server-timing";
@@ -67,6 +68,7 @@ import { ServerTimingModule } from "./common/server-timing";
     FilesModule,
     SkillsModule,
     ConsentModule,
+    OnboardingModule,
     FeatureFlagsModule,
   ],
   providers: [

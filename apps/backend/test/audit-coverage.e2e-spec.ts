@@ -7,7 +7,7 @@ import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { TokenService } from "../src/modules/identity/application/services/token.service";
 import { toPublicUser, userWithRolesInclude } from "../src/modules/identity";
-import { FeatureFlagsService, FLAG_HASH } from "../src/modules/feature-flags/feature-flags.service";
+import { FeatureFlagsService, FLAG_CACHE_KEY, FLAG_HASH } from "../src/modules/feature-flags/feature-flags.service";
 import { REDIS_CLIENT } from "../src/common/redis/redis.constants";
 
 // TASK-015: every privileged route must leave an audit row. The routes are discovered from
@@ -366,7 +366,8 @@ describe("Audit coverage of privileged routes (e2e)", () => {
   });
 
   afterAll(async () => {
-    await app.get<{ del: (k: string) => Promise<unknown> }>(REDIS_CLIENT).del(FLAG_HASH);
+    await prisma.featureFlag.deleteMany(); // switches live in the table now; Redis only caches them
+    await app.get<{ del: (...k: string[]) => Promise<unknown> }>(REDIS_CLIENT).del(FLAG_HASH, FLAG_CACHE_KEY);
     app.get(FeatureFlagsService).invalidate();
     if (originalSettings) {
       const { id, updatedAt, createdAt, ...rest } = originalSettings as Record<string, unknown>;

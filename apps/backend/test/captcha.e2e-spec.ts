@@ -88,7 +88,7 @@ describe("Bot protection e2e (TASK-013 / TEST-013 / SEC-06)", () => {
       {
         name: "register",
         path: "/api/auth/register",
-        body: { firstName: "Cap", lastName: "Tcha", email, password, consents },
+        body: { firstName: "Cap", lastName: "Tcha", email, password, ageConfirmed: true, consents },
         okStatus: [201],
       },
       {
