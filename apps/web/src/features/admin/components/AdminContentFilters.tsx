@@ -49,6 +49,7 @@ export function AdminContentFilters({
       />
       {typeOptions && (
         <select
+          aria-label="Filter by type"
           value={type}
           onChange={(e) => handleChange(typeParam, e.target.value)}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -62,6 +63,7 @@ export function AdminContentFilters({
         </select>
       )}
       <select
+        aria-label="Filter by category"
         value={category}
         onChange={(e) => handleChange("category", e.target.value)}
         className="rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -74,6 +76,7 @@ export function AdminContentFilters({
         ))}
       </select>
       <select
+        aria-label="Filter by status"
         value={status}
         onChange={(e) => handleChange("status", e.target.value)}
         className="rounded-md border border-input bg-background px-3 py-2 text-sm"

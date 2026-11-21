@@ -35,9 +35,11 @@ export function LogsFilters() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search message or context…"
+        aria-label="Search logs"
         className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
       />
       <select
+        aria-label="Filter by level"
         value={level}
         onChange={(e) => handleLevelChange(e.target.value)}
         className="rounded-md border border-input bg-background px-3 py-2 text-sm"

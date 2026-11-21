@@ -33,13 +33,18 @@ function QuestionOptions({
     <div className="flex flex-col gap-2 pl-4">
       {fields.map((field, optionIndex) => (
         <div key={field.id} className="flex items-center gap-2">
-          <input type="checkbox" {...register(`questions.${questionIndex}.options.${optionIndex}.isCorrect`)} />
+          <input
+            type="checkbox"
+            aria-label={`Option ${optionIndex + 1} is correct`}
+            {...register(`questions.${questionIndex}.options.${optionIndex}.isCorrect`)}
+          />
           <input
             placeholder="Option text"
+            aria-label={`Option ${optionIndex + 1} text`}
             className={cn(inputClass, "flex-1")}
             {...register(`questions.${questionIndex}.options.${optionIndex}.optionText`)}
           />
-          <Button type="button" variant="glass" size="sm" onClick={() => remove(optionIndex)} disabled={fields.length <= 2}>
+          <Button type="button" variant="glass" size="sm" aria-label={`Remove option ${optionIndex + 1}`} onClick={() => remove(optionIndex)} disabled={fields.length <= 2}>
             Remove
           </Button>
         </div>
@@ -199,6 +204,7 @@ export function QuizBuilder() {
 
           <input
             placeholder="Question text"
+            aria-label={`Question ${questionIndex + 1} text`}
             className={inputClass}
             {...register(`questions.${questionIndex}.questionText`)}
           />
@@ -207,7 +213,7 @@ export function QuizBuilder() {
           )}
 
           <div className="flex gap-4">
-            <select className={inputClass} {...register(`questions.${questionIndex}.questionType`)}>
+            <select aria-label={`Question ${questionIndex + 1} type`} className={inputClass} {...register(`questions.${questionIndex}.questionType`)}>
               <option value="single_choice">Single choice</option>
               <option value="multi_choice">Multiple choice</option>
             </select>
@@ -215,6 +221,7 @@ export function QuizBuilder() {
               type="number"
               min={1}
               placeholder="Points"
+              aria-label={`Question ${questionIndex + 1} points`}
               className={cn(inputClass, "w-24")}
               {...register(`questions.${questionIndex}.points`)}
             />
@@ -227,6 +234,7 @@ export function QuizBuilder() {
             variant="glass"
             size="sm"
             className="w-fit"
+            aria-label={`Remove question ${questionIndex + 1}`}
             onClick={() => removeQuestion(questionIndex)}
             disabled={questionFields.length <= 1}
           >

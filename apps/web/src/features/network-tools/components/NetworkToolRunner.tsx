@@ -99,7 +99,7 @@ export function NetworkToolRunner() {
       </p>
 
       <form onSubmit={handleSubmit((dto) => mutation.mutate(dto))} className="flex flex-col gap-3 sm:flex-row">
-        <select {...register("toolType")} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+        <select aria-label="Tool" {...register("toolType")} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
           {TOOL_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}

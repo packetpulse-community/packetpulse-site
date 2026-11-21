@@ -31,7 +31,6 @@ export function AppSidebar() {
       <div className="flex h-16 items-center border-b border-border px-4">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <BrandLogo />
-          <span className="sr-only">PacketPulse</span>
         </Link>
       </div>
 

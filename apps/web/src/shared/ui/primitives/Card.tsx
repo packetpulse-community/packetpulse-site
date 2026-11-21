@@ -54,9 +54,11 @@ export const CardHeader = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
 );
 CardHeader.displayName = "CardHeader";
 
-export const CardTitle = forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
-  ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("text-xl font-semibold leading-none tracking-tight", className)} {...props} />
+// A card title is a heading. It defaults to h2 (a card directly under the page's h1); pass `as="h3"` when the
+// card sits under a section heading. Heading order is checked by the a11y scans (axe "heading-order").
+export const CardTitle = forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement> & { as?: "h2" | "h3" | "h4" }>(
+  ({ className, as: Heading = "h2", ...props }, ref) => (
+    <Heading ref={ref} className={cn("text-xl font-semibold leading-none tracking-tight", className)} {...props} />
   ),
 );
 CardTitle.displayName = "CardTitle";

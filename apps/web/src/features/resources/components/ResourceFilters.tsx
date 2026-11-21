@@ -48,9 +48,11 @@ export function ResourceFilters() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search resources…"
+        aria-label="Search resources"
         className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
       />
       <select
+        aria-label="Filter by type"
         value={resourceType}
         onChange={(e) => handleFilterChange("resourceType", e.target.value)}
         className="rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -63,6 +65,7 @@ export function ResourceFilters() {
         ))}
       </select>
       <select
+        aria-label="Filter by category"
         value={categoryId}
         onChange={(e) => handleFilterChange("categoryId", e.target.value)}
         className="rounded-md border border-input bg-background px-3 py-2 text-sm"

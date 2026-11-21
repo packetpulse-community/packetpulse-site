@@ -36,9 +36,11 @@ export function RecordingFilters() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search recordings…"
+        aria-label="Search recordings"
         className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
       />
       <select
+        aria-label="Filter by category"
         value={categoryId}
         onChange={(e) => handleCategoryChange(e.target.value)}
         className="rounded-md border border-input bg-background px-3 py-2 text-sm"

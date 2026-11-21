@@ -33,6 +33,7 @@ export function NewThreadForm({ categories }: { categories: ForumCategory[] }) {
       <h2 className="text-lg font-semibold">Start a new thread</h2>
 
       <select
+        aria-label="Category"
         value={categoryId}
         onChange={(e) => setCategoryId(e.target.value)}
         className="rounded-md border border-input bg-background px-3 py-2"
