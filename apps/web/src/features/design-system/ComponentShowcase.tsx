@@ -56,10 +56,10 @@ function ButtonRow({ spec, dark }: { spec: (typeof GROVE_BUTTONS)[number]; dark?
           : "rounded-grove-card border border-grove-border bg-grove-surface p-4"
       }
     >
-      <h4 className={`mb-3 text-sm font-semibold ${dark ? "text-grove-on-brand" : ""}`}>
+      <h3 className={`mb-3 text-sm font-semibold ${dark ? "text-grove-on-brand" : ""}`}>
         {spec.label}
         {dark ? " on a deep teal panel" : ""}
-      </h4>
+      </h3>
       <div className="flex flex-wrap items-start gap-6">
         <StateCell onDark={dark} caption="Default (live)">
           <Button variant={v}>{spec.label}</Button>
@@ -101,7 +101,7 @@ export function ComponentShowcase({ grove }: { grove: boolean }) {
           </>
         ) : null}
         <div className="rounded-grove-card border p-4">
-          <h4 className="mb-3 text-sm font-semibold">Pre-Grove variant names (now resolved to the theme tokens)</h4>
+          <h3 className="mb-3 text-sm font-semibold">Pre-Grove variant names (now resolved to the theme tokens)</h3>
           <div className="flex flex-wrap gap-3">
             <Button>Default</Button>
             <Button variant="gradient">Gradient</Button>

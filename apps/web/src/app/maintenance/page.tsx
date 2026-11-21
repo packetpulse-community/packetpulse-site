@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 // (shared/api/http-client.ts).
 export default function MaintenancePage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background text-text px-4 py-16">
+    <main id="main" tabIndex={-1} className="flex min-h-screen flex-col items-center justify-center bg-background text-text px-4 py-16 outline-none">
       <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">
         <Image src="/logo.png" alt="PacketPulse" width={140} height={54} className="h-14 w-auto" priority />
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warning-soft">
@@ -37,6 +37,6 @@ export default function MaintenancePage() {
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

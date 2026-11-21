@@ -48,9 +48,11 @@ export function BlogFilters({ availableTags = [] }: { availableTags?: string[] }
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search posts…"
+          aria-label="Search posts"
           className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
         <select
+          aria-label="Filter by category"
           value={categoryId}
           onChange={(e) => handleCategoryChange(e.target.value)}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -67,7 +69,7 @@ export function BlogFilters({ availableTags = [] }: { availableTags?: string[] }
       {availableTags.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {availableTags.map((t) => (
-            <button key={t} onClick={() => handleTagClick(t)} className={cn(tag === t && "opacity-100")}>
+            <button key={t} type="button" aria-pressed={tag === t} onClick={() => handleTagClick(t)} className={cn(tag === t && "opacity-100")}>
               <Badge variant={tag === t ? "default" : "glass"}>#{t}</Badge>
             </button>
           ))}

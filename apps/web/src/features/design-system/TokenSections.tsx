@@ -70,7 +70,7 @@ export function TokenSections({ wrapperRef, themeKey }: { wrapperRef: RefObject<
           Measured live from the values in the current theme. Text pairs need 4.5:1; control borders and the focus
           ring need 3:1 (Document 2 section 4.4). The same pairs are asserted by the automated test.
         </p>
-        <div className="overflow-x-auto rounded-grove-card border border-grove-border">
+        <div className="overflow-x-auto rounded-grove-card border border-grove-border" role="region" aria-label="Token table (scrolls sideways on narrow screens)" tabIndex={0}>
           <table className="w-full text-left text-sm">
             <caption className="sr-only">Contrast of token pairs in the selected theme</caption>
             <thead className="bg-grove-subtle">
@@ -93,12 +93,23 @@ export function TokenSections({ wrapperRef, themeKey }: { wrapperRef: RefObject<
                   <tr key={p.name} className="border-t border-grove-border">
                     <th scope="row" className="p-3 font-medium">{p.name}</th>
                     <td className="p-3">
-                      <span
-                        className="inline-block rounded-grove-tag border border-grove-border px-2 py-0.5 font-semibold"
-                        style={{ color: `var(${p.fg})`, background: `var(${p.bg})` }}
-                      >
-                        Aa 123
-                      </span>
+                      {p.kind === "text" ? (
+                        <span
+                          className="inline-block rounded-grove-tag border border-grove-border px-2 py-0.5 font-semibold"
+                          style={{ color: `var(${p.fg})`, background: `var(${p.bg})` }}
+                        >
+                          Aa 123
+                        </span>
+                      ) : (
+                        // Non-text pairs (control borders, focus ring) are shown as the border they style, with
+                        // readable text inside, so the demo itself never has low-contrast text.
+                        <span
+                          className="inline-block rounded-grove-tag border-2 px-2 py-0.5 font-semibold text-grove-text"
+                          style={{ borderColor: `var(${p.fg})`, background: `var(${p.bg})` }}
+                        >
+                          Aa 123
+                        </span>
+                      )}
                     </td>
                     <td className="p-3 font-grove-mono tabular-nums">{ratio ? `${ratio.toFixed(2)}:1` : "…"}</td>
                     <td className="p-3 font-grove-mono tabular-nums">{need}:1</td>
@@ -150,8 +161,10 @@ export function TokenSections({ wrapperRef, themeKey }: { wrapperRef: RefObject<
             <div className="rounded-grove-card border border-grove-border bg-grove-surface p-4 text-sm shadow-grove-overlay">
               Overlay: <code className="font-grove-mono">shadow-grove-overlay</code>
             </div>
-            <div className="rounded-grove-card bg-grove-scrim p-4 text-sm text-grove-on-brand">
-              Scrim: <code className="font-grove-mono">bg-grove-scrim</code>
+            <div className="rounded-grove-card bg-grove-teal">
+              <div className="rounded-grove-card bg-grove-scrim p-4 text-sm text-grove-on-brand">
+                Scrim over a dark panel: <code className="font-grove-mono">bg-grove-scrim</code>
+              </div>
             </div>
           </div>
         </div>

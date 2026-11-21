@@ -24,7 +24,7 @@ export function ModelPanel({ dissection, onFocusLayer }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" role="region" aria-label="OSI and TCP/IP layer diagram (scrolls sideways on narrow screens)" tabIndex={0}>
       <div
         className="grid min-w-[480px] gap-x-3 gap-y-1"
         style={{ gridTemplateColumns: "minmax(0,1.25fr) minmax(0,1fr)", gridTemplateRows: "auto repeat(7, minmax(46px, auto))" }}
@@ -41,19 +41,21 @@ export function ModelPanel({ dissection, onFocusLayer }: Props) {
               type="button"
               disabled={!on}
               onClick={() => onFocusLayer(l.n)}
-              aria-label={`OSI layer ${l.n}, ${l.name}. ${on ? "Used by the selected packet. Show its bytes." : "Not used by the selected packet."}`}
               className={cn(
                 "flex items-center gap-3 rounded-md border px-3 py-2 text-left transition-colors",
                 on ? "border-primary bg-surface-subtle hover:bg-border" : "border-border bg-surface text-text-secondary",
               )}
               style={{ gridColumn: 1, gridRow: i + 2 }}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-subtle font-mono text-sm font-bold">{l.n}</span>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-subtle font-mono text-sm font-bold"><span className="sr-only">OSI layer </span>{l.n}</span>
               <span className="flex flex-col">
                 <span className="text-sm font-semibold">{l.name}</span>
                 <span className="text-xs text-text-secondary">
                   {l.pdu} · {l.examples}
                   {noteOnly && " · in TCP/IP the application does this"}
+                </span>
+                <span className="sr-only">
+                  {on ? "Used by the selected packet. Show its bytes." : "Not used by the selected packet."}
                 </span>
               </span>
             </button>
@@ -67,7 +69,7 @@ export function ModelPanel({ dissection, onFocusLayer }: Props) {
           return (
             <div
               key={l.name}
-              className={cn("flex flex-col justify-center rounded-md border-2 px-3 py-2", on ? "" : "opacity-60")}
+              className={cn("flex flex-col justify-center rounded-md border-2 px-3 py-2", on ? "" : "border-dashed")}
               style={{ gridColumn: 2, gridRow: `${start} / span ${rows.length}`, borderColor: layerColor(TINT[l.key] as string), backgroundColor: on ? layerSoft(TINT[l.key] as string) : "var(--grove-surface)" }}
             >
               <span className="text-sm font-semibold">{l.name}</span>

@@ -18,7 +18,7 @@ export default function AboutPage() {
   return (
     <MarketingBackground>
       <Navbar />
-      <main>
+      <main id="main" tabIndex={-1} className="outline-none">
         <AboutHero />
         <AboutStats />
         <AboutMission />

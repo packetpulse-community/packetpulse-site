@@ -15,7 +15,7 @@ export default async function BlogsLayout({ children }: { children: React.ReactN
     <AuthProvider user={user}>
       <MarketingBackground>
         <Navbar />
-        <main className="mx-auto w-full max-w-6xl px-4 py-12">{children}</main>
+        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl px-4 py-12 outline-none">{children}</main>
         <Footer />
       </MarketingBackground>
     </AuthProvider>

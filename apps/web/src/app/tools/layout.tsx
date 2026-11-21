@@ -7,7 +7,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
   return (
     <MarketingBackground>
       <Navbar />
-      <main id="main" className="container flex-1 py-8">
+      <main id="main" tabIndex={-1} className="container flex-1 py-8 outline-none">
         {children}
       </main>
       <Footer />

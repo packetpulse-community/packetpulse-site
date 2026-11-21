@@ -16,7 +16,7 @@ export default async function VerifyCertificatePage({ params }: { params: Promis
   return (
     <MarketingBackground>
       <Navbar />
-      <main className="container flex flex-col items-center gap-6 py-20 text-center">
+      <main id="main" tabIndex={-1} className="container flex flex-col items-center gap-6 py-20 text-center outline-none">
         {certificate ? (
           <div className="rounded-grove-card border border-border bg-surface flex flex-col gap-3 p-8">
             <h1 className="text-2xl font-semibold text-success">✅ Certificate Verified</h1>

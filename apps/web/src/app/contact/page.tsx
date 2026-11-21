@@ -21,7 +21,7 @@ export default function ContactPage() {
   return (
     <MarketingBackground>
       <Navbar />
-      <main className="container py-20">
+      <main id="main" tabIndex={-1} className="container py-20 outline-none">
         <Reveal className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
           <h1 className="text-4xl font-bold sm:text-5xl">Contact Us</h1>
           <p className="text-xl text-text-secondary">Have questions or suggestions? We'd love to hear from you.</p>

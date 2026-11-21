@@ -50,7 +50,7 @@ export default async function LandingPage() {
   return (
     <MarketingBackground>
       <Navbar />
-      <main>
+      <main id="main" tabIndex={-1} className="outline-none">
         <Hero />
         <StatsStrip />
         <WhatWeOffer />

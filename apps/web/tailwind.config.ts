@@ -30,6 +30,10 @@ const config: Config = {
       },
     },
     extend: {
+      // `--grove-destructive` is a button FILL (#b42332 in both themes): as text on the dark page it is only
+      // 2.4:1. Every `text-destructive` on a page background should use the state token, which is the same
+      // red in Light and a readable pink in Dark (a11y scan, TASK-050). Fills and borders keep `destructive`.
+      textColor: { destructive: v("--state-danger") },
       colors: {
         // --- semantic names (use these in new and migrated code) ---
         background: v("--grove-page"),

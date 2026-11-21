@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import type { Dissection, DeviceInfo, Trace } from "@packetpulse/netsim";
 import { CANVAS, LAB_LAYOUT } from "../lib/layout";
 import { packetBadge, protocolColor } from "../lib/format";
@@ -147,7 +148,7 @@ export function TopologyView({ trace, dissected, hops, time, hopMs, selectedFram
             transform={`translate(${x} ${y})`}
             role="button"
             tabIndex={0}
-            aria-label={`Inspect ${d.name}`}
+            aria-label={`Inspect ${[d.name, ...ips].join(" ")}`}
             aria-pressed={selectedDev}
             className="cursor-pointer outline-none [&:focus-visible_.focus-ring]:opacity-100"
             onClick={() => onSelectDevice(d.id)}
@@ -160,10 +161,17 @@ export function TopologyView({ trace, dissected, hops, time, hopMs, selectedFram
           >
             <rect className="focus-ring opacity-0" x={-52} y={-40} width={104} height={104} rx={14} fill="none" stroke="var(--grove-focus)" strokeWidth={2} />
             <Glyph device={d} active={active} selected={selectedDev} />
-            <text y={46} textAnchor="middle" fontSize={15} fontWeight={600} fill="var(--grove-text)">{d.name}</text>
-            {ips.map((ip, i) => (
-              <text key={ip} y={63 + i * 15} textAnchor="middle" fontSize={12} fill="var(--grove-text-secondary)" className="font-mono">{ip}</text>
-            ))}
+            {/* One <text> with spaces between the tspans, so the visible text reads "PC-A 192.168.1.10" and the
+                accessible name below contains it (WCAG 2.5.3 label in name). */}
+            <text textAnchor="middle">
+              <tspan x={0} y={46} fontSize={15} fontWeight={600} fill="var(--grove-text)">{d.name}</tspan>
+              {ips.map((ip, i) => (
+                <Fragment key={ip}>
+                  {" "}
+                  <tspan x={0} y={63 + i * 15} fontSize={12} fill="var(--grove-text-secondary)" className="font-mono">{ip}</tspan>
+                </Fragment>
+              ))}
+            </text>
           </g>
         );
       })}
