@@ -10,13 +10,14 @@ import { findPageHeading, shouldMoveFocus } from "./route-focus-logic";
 // watched for up to 1.5 s; if there is none, focus goes to <main>.
 export function RouteFocus() {
   const pathname = usePathname();
-  const first = useRef(true);
+  const lastPath = useRef(pathname);
 
   useEffect(() => {
-    if (first.current) {
-      first.current = false; // first load: the browser already starts at the top
-      return;
-    }
+    // Only react to a real path change. A boolean "first run" flag is flipped by the
+    // first of React Strict Mode's two dev-time effect runs, so the second run moved focus
+    // and wrote tabindex/style onto the heading before hydration (a hydration warning).
+    if (lastPath.current === pathname) return; // first load: the browser already starts at the top
+    lastPath.current = pathname;
     if (!shouldMoveFocus(document.activeElement as HTMLElement | null)) return;
     const main = document.getElementById("main") ?? document.querySelector("main");
     if (!main) return;
