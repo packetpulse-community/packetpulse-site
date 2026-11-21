@@ -114,7 +114,7 @@ const AUTHENTICATED_ONLY: Record<string, string> = {
   "PUT /api/consent/mine": "own consents only; Terms and Privacy cannot be withdrawn; must name the current policy version",
   "GET /api/members/:userId": "any approved member; private profile fields are stripped by the field-protection policy unless the owner opened them to members (staff and the owner always see them)",
   "GET /api/users/profile": "own profile",
-  "GET /api/users/profile/privacy": "own profile visibility settings",
+  "GET /api/users/profile/privacy": "own profile visibility settings; open to pending and unverified accounts",
   "PUT /api/users/profile/privacy": "own profile visibility settings; private or members only, no public level",
   "PUT /api/users/profile": "own profile",
   "PUT /api/users/profile/password": "own account; needs current password",

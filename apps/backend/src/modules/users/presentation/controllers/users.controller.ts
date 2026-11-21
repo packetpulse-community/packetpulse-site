@@ -3,7 +3,7 @@ import { Response } from "express";
 import { UsersService } from "../../application/services/users.service";
 import { ProfilePrivacyService } from "../../application/services/profile-privacy.service";
 import { UpdateProfilePrivacyDto, UpdateProfileDto, ChangePasswordDto, DeleteAccountDto } from "../../application/dto/users.dto";
-import { CurrentUser } from "../../../identity";
+import { CurrentUser, SkipApproval, SkipEmailVerification } from "../../../identity";
 import type { AccessTokenPayload } from "../../../identity";
 import { AuthCookieService } from "../../../identity/application/services/auth-cookie.service";
 
@@ -26,11 +26,15 @@ export class UsersController {
   }
 
   // Who may see which profile fields (TASK-025). Declared before the other sub-routes; own data only.
+  @SkipApproval()
+  @SkipEmailVerification()
   @Get("privacy")
   getPrivacy(@CurrentUser() current: AccessTokenPayload) {
     return this.privacy.get(current.sub);
   }
 
+  @SkipApproval()
+  @SkipEmailVerification()
   @Put("privacy")
   updatePrivacy(@CurrentUser() current: AccessTokenPayload, @Body() dto: UpdateProfilePrivacyDto) {
     return this.privacy.update(current.sub, dto);

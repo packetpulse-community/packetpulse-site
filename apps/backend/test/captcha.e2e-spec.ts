@@ -10,6 +10,7 @@ import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { CaptchaService } from "../src/common/captcha";
 import { parseTrustProxy } from "../src/common/config/trust-proxy";
+import { acceptedConsents } from "./helpers/consents";
 
 const CAPTCHA_MESSAGE = "We could not confirm you are human. Please try again.";
 const GOOD = "good-token";
@@ -33,6 +34,8 @@ describe("Bot protection e2e (TASK-013 / TEST-013 / SEC-06)", () => {
   const fake = new FakeCaptcha();
   const email = "e2e-captcha-user@example.com";
   const password = "Passw0rd!23";
+  // Filled in beforeAll (the register body below holds this array by reference).
+  const consents: { purpose: string; policyVersion: number }[] = [];
   const server = () => app.getHttpServer();
   // Failed logins for this address build a Redis lockout that would turn later runs' 401 into 429;
   // remove only that key (never flush keys we did not create).
@@ -48,6 +51,7 @@ describe("Bot protection e2e (TASK-013 / TEST-013 / SEC-06)", () => {
     app.setGlobalPrefix("api");
     await app.init();
     prisma = app.get(PrismaService);
+    consents.push(...(await acceptedConsents(prisma)));
     await prisma.user.deleteMany({ where: { email } });
     await app.get<Redis>(REDIS_CLIENT).del(lockKey);
   });
@@ -84,7 +88,7 @@ describe("Bot protection e2e (TASK-013 / TEST-013 / SEC-06)", () => {
       {
         name: "register",
         path: "/api/auth/register",
-        body: { firstName: "Cap", lastName: "Tcha", email, password },
+        body: { firstName: "Cap", lastName: "Tcha", email, password, consents },
         okStatus: [201],
       },
       {
