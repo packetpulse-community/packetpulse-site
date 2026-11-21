@@ -17,14 +17,14 @@ export default async function CertificatesPage() {
       </div>
       <div className="flex flex-col gap-3">
         {certificates.map((cert) => (
-          <Card key={cert.id} variant="glass" className="flex items-center justify-between p-4">
-            <div>
+          <Card key={cert.id} variant="glass" className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <p className="font-medium">{cert.quiz.title}</p>
               <p className="text-sm text-text-secondary">
                 {cert.certificateNumber} · issued {new Date(cert.issuedAt).toLocaleDateString()}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Badge variant="glass">{cert.quiz.category.name}</Badge>
               <CopyVerifyLinkButton certificateNumber={cert.certificateNumber} />
             </div>
