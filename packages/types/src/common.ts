@@ -28,6 +28,7 @@ export const API_ERROR_CODES = [
   "CONFLICT",
   "RATE_LIMITED",
   "MAINTENANCE",
+  "FEATURE_DISABLED",
   "BAD_REQUEST",
   "PAYLOAD_TOO_LARGE",
   "INTERNAL_ERROR",
@@ -47,4 +48,6 @@ export interface ApiErrorBody {
   requestId?: string;
   // Only on the maintenance 503; the web client keys on it to show /maintenance.
   maintenance?: true;
+  // Only on FEATURE_DISABLED: the switch that blocked the call.
+  feature?: string;
 }
