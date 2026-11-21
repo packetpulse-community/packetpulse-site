@@ -7,6 +7,8 @@ import { AppModule } from "../src/app.module";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { TokenService } from "../src/modules/identity/application/services/token.service";
 import { toPublicUser, userWithRolesInclude } from "../src/modules/identity";
+import { FeatureFlagsService, FLAG_HASH } from "../src/modules/feature-flags/feature-flags.service";
+import { REDIS_CLIENT } from "../src/common/redis/redis.constants";
 
 // TASK-015: every privileged route must leave an audit row. The routes are discovered from
 // the live Nest metadata (same approach as permission-matrix.e2e-spec.ts), so a new
@@ -132,6 +134,11 @@ describe("Audit coverage of privileged routes (e2e)", () => {
       void id; void updatedAt; void createdAt;
       await api("put", "/api/admin/settings", { ...body, siteName: `Cov ${TAG}`, reason: `${TAG} settings change reason` }).expect(200);
       return { action: "site_settings_changed", targetId: "default" };
+    },
+    "PUT /api/admin/feature-flags/:key": async () => {
+      // One real change; afterAll deletes the override so no later suite sees it disabled.
+      await api("put", "/api/admin/feature-flags/blogs.comments", { enabled: false, reason: `${TAG} feature switch reason` }).expect(200);
+      return { action: "site_settings_changed", targetId: "blogs.comments" };
     },
     "PUT /api/admin/users/:id/approve": async () => {
       const u = await makeUser("pending", { isApproved: false });
@@ -359,6 +366,8 @@ describe("Audit coverage of privileged routes (e2e)", () => {
   });
 
   afterAll(async () => {
+    await app.get<{ del: (k: string) => Promise<unknown> }>(REDIS_CLIENT).del(FLAG_HASH);
+    app.get(FeatureFlagsService).invalidate();
     if (originalSettings) {
       const { id, updatedAt, createdAt, ...rest } = originalSettings as Record<string, unknown>;
       void id; void updatedAt; void createdAt;
