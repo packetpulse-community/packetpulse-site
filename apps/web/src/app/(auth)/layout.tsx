@@ -4,8 +4,8 @@ import { SessionAwareBanner } from "@/shared/auth/SessionAwareBanner";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-indigo-900 px-4 py-16">
-      <Link href="/" className="absolute right-6 top-6 text-sm text-muted-foreground transition-colors hover:text-foreground">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background text-text px-4 py-16">
+      <Link href="/" className="absolute right-6 top-6 text-sm text-text-secondary transition-colors hover:text-text">
         Back to Home
       </Link>
 
@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </Link>
 
         <SessionAwareBanner />
-        {children}
+        <div className="rounded-grove-card border border-border bg-surface p-6 sm:p-8">{children}</div>
       </div>
     </div>
   );

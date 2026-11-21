@@ -62,14 +62,14 @@ export function LoginForm({
       </div>
 
       {justRegistered && (
-        <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm">
+        <p className="rounded-grove-control border border-success bg-success-soft px-4 py-3 text-sm text-success">
           Account created. An admin will review it — once it&apos;s approved you&apos;ll get an email with a link to
           verify your address, and then you can sign in.
         </p>
       )}
 
       {passwordReset && (
-        <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm">
+        <p className="rounded-grove-control border border-success bg-success-soft px-4 py-3 text-sm text-success">
           Your password has been reset and all other sessions were signed out. Sign in with your new password — a
           confirmation email is on its way.
         </p>
@@ -101,7 +101,7 @@ export function LoginForm({
             <input type="checkbox" className="rounded border-input" />
             Remember me
           </label>
-          <Link href="/forgot-password" className="font-medium text-indigo-400 hover:underline">
+          <Link href="/forgot-password" className="font-medium text-primary-text hover:underline">
             Forgot your password?
           </Link>
         </div>

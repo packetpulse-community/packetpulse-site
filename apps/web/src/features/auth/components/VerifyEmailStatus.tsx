@@ -41,7 +41,7 @@ export function VerifyEmailStatus({ token }: { token: string | null }) {
   if (status === "success") {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
-        <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+        <CheckCircle2 className="h-10 w-10 text-success" />
         <h1 className="text-xl font-semibold">Email verified</h1>
         <p className="text-muted-foreground">Your email is verified and your account is now active.</p>
         <Link href="/login" className={cn(buttonVariants({ variant: "gradient" }), "w-full")}>

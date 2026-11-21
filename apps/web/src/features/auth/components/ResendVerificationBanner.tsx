@@ -20,9 +20,9 @@ export function ResendVerificationBanner() {
   if (!user || user.emailVerified || dismissed) return null;
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+    <div className="flex items-center justify-between gap-4 rounded-grove-control border border-warning bg-warning-soft px-4 py-3 text-sm text-warning">
       <div className="flex items-center gap-2">
-        <Mail className="h-4 w-4 shrink-0 text-amber-600" />
+        <Mail className="h-4 w-4 shrink-0 text-warning" />
         <span>
           {sent ? "Verification email sent — check your inbox." : "Please verify your email address."}
         </span>
