@@ -28,7 +28,7 @@ export function NewThreadForm({ categories }: { categories: ForumCategory[] }) {
         e.preventDefault();
         if (categoryId && title.trim() && content.trim()) mutation.mutate();
       }}
-      className="glass-panel flex flex-col gap-4 rounded-lg p-4"
+      className="border border-border bg-surface flex flex-col gap-4 rounded-lg p-4"
     >
       <h2 className="text-lg font-semibold">Start a new thread</h2>
 

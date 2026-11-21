@@ -42,7 +42,7 @@ function ReplyItem({ threadId, reply, canDelete }: { threadId: string; reply: Fo
   });
 
   return (
-    <li className="glass-panel rounded-md p-3">
+    <li className="border border-border bg-surface rounded-md p-3">
       <p className="text-sm">{reply.content}</p>
       <div className="mt-2 flex items-center gap-3">
         <p className="text-xs text-muted-foreground">
@@ -84,7 +84,7 @@ export function ReplySection({ threadId, replies, isLocked }: { threadId: string
             e.preventDefault();
             if (content.trim()) mutation.mutate();
           }}
-          className="glass-panel flex gap-2 rounded-lg p-3"
+          className="border border-border bg-surface flex gap-2 rounded-lg p-3"
         >
           <input
             value={content}
