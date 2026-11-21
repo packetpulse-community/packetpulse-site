@@ -49,9 +49,20 @@ function isMaintenance(status: number, body: unknown) {
   return status === 503 && (body as { maintenance?: boolean } | null)?.maintenance === true;
 }
 
+// An account waiting out its deletion grace period (TASK-046) gets 403 + reason ACCOUNT_DEACTIVATED
+// from every route but the data-rights ones. Send the member to the page where they can cancel.
+export const DATA_RIGHTS_PATH = "/settings/data-rights";
+function isDeactivated(status: number, body: unknown) {
+  return status === 403 && (body as { reason?: string } | null)?.reason === "ACCOUNT_DEACTIVATED";
+}
+
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => null);
+    if (isDeactivated(res.status, body)) {
+      if (typeof window === "undefined") redirect(DATA_RIGHTS_PATH);
+      if (window.location.pathname !== DATA_RIGHTS_PATH) window.location.assign(DATA_RIGHTS_PATH);
+    }
     if (isMaintenance(res.status, body)) {
       if (typeof window === "undefined") redirect(MAINTENANCE_PATH);
       if (window.location.pathname !== MAINTENANCE_PATH) window.location.assign(MAINTENANCE_PATH);

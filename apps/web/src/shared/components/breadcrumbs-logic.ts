@@ -34,6 +34,7 @@ export const ROUTE_TITLES: Readonly<Record<string, RouteTitle>> = {
   "/settings": { label: "Settings", linkable: false },
   "/settings/notifications": { label: "Notification settings" },
   "/settings/privacy": { label: "Privacy and consent" },
+  "/settings/data-rights": { label: "Your data" },
   "/blogs": { label: "Blogs" },
   "/blogs/*": { label: "Blog post" },
   "/admin": { label: "Admin" },
@@ -54,6 +55,7 @@ export const ROUTE_TITLES: Readonly<Record<string, RouteTitle>> = {
   "/admin/api-docs": { label: "API docs" },
   "/admin/settings": { label: "Platform settings" },
   "/admin/feature-flags": { label: "Feature switches" },
+  "/admin/data-requests": { label: "Data requests" },
 };
 
 // Looks like an identifier rather than a word: a UUID, a long number, a long hex/cuid
