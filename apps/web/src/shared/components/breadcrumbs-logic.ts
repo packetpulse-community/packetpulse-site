@@ -31,6 +31,7 @@ export const ROUTE_TITLES: Readonly<Record<string, RouteTitle>> = {
   "/tools/packet-lab": { label: "Packet Lab" },
   "/tools/packet-lab/*": { label: "Scenario" },
   "/profile": { label: "Profile" },
+  "/profile/resume": { label: "Resume" },
   "/settings": { label: "Settings", linkable: false },
   "/settings/notifications": { label: "Notification settings" },
   "/settings/privacy": { label: "Privacy and consent" },

@@ -71,6 +71,18 @@ export default async function ProfilePage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Your resume</CardTitle>
+          <CardDescription>Upload a resume to get skills, education and experience suggested for your profile. You review every suggestion; a resume is private.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/profile/resume" className={buttonVariants({ variant: "secondary" })}>
+            Open my resume
+          </Link>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Privacy and consent</CardTitle>
           <CardDescription>Choose who can see your profile, and review or withdraw the consents you have given.</CardDescription>
         </CardHeader>
