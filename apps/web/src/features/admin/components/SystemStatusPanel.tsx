@@ -71,14 +71,16 @@ export function SystemStatusPanel({ initialStatus }: { initialStatus: SystemStat
         {services.map((service) => {
           const ui = STATE_UI[service.status];
           return (
-            <Card key={service.key} variant="glass">
+            <Card key={service.key} variant="glass" className="min-w-0">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between gap-2 text-base">
-                  <span className="flex items-center gap-2">
+                <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+                  <span className="flex min-w-0 items-center gap-2">
                     <ui.Icon className={`h-5 w-5 shrink-0 ${ui.color}`} />
-                    {service.name}
+                    <span className="min-w-0 break-words">{service.name}</span>
                   </span>
-                  <Badge variant={ui.badge}>{ui.label}</Badge>
+                  <Badge variant={ui.badge} className="shrink-0">
+                    {ui.label}
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-1 text-sm text-muted-foreground">
